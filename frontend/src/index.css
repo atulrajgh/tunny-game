@@ -1,0 +1,155 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a5c1a; color: #fff; min-height: 100vh; }
+input, button { font-family: inherit; }
+
+.app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 8px; z-index: 999; font-weight: 600; }
+.toast.error { background: #c0392b; color: #fff; }
+
+/* ---- Login ---- */
+.login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+.title { font-size: 48px; margin-bottom: 32px; letter-spacing: 8px; }
+.login-box { background: #2d6e2d; border-radius: 16px; padding: 32px; width: 400px; max-width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+.login-box input { width: 100%; padding: 12px 16px; border: none; border-radius: 8px; font-size: 16px; margin-bottom: 12px; background: #3a8a3a; color: #fff; }
+.login-box input::placeholder { color: #a0d0a0; }
+.login-box button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; background: #f0c040; color: #2d4a2d; cursor: pointer; margin-bottom: 20px; }
+.login-box button:hover { background: #f5d060; }
+.muted { color: #a0d0a0; font-size: 14px; text-align: center; padding: 16px; }
+
+.room-list { margin-top: 16px; }
+.room-list h3 { margin-bottom: 12px; color: #c0e8c0; }
+.room-entry { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #3a8a3a; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+.room-entry:hover { background: #4a9a4a; }
+.room-entry .room-id { font-family: monospace; font-size: 14px; }
+.room-entry button { padding: 4px 12px; border: none; border-radius: 4px; background: #f0c040; color: #2d4a2d; cursor: pointer; margin: 0; width: auto; font-size: 13px; }
+
+/* ---- Room / Seating ---- */
+.room-screen { text-align: center; }
+.room-screen h2 { margin-bottom: 24px; }
+.seating { display: grid; grid-template-columns: 120px 120px; grid-template-rows: 100px 100px; gap: 8px; justify-content: center; margin: 24px auto; }
+.seat { background: #2d6e2d; border: 2px solid #4a9a4a; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.seat-label { font-size: 12px; color: #a0d0a0; margin-bottom: 4px; }
+.seat-player { font-weight: 600; font-size: 14px; }
+.badge { font-size: 10px; background: #f0c040; color: #2d4a2d; padding: 1px 6px; border-radius: 4px; margin-left: 4px; }
+.seat-empty button { padding: 4px 8px; border: none; border-radius: 4px; background: #4a9a4a; color: #fff; cursor: pointer; font-size: 12px; }
+
+.unseated { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 16px 0; }
+.player-chip { background: #3a8a3a; padding: 8px 12px; border-radius: 20px; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.mini-btn { padding: 2px 8px; border: none; border-radius: 4px; background: #4a9a4a; color: #fff; cursor: pointer; font-size: 11px; }
+.mini-btn.kick { background: #c0392b; }
+.start-btn { padding: 14px 36px; border: none; border-radius: 8px; font-size: 18px; font-weight: 600; background: #f0c040; color: #2d4a2d; cursor: pointer; margin: 16px 0; }
+.start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---- Cut ---- */
+.cut-display { text-align: center; padding: 40px; }
+.cut-display .card { display: inline-block; padding: 24px 32px; background: #fff; border-radius: 12px; font-size: 36px; margin: 16px; }
+.cut-display p { font-size: 18px; margin: 16px 0; }
+
+/* ---- Game Table ---- */
+.game-table { display: grid; grid-template-columns: 100px 1fr 100px; grid-template-rows: auto 1fr auto auto; gap: 8px; min-height: 85vh; }
+.table-seat { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; }
+.seat-info { font-size: 13px; font-weight: 600; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.team-badge { font-size: 10px; background: #2d4a2d; color: #a0d0a0; padding: 1px 5px; border-radius: 4px; margin-left: 4px; }
+.host-info { font-size: 14px; color: #c0e8c0; margin-bottom: 12px; }
+.spectator-label { font-size: 12px; color: #a0d0a0; padding: 8px; }
+.hand-cards { display: flex; gap: 2px; }
+.hand-cards.vert { flex-direction: column; }
+.card-back { display: inline-block; width: 24px; height: 36px; background: linear-gradient(135deg, #1a3a6a, #2a5a8a); border-radius: 4px; border: 1px solid #3a6a9a; }
+.card-back.mini { width: 16px; height: 24px; }
+.card-back.tiny { width: 20px; height: 30px; }
+.tricks { font-size: 12px; color: #f0c040; margin-top: 4px; }
+
+.table-seat.top { grid-column: 2; grid-row: 1; }
+.table-seat.left { grid-column: 1; grid-row: 2; }
+.table-seat.right { grid-column: 3; grid-row: 2; }
+.table-seat.bottom { grid-column: 2; grid-row: 3; }
+
+.table-center { grid-column: 2; grid-row: 2; position: relative; display: flex; align-items: center; justify-content: center; }
+.table-felt { background: #2d6e2d; border-radius: 50%; width: 100%; height: 100%; min-height: 200px; display: flex; align-items: center; justify-content: center; border: 3px solid #4a9a4a; box-shadow: inset 0 0 40px rgba(0,0,0,0.3); }
+.table-info { text-align: center; font-size: 14px; }
+.trump-indicator { font-size: 20px; font-weight: 700; color: #f0c040; margin-bottom: 8px; }
+.trump-revealed { background: #f0c040; color: #2d4a2d; padding: 4px 16px; border-radius: 20px; font-weight: 700; display: inline-block; margin-bottom: 8px; animation: pulse 1s infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.round-info { color: #a0d0a0; margin-bottom: 4px; }
+
+.current-trick { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+.trick-entry { display: flex; flex-direction: column; align-items: center; font-size: 12px; }
+
+/* ---- Cards ---- */
+.card-face { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 64px; background: #fff; color: #222; border-radius: 6px; font-weight: 700; font-size: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.card-face.red { color: #c0392b; }
+.card-face.small { width: 32px; height: 46px; font-size: 12px; }
+
+.my-hand { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.hand-card { background: none; border: none; cursor: pointer; padding: 2px; }
+.hand-card:disabled { opacity: 0.8; cursor: default; }
+.hand-card .card-face { transition: transform 0.15s; }
+.hand-card:not(:disabled) .card-face:hover { transform: translateY(-6px); }
+.hand-card.trump .card-face { border: 2px solid #f0c040; box-shadow: 0 0 8px rgba(240,192,64,0.5); }
+
+/* ---- Overlays ---- */
+.overlay { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2d6e2d; border: 2px solid #4a9a4a; border-radius: 16px; padding: 24px; min-width: 300px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 10; }
+.overlay.active { display: block; }
+.overlay h3 { margin-bottom: 12px; }
+
+.bid-buttons { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 12px 0; }
+.bid-pass { padding: 8px 16px; border: none; border-radius: 6px; background: #e74c3c; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; }
+.bid-num { padding: 8px 14px; border: none; border-radius: 6px; background: #3498db; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; }
+.bid-num:hover, .bid-pass:hover { opacity: 0.85; }
+.bid-summary { margin-top: 12px; font-size: 13px; }
+
+.trump-cards { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.card-btn { background: none; border: none; cursor: pointer; padding: 4px; }
+.card-btn .card-face { width: 52px; height: 72px; font-size: 20px; }
+.card-btn .card-face:hover { border: 2px solid #f0c040; }
+
+/* ---- Action bar ---- */
+.trump-card-display { margin-top: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.trump-card-label { font-size: 11px; color: #a0d0a0; }
+.action-bar { grid-column: 1 / -1; grid-row: 4; display: flex; gap: 8px; justify-content: center; padding: 8px; }
+.action-btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: #3498db; color: #fff; font-size: 14px; }
+.action-btn.reset { background: #7f8c8d; }
+
+/* ---- Turn indicator ---- */
+.turn-indicator { grid-column: 1 / -1; grid-row: 5; text-align: center; padding: 8px; background: #f0c040; color: #2d4a2d; font-weight: 700; border-radius: 8px; animation: pulse 1s infinite; }
+
+/* ---- Timeout banner ---- */
+.timeout-banner { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #e67e22; padding: 12px 24px; border-radius: 8px; z-index: 100; font-weight: 600; animation: pulse 1s infinite; }
+.timeout-banner button { margin-left: 12px; padding: 4px 12px; border: none; border-radius: 4px; background: #fff; color: #e67e22; cursor: pointer; font-weight: 600; }
+
+/* ---- Review Screen ---- */
+.review-screen { text-align: center; }
+.review-hands { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin: 16px 0; }
+.review-hand { background: #2d6e2d; border-radius: 12px; padding: 16px; }
+.review-player { font-weight: 700; margin-bottom: 8px; }
+.review-cards { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
+.mini-card { background: #fff; color: #222; padding: 2px 6px; border-radius: 3px; font-size: 13px; font-weight: 600; }
+.mini-card.red { color: #c0392b; }
+.review-score { font-size: 20px; font-weight: 700; margin: 16px; }
+
+/* ---- Game Over ---- */
+.gameover-screen { text-align: center; }
+.winner-banner { font-size: 36px; font-weight: 700; margin: 32px 0; color: #f0c040; }
+.final-scores { display: flex; gap: 32px; justify-content: center; margin: 24px 0; }
+.score-card { background: #2d6e2d; border-radius: 16px; padding: 24px; min-width: 180px; }
+.score-card h3 { font-size: 24px; margin-bottom: 8px; }
+.score-num { font-size: 48px; font-weight: 700; color: #f0c040; }
+
+/* ---- Loading ---- */
+.loading { text-align: center; padding: 80px; font-size: 24px; }
+
+/* ---- Responsive ---- */
+@media (max-width: 700px) {
+  .game-table { grid-template-columns: 70px 1fr 70px; }
+  .card-face { width: 34px; height: 50px; font-size: 13px; }
+  .card-back { width: 18px; height: 28px; }
+  .card-back.mini { width: 12px; height: 18px; }
+  .table-felt { min-height: 150px; }
+  .title { font-size: 32px; }
+}
+@media (max-width: 500px) {
+  .game-table { grid-template-columns: 50px 1fr 50px; gap: 4px; }
+  .card-face { width: 28px; height: 40px; font-size: 11px; }
+  .seat-info { font-size: 11px; }
+  .login-box { padding: 20px; }
+}

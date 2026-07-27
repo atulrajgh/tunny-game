@@ -1,0 +1,11 @@
+{
+  "name": "tunny-game",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install && npm run build",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start"
+  }
+}

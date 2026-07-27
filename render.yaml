@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: tunny-game
+    env: node
+    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
+    startCommand: node backend/src/server.js
