@@ -185,9 +185,9 @@ io.on('connection', (socket) => {
     updateAll();
   });
 
-  socket.on('choose_trump', ({ cardIndex }) => {
+  socket.on('choose_trump', ({ card }) => {
     const g = game(); if (!g) return error('Not in a game');
-    if (!g.selectTrump(playerId, cardIndex)) return error('Invalid trump selection');
+    if (!g.selectTrump(playerId, card)) return error('Invalid trump selection');
     clearTimeout(g._timeout);
     io.to(g.id).emit('game_playing', { trump: g.trumpSuit });
     timeoutStart();

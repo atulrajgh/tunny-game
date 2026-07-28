@@ -382,7 +382,7 @@ function App() {
             {isDeclarer ? (
               <div className="trump-cards">
                 {(me?.hand || []).map((c, i) => (
-                  <button key={i} className="card-btn" onClick={() => socket.emit('choose_trump', { cardIndex: i })}>
+                  <button key={i} className="card-btn" onClick={() => socket.emit('choose_trump', { card: { suit: c.suit, rank: c.rank } })}>
                     {renderCard(c)}
                   </button>
                 ))}
