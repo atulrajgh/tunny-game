@@ -85,7 +85,7 @@ io.on('connection', (socket) => {
 
   function error(msg) { socket.emit('error', { message: msg }); }
   function game() { return ROOMS[gameId]; }
-  function me() { const g = game(); return g ? g.getPlayer(playerId) : null; }
+  function me() { const g = game(); return g ? g.getViewer(playerId) : null; }
 
   function track() {
     if (playerId) {
@@ -105,6 +105,7 @@ io.on('connection', (socket) => {
     if (!g) return;
     for (const p of g.players) emitToPlayer(p.id, 'state', g.getGameState(p.id));
     if (g.admin) emitToPlayer(g.admin.id, 'state', g.getGameState(g.admin.id));
+    for (const s of g.spectators) emitToPlayer(s.id, 'state', g.getGameState(s.id));
   }
 
   function timeoutStart() {
@@ -145,6 +146,28 @@ io.on('connection', (socket) => {
     socket.join(g.id); track();
     socket.emit('room_joined', { gameId: g.id, playerId: p.id, isAdmin: p.isAdmin });
     io.to(g.id).emit('player_joined', { playerId: p.id, playerName: p.name, isAdmin: p.isAdmin, playerCount: g.players.length });
+    io.emit('room_list', getPublicList());
+    updateAll();
+  });
+
+  socket.on('join_as_spectator', ({ gameId: rid, playerName }) => {
+    if (!playerName) return error('Name required');
+    const g = ROOMS[rid];
+    if (!g) return error('Room not found');
+    const s = g.addSpectator(playerName);
+    gameId = g.id; playerId = s.id;
+    socket.join(g.id); track();
+    socket.emit('room_joined', { gameId: g.id, playerId: s.id, isAdmin: false, isSpectator: true });
+    io.to(g.id).emit('spectator_joined', { playerId: s.id, playerName: s.name });
+    updateAll();
+  });
+
+  socket.on('promote_to_player', ({ spectatorId }) => {
+    const g = game(); if (!g) return;
+    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    const p = g.promoteSpectator(playerId, spectatorId);
+    if (!p) return error('Cannot promote');
+    io.to(g.id).emit('spectator_promoted', { playerId: p.id, playerName: p.name });
     io.emit('room_list', getPublicList());
     updateAll();
   });
@@ -283,7 +306,9 @@ io.on('connection', (socket) => {
     console.log('Player disconnect:', playerId);
     const g = game();
     if (g && playerId) {
-      const p = g.getPlayer(playerId);
+      const wasPlayer = !!g.getPlayer(playerId);
+      const wasSpectator = !wasPlayer && !!g.getViewer(playerId);
+      const p = g.getViewer(playerId);
       const pName = p?.name || 'Unknown';
       const wasAdmin = p?.isAdmin || false;
       g.removePlayer(playerId);
@@ -291,6 +316,11 @@ io.on('connection', (socket) => {
       if (wasAdmin) {
         io.to(g.id).emit('room_closed', { message: 'Admin disconnected — room closed' });
         delete ROOMS[g.id];
+      } else if (wasSpectator) {
+        io.to(g.id).emit('spectator_left', { playerId, playerName: pName });
+        if (g.players.length === 0 && !g.admin) {
+          delete ROOMS[g.id];
+        }
       } else {
         io.to(g.id).emit('player_left', { playerId, playerName: pName, playerCount: g.players.length });
         if (g.players.length === 0) {

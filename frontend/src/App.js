@@ -14,6 +14,7 @@ function App() {
   const [screen, setScreen] = useState('login');
   const [playerId, setPlayerId] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSpectator, setIsSpectator] = useState(false);
   const [name, setName] = useState(localStorage.getItem('tunny_name') || '');
   const [gameId, setGameId] = useState('');
   const [roomList, setRoomList] = useState({});
@@ -37,6 +38,7 @@ function App() {
     socket.on('room_joined', (data) => {
       setPlayerId(data.playerId);
       setIsAdmin(data.isAdmin);
+      setIsSpectator(!!data.isSpectator);
       setGameId(data.gameId);
       setScreen('room');
     });
@@ -44,6 +46,7 @@ function App() {
       setGameState(state);
       if (state.me) {
         setIsAdmin(state.me.isAdmin);
+        setIsSpectator(!!state.me.isSpectator);
         setPlayerId(state.me.id);
       }
       if (state.state === 'cut') {
@@ -75,6 +78,11 @@ function App() {
     socket.on('player_left', (data) => {
       showError(`${data.playerName} dropped out`);
     });
+    socket.on('spectator_joined', () => {});
+    socket.on('spectator_left', () => {});
+    socket.on('spectator_promoted', (data) => {
+      showError(`${data.playerName} promoted to player`);
+    });
     socket.on('dealer_rotated', () => {});
   }, [socket]);
 
@@ -91,6 +99,13 @@ function App() {
     socket.emit('join_room', { gameId: id, playerName: name });
   };
 
+  const observeRoom = (id) => {
+    if (!name) return showError('Enter your name');
+    localStorage.setItem('tunny_name', name);
+    setGameId(id);
+    socket.emit('join_as_spectator', { gameId: id, playerName: name + ' (obs)' });
+  };
+
   // --- Login / Gallery ---
   if (screen === 'login') {
     return (
@@ -105,10 +120,11 @@ function App() {
             <h3>Active Rooms</h3>
             {Object.keys(roomList).length === 0 && <p className="muted">No rooms yet</p>}
             {Object.entries(roomList).map(([id, r]) => (
-              <div key={id} className="room-entry" onClick={() => joinRoom(id)}>
+              <div key={id} className="room-entry">
                 <span className="room-id">{id.slice(0, 8)}</span>
                 <span>{r.playerCount}/4 players</span>
-                <button onClick={(e) => { e.stopPropagation(); joinRoom(id); }}>Join</button>
+                <button onClick={() => joinRoom(id)}>Join</button>
+                <button className="observe-btn" onClick={() => observeRoom(id)}>Observe</button>
               </div>
             ))}
           </div>
@@ -176,6 +192,19 @@ function App() {
             </div>
           ))}
         </div>
+        {gameState.spectators?.length > 0 && (
+          <div className="spectator-list">
+            <h4>Spectators ({gameState.spectators.length})</h4>
+            {gameState.spectators.map(s => (
+              <div key={s.id} className="player-chip">
+                {s.name}
+                {isAdmin && players.length < 4 && (
+                  <button className="mini-btn" onClick={() => socket.emit('promote_to_player', { spectatorId: s.id })}>Promote</button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         {isAdmin && gameState.state === 'waiting' && (
           <button className="start-btn"
             disabled={Object.keys(gameState.positions || {}).length < 4}
@@ -419,8 +448,8 @@ function App() {
       {/* Bottom player (YOU) + hand */}
       <div className="table-seat bottom">
         <div className="seat-info">{playerAtPos(posOrder[2])?.name || POSITION_NAMES[posOrder[2]]}</div>
-        {isAdmin ? (
-          <div className="spectator-label">Spectating — all hands visible</div>
+        {(isAdmin || isSpectator) ? (
+          <div className="spectator-label">{isSpectator ? 'Observing' : 'Admin'} — all hands visible</div>
         ) : (
           <div className="my-hand">
             {(me?.hand || []).map((c, i) => {
@@ -440,7 +469,7 @@ function App() {
       </div>
 
       {/* Action buttons */}
-      {isPlaying && (
+      {isPlaying && !isSpectator && (
         <div className="action-bar">
           {isPlaying && !isDeclarer && !gameState.trumpRevealed && (
             <button className="action-btn" onClick={() => socket.emit('ask_trump')}>Ask Trump</button>
@@ -455,7 +484,7 @@ function App() {
       )}
 
       {/* Turn indicator */}
-      {isMyTurn && isPlaying && <div className="turn-indicator">Your turn!</div>}
+      {isMyTurn && isPlaying && !isSpectator && <div className="turn-indicator">Your turn!</div>}
     </div>
   );
 }

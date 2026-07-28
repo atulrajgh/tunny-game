@@ -62,6 +62,7 @@ class Game {
     this.winner = null;
     this.admin = null;
     this.adminId = null;
+    this.spectators = [];
     this.positions = {};
     this.roomId = null;
     this.lastActivity = Date.now();
@@ -105,18 +106,52 @@ class Game {
       return true;
     }
     const idx = this.players.findIndex(p => p.id === playerId);
-    if (idx === -1) return false;
-    this.players.splice(idx, 1);
-    for (const [pos, id] of Object.entries(this.positions)) {
-      if (id === playerId) delete this.positions[pos];
+    if (idx !== -1) {
+      this.players.splice(idx, 1);
+      for (const [pos, id] of Object.entries(this.positions)) {
+        if (id === playerId) delete this.positions[pos];
+      }
+      this.lastActivity = Date.now();
+      return true;
     }
-    this.lastActivity = Date.now();
-    return true;
+    return this.removeSpectator(playerId);
   }
 
   getPlayer(playerId) {
     if (this.admin && this.admin.id === playerId) return this.admin;
     return this.players.find(p => p.id === playerId);
+  }
+
+  addSpectator(name) {
+    const s = new Player(uuidv4(), name);
+    this.spectators.push(s);
+    this.lastActivity = Date.now();
+    return s;
+  }
+
+  removeSpectator(playerId) {
+    const idx = this.spectators.findIndex(s => s.id === playerId);
+    if (idx === -1) return false;
+    this.spectators.splice(idx, 1);
+    this.lastActivity = Date.now();
+    return true;
+  }
+
+  getViewer(playerId) {
+    return this.getPlayer(playerId) || this.spectators.find(s => s.id === playerId);
+  }
+
+  promoteSpectator(adminId, spectatorId) {
+    const admin = this.getPlayer(adminId);
+    if (!admin || !admin.isAdmin) return null;
+    if (this.players.length >= 4) return null;
+    const idx = this.spectators.findIndex(s => s.id === spectatorId);
+    if (idx === -1) return null;
+    const [s] = this.spectators.splice(idx, 1);
+    s.position = null; s.hand = []; s.bid = null; s.team = null;
+    this.players.push(s);
+    this.lastActivity = Date.now();
+    return s;
   }
 
   setPosition(playerId, pos) {
@@ -392,13 +427,15 @@ class Game {
   }
 
   getGameState(playerId) {
-    const viewer = this.getPlayer(playerId);
+    const viewer = this.getViewer(playerId);
+    const isSpectator = viewer && !this.getPlayer(playerId);
+    const seesAll = viewer && (viewer.isAdmin || isSpectator);
     const state = {
       roomId: this.id, state: this.state,
       dealer: this.dealer ? { id: this.dealer.id, name: this.dealer.name, position: this.dealer.position } : null,
       currentPlayer: this.currentPlayer ? { id: this.currentPlayer.id, name: this.currentPlayer.name, position: this.currentPlayer.position } : null,
-      trumpSuit: (viewer && (viewer.isAdmin || this.trumpRevealed || viewer.id === this.declarer?.id)) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
-      trumpCard: (viewer && (viewer.isAdmin || this.trumpRevealed || viewer.id === this.declarer?.id)) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
+      trumpSuit: (seesAll || this.trumpRevealed || viewer?.id === this.declarer?.id) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
+      trumpCard: (seesAll || this.trumpRevealed || viewer?.id === this.declarer?.id) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
       trickNumber: this.trickNumber, handNumber: this.handNumber,
       contractLevel: this.contractLevel, targetTricks: this.targetTricks,
       declarer: this.declarer ? { id: this.declarer.id, position: this.declarer.position } : null,
@@ -408,7 +445,8 @@ class Game {
         playerId: e.player.id, playerName: e.player.name,
         position: e.player.position,
         card: { suit: e.card.suit, rank: e.card.rank }
-      }))
+      })),
+      spectators: this.spectators.map(s => ({ id: s.id, name: s.name }))
     };
     state.teamTricks = { ...this.teamTricks };
     state.teamPoints = { ...this.teamPoints };
@@ -416,12 +454,12 @@ class Game {
     if (viewer) {
       state.me = {
         id: viewer.id, name: viewer.name, position: viewer.position,
-        hand: viewer.isAdmin ? [] : this.sortHand(viewer.hand).map(c => ({ suit: c.suit, rank: c.rank })),
-        isAdmin: viewer.isAdmin, team: viewer.team,
+        hand: seesAll ? [] : this.sortHand(viewer.hand).map(c => ({ suit: c.suit, rank: c.rank })),
+        isAdmin: viewer.isAdmin, isSpectator: !!isSpectator, team: viewer.team,
         bid: viewer.bid, score: viewer.score,
         cutCard: viewer.cutCard ? { suit: viewer.cutCard.suit, rank: viewer.cutCard.rank } : null
       };
-      if (viewer.isAdmin) {
+      if (seesAll) {
         state.players = this.players.map(p => ({
           id: p.id, name: p.name, position: p.position, team: p.team,
           isAdmin: p.isAdmin, bid: p.bid, score: p.score,
@@ -456,6 +494,7 @@ class Game {
         id: p.id, name: p.name, position: p.position, team: p.team,
         isAdmin: false, bid: p.bid, score: p.score
       })),
+      spectators: this.spectators.map(s => ({ id: s.id, name: s.name })),
       admin: this.admin ? { id: this.admin.id, name: this.admin.name } : null,
       dealer: this.dealer ? this.dealer.id : null,
       scores: this.scores, winner: this.winner,
@@ -482,6 +521,12 @@ class Game {
       g.players.push(p);
       pMap[pd.id] = p;
     }
+    if (data.spectators) {
+      for (const sd of data.spectators) {
+        const s = new Player(sd.id, sd.name);
+        g.spectators.push(s);
+      }
+    }
     if (data.dealer) g.dealer = pMap[data.dealer] || null;
     if (data.admin) {
       const a = new Player(data.admin.id, data.admin.name);
@@ -503,6 +548,7 @@ class Game {
     this.scores = { 'N-S': 0, 'E-W': 0 }; this.winner = null;
     this.teamTricks = { 'N-S': 0, 'E-W': 0 };
     this.teamPoints = { 'N-S': 0, 'E-W': 0 };
+    this.spectators = [];
     this.admin = savedAdmin;
     this.adminId = savedAdmin ? savedAdmin.id : null;
     this.positions = {}; this.leadSuit = null;
