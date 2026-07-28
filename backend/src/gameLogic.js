@@ -28,6 +28,8 @@ class Player {
     this.playedCard = null;
     this.score = 0;
     this.cutCard = null;
+    this.tricksWon = 0;
+    this.pointsWon = 0;
     this.team = null;
   }
 }
@@ -52,13 +54,9 @@ class Game {
     this.handNumber = 0;
     this.deck = [];
     this.lastBidder = null;
-    this.highestBid = null;
-    this.passCount = 0;
     this.contractLevel = null;
     this.targetTricks = null;
     this.scores = { 'N-S': 0, 'E-W': 0 };
-    this.teamTricks = { 'N-S': 0, 'E-W': 0 };
-    this.teamPoints = { 'N-S': 0, 'E-W': 0 };
     this.winner = null;
     this.admin = null;
     this.adminId = null;
@@ -154,14 +152,11 @@ class Game {
       }
     }
     this.dealer = highest;
-    for (const p of this.players) { p.cutCard = null; p.bid = null; }
+    for (const p of this.players) p.cutCard = null;
     this.setupDeck();
     this.dealCards(4);
     this.currentPlayer = this.getNextPlayer(this.dealer.id);
     this.state = 'bidding';
-    this.lastBidder = null;
-    this.highestBid = null;
-    this.passCount = 0;
     this.lastActivity = Date.now();
   }
 
@@ -194,26 +189,23 @@ class Game {
     if (!player) return false;
     if (bid === 'pass') {
       player.bid = 'pass';
-      this.passCount++;
-    } else if (typeof bid === 'number' && bid >= 5 && bid <= 14 && bid > (this.highestBid || 0)) {
+    } else if (typeof bid === 'number' && bid >= 5 && bid <= 14) {
       player.bid = bid;
       this.lastBidder = player;
-      this.highestBid = bid;
-      this.passCount = 0;
     } else {
       return false;
     }
-    if (this.passCount >= 4 && !this.lastBidder) {
-      this.resetForNextHand(false);
-      return true;
-    }
-    if (this.passCount >= 3 && this.lastBidder) {
+    if (this.players.every(p => p.bid !== null)) {
+      if (!this.lastBidder) {
+        this.resetForNextHand();
+        return true;
+      }
+      this.state = 'trump_selection';
       this.declarer = this.lastBidder;
       const partnerPos = this.getPartnerPosition(this.declarer.position);
       this.dummy = this.getPlayer(this.positions[partnerPos]);
       this.contractLevel = this.declarer.bid < 10 ? 1 : 2;
       this.targetTricks = this.contractLevel === 1 ? 4 : 5;
-      this.state = 'trump_selection';
       this.currentPlayer = this.declarer;
       this.lastActivity = Date.now();
       return true;
@@ -277,9 +269,9 @@ class Game {
         winner = entry; winningCard = card;
       }
     }
-    this.teamTricks[winner.player.team]++;
-    for (const entry of this.currentTrick) this.teamPoints[winner.player.team] += entry.card.hcp;
-    this.teamPoints[winner.player.team] = Math.round(this.teamPoints[winner.player.team] * 10) / 10;
+    winner.player.tricksWon++;
+    for (const entry of this.currentTrick) winner.player.pointsWon += entry.card.hcp;
+    winner.player.pointsWon = Math.round(winner.player.pointsWon * 10) / 10;
     this.currentTrick = [];
     this.currentPlayer = winner.player;
     this.trickNumber++;
@@ -331,7 +323,7 @@ class Game {
     const admin = this.getPlayer(adminId);
     if (!admin || !admin.isAdmin) return false;
     const declarerTeam = this.declarer.team;
-    const declarerTricks = this.teamTricks[declarerTeam];
+    const declarerTricks = this.players.filter(p => p.team === declarerTeam).reduce((s, p) => s + p.tricksWon, 0);
     const defendingTeam = declarerTeam === 'N-S' ? 'E-W' : 'N-S';
     if (declarerTricks >= this.targetTricks) {
       this.scores[declarerTeam] += declarerTricks === 6 ? 3 : 1;
@@ -349,20 +341,17 @@ class Game {
     return true;
   }
 
-  resetForNextHand(rotateDealer = true) {
+  resetForNextHand() {
     for (const p of this.players) {
       p.hand = []; p.bid = null; p.playedCard = null;
-      p.cutCard = null;
+      p.tricksWon = 0; p.pointsWon = 0; p.cutCard = null;
     }
-    this.teamTricks = { 'N-S': 0, 'E-W': 0 };
-    this.teamPoints = { 'N-S': 0, 'E-W': 0 };
     this.trumpSuit = null; this.trumpCard = null; this.trumpCardIndex = -1;
     this.trumpRevealed = false; this.trumpCardPlayed = false; this.currentTrick = []; this.trickNumber = 0;
     this.declarer = null; this.dummy = null; this.lastBidder = null;
-    this.highestBid = null; this.passCount = 0;
     this.contractLevel = null; this.targetTricks = null;
     this.currentPlayer = null; this.leadSuit = null;
-    if (rotateDealer) this.dealer = this.getNextPlayer(this.dealer.id);
+    this.dealer = this.getNextPlayer(this.dealer.id);
     this.setupDeck();
     this.dealCards(4);
     this.currentPlayer = this.getNextPlayer(this.dealer.id);
@@ -409,21 +398,20 @@ class Game {
         card: { suit: e.card.suit, rank: e.card.rank }
       }))
     };
-    state.teamTricks = { ...this.teamTricks };
-    state.teamPoints = { ...this.teamPoints };
     state.admin = this.admin ? { id: this.admin.id, name: this.admin.name } : null;
     if (viewer) {
       state.me = {
         id: viewer.id, name: viewer.name, position: viewer.position,
         hand: viewer.isAdmin ? [] : this.sortHand(viewer.hand).map(c => ({ suit: c.suit, rank: c.rank })),
         isAdmin: viewer.isAdmin, team: viewer.team,
-        bid: viewer.bid, score: viewer.score,
+        bid: viewer.bid, score: viewer.score, tricksWon: viewer.tricksWon, pointsWon: viewer.pointsWon,
         cutCard: viewer.cutCard ? { suit: viewer.cutCard.suit, rank: viewer.cutCard.rank } : null
       };
       if (viewer.isAdmin) {
         state.players = this.players.map(p => ({
           id: p.id, name: p.name, position: p.position, team: p.team,
           isAdmin: p.isAdmin, bid: p.bid, score: p.score,
+          tricksWon: p.tricksWon, pointsWon: p.pointsWon,
           hand: this.sortHand(p.hand).map(c => ({ suit: c.suit, rank: c.rank }))
         }));
       } else {
@@ -431,6 +419,7 @@ class Game {
           id: p.id, name: p.name,
           position: p.position, team: p.team,
           isAdmin: p.isAdmin, bid: p.bid, score: p.score,
+          tricksWon: p.tricksWon, pointsWon: p.pointsWon,
           hand: (p.id === viewer.id || (this.state === 'playing' && this.dummy && p.id === this.dummy.id))
             ? this.sortHand(p.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined,
           cardCount: p.hand.length
@@ -453,12 +442,11 @@ class Game {
       id: this.id, roomId: this.roomId, state: this.state,
       players: this.players.map(p => ({
         id: p.id, name: p.name, position: p.position, team: p.team,
-        isAdmin: false, bid: p.bid, score: p.score
+        isAdmin: false, bid: p.bid, score: p.score, tricksWon: p.tricksWon, pointsWon: p.pointsWon
       })),
       admin: this.admin ? { id: this.admin.id, name: this.admin.name } : null,
       dealer: this.dealer ? this.dealer.id : null,
       scores: this.scores, winner: this.winner,
-      teamTricks: this.teamTricks, teamPoints: this.teamPoints,
       adminId: this.adminId, positions: this.positions,
       handNumber: this.handNumber, lastActivity: this.lastActivity
     };
@@ -468,8 +456,6 @@ class Game {
     const g = new Game(data.id);
     g.roomId = data.roomId; g.state = data.state;
     g.scores = data.scores; g.winner = data.winner;
-    g.teamTricks = data.teamTricks || { 'N-S': 0, 'E-W': 0 };
-    g.teamPoints = data.teamPoints || { 'N-S': 0, 'E-W': 0 };
     g.adminId = data.adminId; g.positions = data.positions;
     g.handNumber = data.handNumber || 0; g.lastActivity = data.lastActivity || Date.now();
     const pMap = {};
@@ -477,7 +463,7 @@ class Game {
       const p = new Player(pd.id, pd.name);
       p.position = pd.position; p.team = pd.team;
       p.isAdmin = false; p.bid = pd.bid;
-      p.score = pd.score || 0;
+      p.score = pd.score || 0; p.tricksWon = pd.tricksWon || 0; p.pointsWon = pd.pointsWon || 0;
       g.players.push(p);
       pMap[pd.id] = p;
     }
@@ -497,11 +483,8 @@ class Game {
     this.trumpSuit = null; this.trumpCard = null; this.trumpCardIndex = -1;
     this.trumpRevealed = false; this.currentTrick = []; this.trickNumber = 0;
     this.handNumber = 0; this.deck = []; this.lastBidder = null;
-    this.highestBid = null; this.passCount = 0;
     this.contractLevel = null; this.targetTricks = null;
     this.scores = { 'N-S': 0, 'E-W': 0 }; this.winner = null;
-    this.teamTricks = { 'N-S': 0, 'E-W': 0 };
-    this.teamPoints = { 'N-S': 0, 'E-W': 0 };
     this.admin = savedAdmin;
     this.adminId = savedAdmin ? savedAdmin.id : null;
     this.positions = {}; this.leadSuit = null;

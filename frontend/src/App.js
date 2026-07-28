@@ -214,26 +214,44 @@ function App() {
 
   // --- Hand Review ---
   if (gameState.state === 'hand_review' && screen === 'review') {
+    const nsPlayers = players.filter(p => p.team === 'N-S');
+    const ewPlayers = players.filter(p => p.team === 'E-W');
     return (
       <div className="app review-screen">
         <h2>Hand {gameState.handNumber} Review</h2>
         {error && <div className="toast error">{error}</div>}
-        <div className="review-hands">
-          {players.map(p => (
-            <div key={p.id} className="review-hand">
-              <div className="review-player">{p.name} {p.team} {p.id === gameState.declarer?.id ? '(Declarer)' : ''}</div>
-              <div className="review-cards">
-                {(p.hand || []).map((c, i) => (
-                  <span key={i} className={`mini-card ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''}`}>
-                    {c.rank}{c.suit}
-                  </span>
-                ))}
+        <div className="review-teams">
+          <div className="review-team">
+            <h3>N-S</h3>
+            <div className="team-points">Tricks: {gameState.teamTricks?.['N-S'] || 0} · Points: {(gameState.teamPoints?.['N-S'] || 0).toFixed(1)}</div>
+            {nsPlayers.map(p => (
+              <div key={p.id} className="review-hand">
+                <div className="review-player">{p.name} {p.id === gameState.declarer?.id ? '(Declarer)' : ''}</div>
+                <div className="review-cards">
+                  {(p.hand || []).map((c, i) => (
+                    <span key={i} className={`mini-card ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''}`}>{c.rank}{c.suit}</span>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <div className="review-team">
+            <h3>E-W</h3>
+            <div className="team-points">Tricks: {gameState.teamTricks?.['E-W'] || 0} · Points: {(gameState.teamPoints?.['E-W'] || 0).toFixed(1)}</div>
+            {ewPlayers.map(p => (
+              <div key={p.id} className="review-hand">
+                <div className="review-player">{p.name} {p.id === gameState.declarer?.id ? '(Declarer)' : ''}</div>
+                <div className="review-cards">
+                  {(p.hand || []).map((c, i) => (
+                    <span key={i} className={`mini-card ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''}`}>{c.rank}{c.suit}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="review-score">
-          N-S: {gameState.scores?.['N-S'] || 0} | E-W: {gameState.scores?.['E-W'] || 0}
+          Running: N-S {gameState.scores?.['N-S'] || 0} · E-W {gameState.scores?.['E-W'] || 0}
         </div>
         {isAdmin && (
           <button className="start-btn" onClick={() => socket.emit('confirm_hand')}>
