@@ -196,6 +196,10 @@ class Game {
       return false;
     }
     if (this.players.every(p => p.bid !== null)) {
+      if (!this.lastBidder) {
+        this.resetForNextHand();
+        return true;
+      }
       this.state = 'trump_selection';
       this.declarer = this.lastBidder;
       const partnerPos = this.getPartnerPosition(this.declarer.position);
