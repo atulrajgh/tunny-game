@@ -229,7 +229,6 @@ function App() {
                   </span>
                 ))}
               </div>
-              <div>Points: {p.pointsWon?.toFixed(1)}</div>
             </div>
           ))}
         </div>
@@ -314,7 +313,7 @@ function App() {
             <span key={i} className="card-back" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[0])?.pointsWon > 0 ? `Pts ${playerAtPos(posOrder[0]).pointsWon.toFixed(1)}` : ''}</div>
+        <div className="tricks">{playerAtPos(posOrder[0])?.team && gameState.teamPoints?.[playerAtPos(posOrder[0]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[0]).team].toFixed(1)}` : ''}</div>
       </div>
 
       {/* Center area */}
@@ -385,7 +384,7 @@ function App() {
             <span key={i} className="card-back mini" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[3])?.pointsWon > 0 ? `Pts ${playerAtPos(posOrder[3]).pointsWon.toFixed(1)}` : ''}</div>
+        <div className="tricks">{playerAtPos(posOrder[3])?.team && gameState.teamPoints?.[playerAtPos(posOrder[3]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[3]).team].toFixed(1)}` : ''}</div>
       </div>
 
       {/* Right player */}
@@ -396,7 +395,7 @@ function App() {
             <span key={i} className="card-back mini" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[1])?.pointsWon > 0 ? `Pts ${playerAtPos(posOrder[1]).pointsWon.toFixed(1)}` : ''}</div>
+        <div className="tricks">{playerAtPos(posOrder[1])?.team && gameState.teamPoints?.[playerAtPos(posOrder[1]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[1]).team].toFixed(1)}` : ''}</div>
       </div>
 
       {/* Bottom player (YOU) + hand */}
@@ -419,7 +418,7 @@ function App() {
             })}
           </div>
         )}
-        <div className="tricks">{me?.pointsWon > 0 ? `Pts ${me.pointsWon.toFixed(1)}` : ''}</div>
+        <div className="tricks">{me?.team && gameState.teamPoints?.[me.team] > 0 ? `Pts ${gameState.teamPoints[me.team].toFixed(1)}` : ''}</div>
       </div>
 
       {/* Action buttons */}
