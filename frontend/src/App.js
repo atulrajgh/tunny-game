@@ -360,7 +360,6 @@ function App() {
             <span key={i} className="card-back" />
           ))}
         </div>
-        </div>
       </div>
 
       {/* Center area */}
@@ -431,7 +430,6 @@ function App() {
             <span key={i} className="card-back mini" />
           ))}
         </div>
-        </div>
       </div>
 
       {/* Right player */}
@@ -441,7 +439,6 @@ function App() {
           {playerAtPos(posOrder[1])?.hand?.map((c, i) => (
             <span key={i} className="card-back mini" />
           ))}
-        </div>
         </div>
       </div>
 
@@ -465,7 +462,6 @@ function App() {
             })}
           </div>
         )}
-        </div>
       </div>
 
       {/* Team scores */}
