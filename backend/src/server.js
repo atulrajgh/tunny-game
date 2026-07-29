@@ -51,7 +51,7 @@ setInterval(saveRooms, SAVE_INTERVAL);
 function getPublicList() {
   const list = {};
   for (const [id, g] of Object.entries(ROOMS)) {
-    if (g.state === 'waiting' || g.state === 'cut') list[id] = { id, playerCount: g.players.length, maxPlayers: 4 };
+    if (g.players.length < 4) list[id] = { id, playerCount: g.players.length, maxPlayers: 4 };
   }
   return list;
 }
