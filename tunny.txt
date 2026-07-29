@@ -1,0 +1,20 @@
+game is played with 24 cards A, K, Q, J, 10, 9
+J > 9 > A > 10 > K > Q
+4 players
+Admin overseas the game does not participate
+Players join a gallery and are admitted to the playing area by the admin
+opposite players form a team
+Admin deals 1 random cards to each player to decide who is the starting dealer by the highest card
+first hand is dealt with 4 cards
+the player to bid first is the next to the dealer in the clockwise direction
+the bidding process starts at 5 ends at 16
+a player can pass on the bid
+once all 4 players pass in a bidding round the highest bidder select a trump that is not disclosed
+on the display for a player only their suite is displayed
+for the remaining three players only the name
+the remaining cards are distributed 2 each to every player
+3 players have ask trump button highest bidder has play trump button
+trump suite supersedes any other suite card in a play after it is disclosed
+if a player has the suite card that is currently in progress they have to play the suite card
+The admin and the gallery can watch the game as it unravels
+the admin decides the team that wins the round of 6 hands and allocates points to the team that wins the round of 6 tricks
