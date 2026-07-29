@@ -64,6 +64,7 @@ class Game {
     this.adminId = null;
     this.spectators = [];
     this.positions = {};
+    this.vacatedHands = {};
     this.roomId = null;
     this.lastActivity = Date.now();
   }
@@ -107,6 +108,11 @@ class Game {
     }
     const idx = this.players.findIndex(p => p.id === playerId);
     if (idx !== -1) {
+      const p = this.players[idx];
+      if (this.state !== 'waiting' && p.position) {
+        this.vacatedHands[p.position] = { hand: [...p.hand], team: p.team };
+        this.lastActivity = Date.now();
+      }
       this.players.splice(idx, 1);
       for (const [pos, id] of Object.entries(this.positions)) {
         if (id === playerId) delete this.positions[pos];
@@ -159,23 +165,13 @@ class Game {
       s.team = null;
     }
     this.players.push(s);
-    // If game already dealt, give this player cards from remaining deck
+    // If game already dealt, give promoted player the vacated hand if available
     if (this.state !== 'waiting' && this.state !== 'cut') {
-      // Re-collect all cards and re-deal fairly
-      const allCards = [];
-      for (const p of this.players) {
-        while (p.hand.length > 0) allCards.push(p.hand.pop());
-      }
-      while (this.deck.length > 0) allCards.push(this.deck.pop());
-      this.deck = allCards;
-      this.shuffle();
-      // Calculate cards per player based on state
-      const cardsPerPlayer = (this.state === 'bidding') ? 4 : 6;
-      for (const p of this.players) {
-        p.hand = [];
-        for (let i = 0; i < cardsPerPlayer && this.deck.length > 0; i++) {
-          p.hand.push(this.deck.pop());
-        }
+      const saved = this.vacatedHands[s.position];
+      if (saved) {
+        s.hand = saved.hand;
+        s.team = saved.team;
+        delete this.vacatedHands[s.position];
       }
     }
     this.lastActivity = Date.now();
