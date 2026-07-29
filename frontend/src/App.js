@@ -641,9 +641,9 @@ function App() {
 
       {/* Team scores */}
       <div className="team-scores">
-        <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span></div>
-        <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span></div>
-        <div style={{ fontSize: 10, color: '#a0d0a0', marginTop: 2 }}>HCP: N-S {gameState.teamPoints?.['N-S'] || 0} · E-W {gameState.teamPoints?.['E-W'] || 0}</div>
+        <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
+        <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
+        <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
       </div>
 
       {/* Action buttons */}

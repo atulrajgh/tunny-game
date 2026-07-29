@@ -64,7 +64,8 @@ input, button { font-family: inherit; }
 .table-seat.right { grid-column: 3; grid-row: 2; }
 .table-seat.bottom { grid-column: 2; grid-row: 3; }
 .team-scores { grid-column: 1; grid-row: 3; background: #1e3a1e; border-radius: 8px; padding: 8px; font-size: 12px; display: flex; flex-direction: column; gap: 4px; align-self: start; }
-.team-scores .ts-row { display: flex; justify-content: space-between; padding: 2px 4px; border-radius: 4px; }
+.team-scores .ts-row { display: grid; grid-template-columns: 30px 1fr 1fr; gap: 4px; padding: 2px 4px; border-radius: 4px; }
+.team-scores .ts-row.header { font-size: 10px; color: #a0d0a0; }
 .team-scores .ts-row.ns { background: #2d4a7a; }
 .team-scores .ts-row.ew { background: #7a2d2d; }
 
