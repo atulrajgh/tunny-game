@@ -162,10 +162,10 @@ io.on('connection', (socket) => {
     updateAll();
   });
 
-  socket.on('promote_to_player', ({ spectatorId }) => {
+  socket.on('promote_to_player', ({ spectatorId, position }) => {
     const g = game(); if (!g) return;
     const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
-    const p = g.promoteSpectator(playerId, spectatorId);
+    const p = g.promoteSpectator(playerId, spectatorId, position);
     if (!p) return error('Cannot promote');
     io.to(g.id).emit('spectator_promoted', { playerId: p.id, playerName: p.name });
     io.emit('room_list', getPublicList());

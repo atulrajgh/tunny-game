@@ -141,17 +141,49 @@ class Game {
     return this.getPlayer(playerId) || this.spectators.find(s => s.id === playerId);
   }
 
-  promoteSpectator(adminId, spectatorId) {
+  promoteSpectator(adminId, spectatorId, position) {
     const admin = this.getPlayer(adminId);
     if (!admin || !admin.isAdmin) return null;
     if (this.players.length >= 4) return null;
     const idx = this.spectators.findIndex(s => s.id === spectatorId);
     if (idx === -1) return null;
     const [s] = this.spectators.splice(idx, 1);
-    s.position = null; s.hand = []; s.bid = null; s.team = null;
+    s.hand = []; s.bid = null;
+    // Assign to empty seat if position provided
+    if (position && ['N','S','E','W'].includes(position) && !this.positions[position]) {
+      s.position = position;
+      s.team = (position === 'N' || position === 'S') ? 'N-S' : 'E-W';
+      this.positions[position] = s.id;
+    } else {
+      s.position = null;
+      s.team = null;
+    }
     this.players.push(s);
+    // If game already dealt, give this player cards from remaining deck
+    if (this.state !== 'waiting' && this.state !== 'cut') {
+      // Re-collect all cards and re-deal fairly
+      const allCards = [];
+      for (const p of this.players) {
+        while (p.hand.length > 0) allCards.push(p.hand.pop());
+      }
+      while (this.deck.length > 0) allCards.push(this.deck.pop());
+      this.deck = allCards;
+      this.shuffle();
+      // Calculate cards per player based on state
+      const cardsPerPlayer = (this.state === 'bidding') ? 4 : 6;
+      for (const p of this.players) {
+        p.hand = [];
+        for (let i = 0; i < cardsPerPlayer && this.deck.length > 0; i++) {
+          p.hand.push(this.deck.pop());
+        }
+      }
+    }
     this.lastActivity = Date.now();
     return s;
+  }
+
+  resetBids() {
+    for (const p of this.players) p.bid = null;
   }
 
   setPosition(playerId, pos) {

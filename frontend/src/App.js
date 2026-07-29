@@ -317,7 +317,7 @@ function App() {
   }
 
   // --- Admin Console ---
-  if (isAdmin && showAdminConsole && (screen === 'game' || screen === 'review' || screen === 'cut')) {
+  if (isAdmin && showAdminConsole) {
     const nsPlayers = players.filter(p => p.team === 'N-S');
     const ewPlayers = players.filter(p => p.team === 'E-W');
     const unseated = players.filter(p => !p.position);
@@ -362,7 +362,7 @@ function App() {
                     {p ? (
                       <>
                         <span className="ac-name">{p.name}</span>
-                        <span className="ac-team">{p.team}</span>
+                        <span className="ac-team">{p.team || '—'}</span>
                         <div className="ac-actions">
                           {isAdmin && p.id !== playerId && (
                             <button className="ac-btn red" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
@@ -382,10 +382,12 @@ function App() {
                     <div key={s.id} className="ac-player-row">
                       <span className="ac-name">{s.name}</span>
                       <div className="ac-actions">
-                        {players.length < 4 && (
-                          <button className="ac-btn green" onClick={() => socket.emit('promote_to_player', { spectatorId: s.id })}>Promote</button>
-                        )}
-                      </div>
+                        {players.length < 4 && ['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
+                          <button key={pos} className="ac-btn green"
+                            onClick={() => socket.emit('promote_to_player', { spectatorId: s.id, position: pos })}>
+                            {pos}
+                          </button>
+                                                  ))}
                     </div>
                   ))}
                 </>
