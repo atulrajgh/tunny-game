@@ -110,7 +110,15 @@ class Game {
     if (idx !== -1) {
       const p = this.players[idx];
       if (this.state !== 'waiting' && p.position) {
-        this.vacatedHands[p.position] = { hand: [...p.hand], team: p.team };
+        this.vacatedHands[p.position] = {
+          hand: [...p.hand],
+          team: p.team,
+          bid: p.bid,
+          playedCard: p.playedCard,
+          wasCurrentPlayer: this.currentPlayer && this.currentPlayer.id === playerId,
+          wasDeclarer: this.declarer && this.declarer.id === playerId,
+          wasDummy: this.dummy && this.dummy.id === playerId,
+        };
         this.lastActivity = Date.now();
       }
       this.players.splice(idx, 1);
@@ -165,12 +173,17 @@ class Game {
       s.team = null;
     }
     this.players.push(s);
-    // If game already dealt, give promoted player the vacated hand if available
+    // If game already dealt, restore saved state from the player who left
     if (this.state !== 'waiting' && this.state !== 'cut') {
       const saved = this.vacatedHands[s.position];
       if (saved) {
         s.hand = saved.hand;
         s.team = saved.team;
+        s.bid = saved.bid || null;
+        s.playedCard = saved.playedCard || null;
+        if (saved.wasCurrentPlayer) this.currentPlayer = s;
+        if (saved.wasDeclarer) this.declarer = s;
+        if (saved.wasDummy) this.dummy = s;
         delete this.vacatedHands[s.position];
       }
     }
