@@ -317,7 +317,7 @@ function App() {
   }
 
   // --- Admin Console ---
-  if (isAdmin && showAdminConsole && (screen === 'game' || screen === 'review')) {
+  if (isAdmin && showAdminConsole && (screen === 'game' || screen === 'review' || screen === 'cut')) {
     const nsPlayers = players.filter(p => p.team === 'N-S');
     const ewPlayers = players.filter(p => p.team === 'E-W');
     const unseated = players.filter(p => !p.position);
@@ -647,24 +647,26 @@ function App() {
       </div>
 
       {/* Action buttons */}
-      {isPlaying && !isSpectator && (
-        <div className="action-bar">
-          {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && (
-            <button className="action-btn" onClick={() => socket.emit('ask_trump')}>Ask Trump</button>
-          )}
-          {isPlaying && isDeclarer && !isAdmin && gameState.trumpCard && (
-            <button className="action-btn" onClick={() => socket.emit('play_trump')}>Play Trump</button>
-          )}
-          {isAdmin && (
-            <button className="action-btn reset" onClick={() => socket.emit('reset_game')}>Reset Game</button>
-          )}
-          {isAdmin && (
-            <button className="action-btn" onClick={() => setShowAdminConsole(v => !v)}>
-              {showAdminConsole ? '◁ Table View' : '☰ Console'}
-            </button>
-          )}
-        </div>
-      )}
+      <div className="action-bar">
+        {(isPlaying || isBidding || isTrump) && !isSpectator && (
+          <>
+            {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && (
+              <button className="action-btn" onClick={() => socket.emit('ask_trump')}>Ask Trump</button>
+            )}
+            {isPlaying && isDeclarer && !isAdmin && gameState.trumpCard && (
+              <button className="action-btn" onClick={() => socket.emit('play_trump')}>Play Trump</button>
+            )}
+            {(isBidding || isTrump || isPlaying) && isAdmin && (
+              <button className="action-btn reset" onClick={() => socket.emit('reset_game')}>Reset Game</button>
+            )}
+          </>
+        )}
+        {isAdmin && !isSpectator && (
+          <button className="action-btn" onClick={() => setShowAdminConsole(v => !v)}>
+            {showAdminConsole ? '◁ Table View' : '☰ Console'}
+          </button>
+        )}
+      </div>
 
       {/* Turn indicator */}
       {isMyTurn && isPlaying && !isSpectator && <div className="turn-indicator">Your turn!</div>}
