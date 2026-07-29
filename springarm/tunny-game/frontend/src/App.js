@@ -252,7 +252,7 @@ function App() {
         <div className="review-teams">
           <div className="review-team">
             <h3>N-S</h3>
-            <div className="team-points">Tricks: {gameState.teamTricks?.['N-S'] || 0} · Points: {(gameState.teamPoints?.['N-S'] || 0).toFixed(1)}</div>
+            <div className="team-points">Tricks: {gameState.teamTricks?.['N-S'] || 0} · Points: {gameState.teamPoints?.['N-S'] || 0}</div>
             {nsPlayers.map(p => (
               <div key={p.id} className="review-hand">
                 <div className="review-player">{p.name} {p.id === gameState.declarer?.id ? '(Declarer)' : ''}</div>
@@ -266,7 +266,7 @@ function App() {
           </div>
           <div className="review-team">
             <h3>E-W</h3>
-            <div className="team-points">Tricks: {gameState.teamTricks?.['E-W'] || 0} · Points: {(gameState.teamPoints?.['E-W'] || 0).toFixed(1)}</div>
+            <div className="team-points">Tricks: {gameState.teamTricks?.['E-W'] || 0} · Points: {gameState.teamPoints?.['E-W'] || 0}</div>
             {ewPlayers.map(p => (
               <div key={p.id} className="review-hand">
                 <div className="review-player">{p.name} {p.id === gameState.declarer?.id ? '(Declarer)' : ''}</div>
@@ -360,7 +360,7 @@ function App() {
             <span key={i} className="card-back" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[0])?.team && gameState.teamPoints?.[playerAtPos(posOrder[0]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[0]).team].toFixed(1)}` : ''}</div>
+        <div className="tricks">{playerAtPos(posOrder[0])?.team && gameState.teamPoints?.[playerAtPos(posOrder[0]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[0]).team]}` : ''}</div>
       </div>
 
       {/* Center area */}
@@ -431,7 +431,7 @@ function App() {
             <span key={i} className="card-back mini" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[3])?.team && gameState.teamPoints?.[playerAtPos(posOrder[3]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[3]).team].toFixed(1)}` : ''}</div>
+        <div className="tricks">{playerAtPos(posOrder[3])?.team && gameState.teamPoints?.[playerAtPos(posOrder[3]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[3]).team]}` : ''}</div>
       </div>
 
       {/* Right player */}
@@ -442,7 +442,7 @@ function App() {
             <span key={i} className="card-back mini" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[1])?.team && gameState.teamPoints?.[playerAtPos(posOrder[1]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[1]).team].toFixed(1)}` : ''}</div>
+        <div className="tricks">{playerAtPos(posOrder[1])?.team && gameState.teamPoints?.[playerAtPos(posOrder[1]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[1]).team]}` : ''}</div>
       </div>
 
       {/* Bottom player (YOU) + hand */}
@@ -465,7 +465,7 @@ function App() {
             })}
           </div>
         )}
-        <div className="tricks">{me?.team && gameState.teamPoints?.[me.team] > 0 ? `Pts ${gameState.teamPoints[me.team].toFixed(1)}` : ''}</div>
+        <div className="tricks">{me?.team && gameState.teamPoints?.[me.team] > 0 ? `Pts ${gameState.teamPoints[me.team]}` : ''}</div>
       </div>
 
       {/* Action buttons */}

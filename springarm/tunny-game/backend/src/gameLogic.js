@@ -315,7 +315,6 @@ class Game {
     }
     this.teamTricks[winner.player.team]++;
     for (const entry of this.currentTrick) this.teamPoints[winner.player.team] += entry.card.hcp;
-    this.teamPoints[winner.player.team] = Math.round(this.teamPoints[winner.player.team] * 10) / 10;
     this.currentTrick = [];
     this.currentPlayer = winner.player;
     this.trickNumber++;
@@ -369,10 +368,17 @@ class Game {
     const declarerTeam = this.declarer.team;
     const declarerTricks = this.teamTricks[declarerTeam];
     const defendingTeam = declarerTeam === 'N-S' ? 'E-W' : 'N-S';
-    if (declarerTricks >= this.targetTricks) {
-      this.scores[declarerTeam] += declarerTricks === 6 ? 3 : 1;
+    const declarerHCP = this.teamPoints[declarerTeam];
+    if (declarerHCP >= this.declarer.bid) {
+      this.scores[declarerTeam] += 1;
+      if (declarerHCP >= 280) {
+        this.scores[declarerTeam] += 1;
+      }
     } else {
-      this.scores[defendingTeam] += 6 - declarerTricks >= 6 ? 3 : 1;
+      this.scores[defendingTeam] += 1;
+      if (this.teamPoints[defendingTeam] >= 280) {
+        this.scores[defendingTeam] += 1;
+      }
     }
     for (const p of this.players) p.score = this.scores[p.team] || 0;
     if (this.handNumber >= MAX_HANDS) {
