@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const SUITS = ['♠', '♥', '♦', '♣'];
 const RANKS = ['J', '9', 'A', '10', 'K', 'Q'];
 const RANK_ORDER = { J: 6, 9: 5, A: 4, 10: 3, K: 2, Q: 1 };
-const HCP_VALUES = { J: 3, 9: 2, A: 1.1, 10: 1, K: 0.3, Q: 0.2 };
+const HCP_VALUES = { J: 20, 9: 15, A: 15, 10: 10, K: 5, Q: 5 };
 const MAX_HANDS = 6;
 
 class Card {
@@ -230,7 +230,7 @@ class Game {
     if (bid === 'pass') {
       player.bid = 'pass';
       this.passCount++;
-    } else if (typeof bid === 'number' && bid >= 5 && bid <= 14 && bid > (this.highestBid || 0)) {
+    } else if (typeof bid === 'number' && bid >= 50 && bid <= 140 && bid > (this.highestBid || 0)) {
       player.bid = bid;
       this.lastBidder = player;
       this.highestBid = bid;
@@ -246,7 +246,7 @@ class Game {
       this.declarer = this.lastBidder;
       const partnerPos = this.getPartnerPosition(this.declarer.position);
       this.dummy = this.getPlayer(this.positions[partnerPos]);
-      this.contractLevel = this.declarer.bid < 10 ? 1 : 2;
+      this.contractLevel = this.declarer.bid < 100 ? 1 : 2;
       this.targetTricks = this.contractLevel === 1 ? 4 : 5;
       this.state = 'trump_selection';
       this.currentPlayer = this.declarer;
@@ -315,7 +315,6 @@ class Game {
     }
     this.teamTricks[winner.player.team]++;
     for (const entry of this.currentTrick) this.teamPoints[winner.player.team] += entry.card.hcp;
-    this.teamPoints[winner.player.team] = Math.round(this.teamPoints[winner.player.team] * 10) / 10;
     this.currentTrick = [];
     this.currentPlayer = winner.player;
     this.trickNumber++;
@@ -369,10 +368,17 @@ class Game {
     const declarerTeam = this.declarer.team;
     const declarerTricks = this.teamTricks[declarerTeam];
     const defendingTeam = declarerTeam === 'N-S' ? 'E-W' : 'N-S';
-    if (declarerTricks >= this.targetTricks) {
-      this.scores[declarerTeam] += declarerTricks === 6 ? 3 : 1;
+    const declarerHCP = this.teamPoints[declarerTeam];
+    if (declarerHCP >= this.declarer.bid) {
+      this.scores[declarerTeam] += 1;
+      if (declarerHCP >= 280) {
+        this.scores[declarerTeam] += 1;
+      }
     } else {
-      this.scores[defendingTeam] += 6 - declarerTricks >= 6 ? 3 : 1;
+      this.scores[defendingTeam] += 1;
+      if (this.teamPoints[defendingTeam] >= 280) {
+        this.scores[defendingTeam] += 1;
+      }
     }
     for (const p of this.players) p.score = this.scores[p.team] || 0;
     if (this.handNumber >= MAX_HANDS) {
@@ -434,8 +440,8 @@ class Game {
       roomId: this.id, state: this.state,
       dealer: this.dealer ? { id: this.dealer.id, name: this.dealer.name, position: this.dealer.position } : null,
       currentPlayer: this.currentPlayer ? { id: this.currentPlayer.id, name: this.currentPlayer.name, position: this.currentPlayer.position } : null,
-      trumpSuit: (seesAll || this.trumpRevealed || viewer?.id === this.declarer?.id) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
-      trumpCard: (seesAll || this.trumpRevealed || viewer?.id === this.declarer?.id) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
+      trumpSuit: ((viewer && viewer.isAdmin) || this.trumpRevealed || viewer?.id === this.declarer?.id) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
+      trumpCard: ((viewer && viewer.isAdmin) || this.trumpRevealed || viewer?.id === this.declarer?.id) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
       trickNumber: this.trickNumber, handNumber: this.handNumber,
       contractLevel: this.contractLevel, targetTricks: this.targetTricks,
       declarer: this.declarer ? { id: this.declarer.id, position: this.declarer.position } : null,

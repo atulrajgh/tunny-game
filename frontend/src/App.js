@@ -252,7 +252,7 @@ function App() {
         <div className="review-teams">
           <div className="review-team">
             <h3>N-S</h3>
-            <div className="team-points">Tricks: {gameState.teamTricks?.['N-S'] || 0} · Points: {(gameState.teamPoints?.['N-S'] || 0).toFixed(1)}</div>
+            <div className="team-points">Tricks: {gameState.teamTricks?.['N-S'] || 0} · Points: {gameState.teamPoints?.['N-S'] || 0}</div>
             {nsPlayers.map(p => (
               <div key={p.id} className="review-hand">
                 <div className="review-player">{p.name} {p.id === gameState.declarer?.id ? '(Declarer)' : ''}</div>
@@ -266,7 +266,7 @@ function App() {
           </div>
           <div className="review-team">
             <h3>E-W</h3>
-            <div className="team-points">Tricks: {gameState.teamTricks?.['E-W'] || 0} · Points: {(gameState.teamPoints?.['E-W'] || 0).toFixed(1)}</div>
+            <div className="team-points">Tricks: {gameState.teamTricks?.['E-W'] || 0} · Points: {gameState.teamPoints?.['E-W'] || 0}</div>
             {ewPlayers.map(p => (
               <div key={p.id} className="review-hand">
                 <div className="review-player">{p.name} {p.id === gameState.declarer?.id ? '(Declarer)' : ''}</div>
@@ -360,7 +360,7 @@ function App() {
             <span key={i} className="card-back" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[0])?.team && gameState.teamPoints?.[playerAtPos(posOrder[0]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[0]).team].toFixed(1)}` : ''}</div>
+        </div>
       </div>
 
       {/* Center area */}
@@ -393,7 +393,7 @@ function App() {
             {isMyTurn && (
               <div className="bid-buttons">
                 <button onClick={() => socket.emit('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
-                {[5,6,7,8,9,10,11,12,13,14].map(b => (
+                {[50,60,70,80,90,100,110,120,130,140].map(b => (
                   <button key={b} onClick={() => socket.emit('bid', { bid: b })} className="bid-num">{b}</button>
                 ))}
               </div>
@@ -431,7 +431,7 @@ function App() {
             <span key={i} className="card-back mini" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[3])?.team && gameState.teamPoints?.[playerAtPos(posOrder[3]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[3]).team].toFixed(1)}` : ''}</div>
+        </div>
       </div>
 
       {/* Right player */}
@@ -442,7 +442,7 @@ function App() {
             <span key={i} className="card-back mini" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[1])?.team && gameState.teamPoints?.[playerAtPos(posOrder[1]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[1]).team].toFixed(1)}` : ''}</div>
+        </div>
       </div>
 
       {/* Bottom player (YOU) + hand */}
@@ -465,16 +465,23 @@ function App() {
             })}
           </div>
         )}
-        <div className="tricks">{me?.team && gameState.teamPoints?.[me.team] > 0 ? `Pts ${gameState.teamPoints[me.team].toFixed(1)}` : ''}</div>
+        </div>
+      </div>
+
+      {/* Team scores */}
+      <div className="team-scores">
+        <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span></div>
+        <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span></div>
+        <div style={{ fontSize: 10, color: '#a0d0a0', marginTop: 2 }}>HCP: N-S {gameState.teamPoints?.['N-S'] || 0} · E-W {gameState.teamPoints?.['E-W'] || 0}</div>
       </div>
 
       {/* Action buttons */}
       {isPlaying && !isSpectator && (
         <div className="action-bar">
-          {isPlaying && !isDeclarer && !gameState.trumpRevealed && (
+          {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && (
             <button className="action-btn" onClick={() => socket.emit('ask_trump')}>Ask Trump</button>
           )}
-          {isPlaying && isDeclarer && gameState.trumpCard && (
+          {isPlaying && isDeclarer && !isAdmin && gameState.trumpCard && (
             <button className="action-btn" onClick={() => socket.emit('play_trump')}>Play Trump</button>
           )}
           {isAdmin && (
