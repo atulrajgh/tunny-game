@@ -387,7 +387,8 @@ function App() {
                             onClick={() => socket.emit('promote_to_player', { spectatorId: s.id, position: pos })}>
                             {pos}
                           </button>
-                                                  ))}
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </>
