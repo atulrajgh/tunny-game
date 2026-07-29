@@ -33,7 +33,7 @@ No lint, typecheck, or formatter scripts exist. `backend/tests/` is empty; front
 
 `waiting` → `cut` → `bidding` → `trump_selection` → `playing` → `hand_review` → (next hand or `game_over`)
 
-6 hands per game (MAX_HANDS). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 5–14 plus Pass. HCP values: J=3, 9=2, A=1.1, 10=1, K=0.3, Q=0.2.
+6 hands per game (MAX_HANDS). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–140 (multiples of 10) plus Pass. HCP values: J=20, 9=15, A=15, 10=10, K=5, Q=5.
 
 Contract: bid < 10 → level 1 (4 tricks), bid ≥ 10 → level 2 (5 tricks).
 

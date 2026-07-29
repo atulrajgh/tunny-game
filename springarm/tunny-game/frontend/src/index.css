@@ -76,9 +76,9 @@ input, button { font-family: inherit; }
 .trick-entry { display: flex; flex-direction: column; align-items: center; font-size: 12px; }
 
 /* ---- Cards ---- */
-.card-face { display: inline-flex; align-items: center; justify-content: center; width: 54px; height: 78px; background: #fff; color: #222; border-radius: 8px; font-weight: 700; font-size: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+.card-face { display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 86px; background: #fff; color: #222; border-radius: 8px; font-weight: 700; font-size: 26px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
 .card-face.red { color: #c0392b; }
-.card-face.small { width: 40px; height: 56px; font-size: 16px; }
+.card-face.small { width: 44px; height: 62px; font-size: 18px; }
 
 .my-hand { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
 .hand-card { background: none; border: none; cursor: pointer; padding: 2px; }
@@ -141,11 +141,11 @@ input, button { font-family: inherit; }
 /* ---- Responsive ---- */
 @media (max-width: 700px) {
   .game-table { grid-template-columns: 70px 1fr 70px; }
-  .card-face { width: 40px; height: 56px; font-size: 16px; }
+  .card-face { width: 44px; height: 62px; font-size: 20px; }
   .card-back { width: 22px; height: 32px; }
   .card-back.mini { width: 14px; height: 20px; }
-  .card-face.small { width: 30px; height: 42px; font-size: 12px; }
-  .card-btn .card-face { width: 48px; height: 66px; font-size: 20px; }
+  .card-face.small { width: 34px; height: 48px; font-size: 14px; }
+  .card-btn .card-face { width: 52px; height: 72px; font-size: 22px; }
   .table-felt { min-height: 150px; }
   .title { font-size: 32px; }
 }

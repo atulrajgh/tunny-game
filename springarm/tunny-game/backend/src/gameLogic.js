@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const SUITS = ['♠', '♥', '♦', '♣'];
 const RANKS = ['J', '9', 'A', '10', 'K', 'Q'];
 const RANK_ORDER = { J: 6, 9: 5, A: 4, 10: 3, K: 2, Q: 1 };
-const HCP_VALUES = { J: 3, 9: 2, A: 1.1, 10: 1, K: 0.3, Q: 0.2 };
+const HCP_VALUES = { J: 20, 9: 15, A: 15, 10: 10, K: 5, Q: 5 };
 const MAX_HANDS = 6;
 
 class Card {
@@ -230,7 +230,7 @@ class Game {
     if (bid === 'pass') {
       player.bid = 'pass';
       this.passCount++;
-    } else if (typeof bid === 'number' && bid >= 5 && bid <= 14 && bid > (this.highestBid || 0)) {
+    } else if (typeof bid === 'number' && bid >= 50 && bid <= 140 && bid > (this.highestBid || 0)) {
       player.bid = bid;
       this.lastBidder = player;
       this.highestBid = bid;
@@ -246,7 +246,7 @@ class Game {
       this.declarer = this.lastBidder;
       const partnerPos = this.getPartnerPosition(this.declarer.position);
       this.dummy = this.getPlayer(this.positions[partnerPos]);
-      this.contractLevel = this.declarer.bid < 10 ? 1 : 2;
+      this.contractLevel = this.declarer.bid < 100 ? 1 : 2;
       this.targetTricks = this.contractLevel === 1 ? 4 : 5;
       this.state = 'trump_selection';
       this.currentPlayer = this.declarer;

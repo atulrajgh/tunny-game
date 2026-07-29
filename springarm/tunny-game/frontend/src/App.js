@@ -393,7 +393,7 @@ function App() {
             {isMyTurn && (
               <div className="bid-buttons">
                 <button onClick={() => socket.emit('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
-                {[5,6,7,8,9,10,11,12,13,14].map(b => (
+                {[50,60,70,80,90,100,110,120,130,140].map(b => (
                   <button key={b} onClick={() => socket.emit('bid', { bid: b })} className="bid-num">{b}</button>
                 ))}
               </div>

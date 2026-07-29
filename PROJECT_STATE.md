@@ -12,7 +12,7 @@
 ## Game Mechanics
 - **Cards:** 24-card deck (J, 9, A, 10, K, Q in 4 suits)
 - **Teams:** N+S vs E+W
-- **Bidding:** HCP points (not suit+level) — J=3, 9=2, A=1.1, 10=1, K=0.3, Q=0.2
+- **Bidding:** HCP points (not suit+level) — J=20, 9=15, A=15, 10=10, K=5, Q=5
 - **Trump:** Highest bidder picks one of their 4 cards as trump BEFORE remaining 2 cards dealt
 - **Contract level:** bid < 10 → level 1 (target 4 tricks), bid ≥ 10 → level 2 (target 5 tricks)
 - **6 hands per session**
