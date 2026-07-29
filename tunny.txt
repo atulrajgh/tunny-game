@@ -18,3 +18,42 @@ trump suite supersedes any other suite card in a play after it is disclosed
 if a player has the suite card that is currently in progress they have to play the suite card
 The admin and the gallery can watch the game as it unravels
 the admin decides the team that wins the round of 6 hands and allocates points to the team that wins the round of 6 tricks
+
+
+Admin Console (initial layout)
+┌─────────────────────────────────────────────────────────────────────────┐
+│  TUNNY ADMIN                          Game: tunny-hyderabad            │
+├─────────────────────┬───────────────────────────┬──────────────────────┤
+│  GALLERY            │  TABLE (4 SEATS)           │  GAME CONTROLS       │
+│  ┌───────────────┐  │  ┌──────────────────────┐ │  [Deal Cards]        │
+│  │ player_4      │  │  │  N: player_1  (N-S) │ │  [Reset Game]         │
+│  │ player_5      │  │  │  S: player_3  (N-S) │ │  [End Game]           │
+│  │ player_6      │  │  │  E: player_2  (E-W) │ │  [Kick Player...]     │
+│  │ ...           │  │  │  W: ai_bot    (E-W) │ │                      │
+│  └───────────────┘  │  └──────────────────────┘ │  QUICK ACTIONS        │
+│  [Admit] [Promote]  │  [Swap Positions]         │  [Force Start]        │
+│                     │  [Assign Team]            │  [Timeout Override]   │
+├─────────────────────┴───────────────────────────┴──────────────────────┤
+│  GAME STATE                                                        │
+│  ┌────────────────────────────────────────────────────────────────┐│
+│  │  Hand 3/6  |  Trick 2/6  |  Declarer: player_1 (N)           ││
+│  │  Contract: Level 2 (5 tricks)  |  Bid: 110                   ││
+│  │  Trump: ♠ (Revealed)                                         ││
+│  └────────────────────────────────────────────────────────────────┘│
+├────────────────────────────────┬──────────────────────────────────┤
+│  SCORES                      │  COMPLETED TRICKS (this hand)     │
+│  ┌────────────────────────┐  │  ┌─────────────────────────────┐  │
+│  │  N-S:  2  (1+0+1)     │  │  │ Trick 1: player_1 (N-S)    │  │
+│  │  E-W:  1  (0+1+0)     │  │  │ Trick 2: player_2 (E-W)    │  │
+│  │                        │  │  │ Trick 3: player_1 (N-S)    │  │
+│  │  HCP this hand:        │  │  │   + player_1: J♠ 20pts    │  │
+│  │  N-S:  155 / bid 110   │  │  │   + player_2: 9♥  15pts   │  │
+│  │  E-W:  125             │  │  │   + player_3: A♣  15pts   │  │
+│  └────────────────────────┘  │  │   + player_4: 10♦ 10pts   │  │
+│                               │  └─────────────────────────────┘  │
+├────────────────────────────────┴──────────────────────────────────┤
+│  SPECTATORS                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │  spectator_1  |  spectator_2  |  spectator_3               ││
+│  └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────┘
