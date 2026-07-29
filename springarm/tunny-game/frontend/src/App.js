@@ -360,7 +360,7 @@ function App() {
             <span key={i} className="card-back" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[0])?.team && gameState.teamPoints?.[playerAtPos(posOrder[0]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[0]).team]}` : ''}</div>
+        </div>
       </div>
 
       {/* Center area */}
@@ -431,7 +431,7 @@ function App() {
             <span key={i} className="card-back mini" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[3])?.team && gameState.teamPoints?.[playerAtPos(posOrder[3]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[3]).team]}` : ''}</div>
+        </div>
       </div>
 
       {/* Right player */}
@@ -442,7 +442,7 @@ function App() {
             <span key={i} className="card-back mini" />
           ))}
         </div>
-        <div className="tricks">{playerAtPos(posOrder[1])?.team && gameState.teamPoints?.[playerAtPos(posOrder[1]).team] > 0 ? `Pts ${gameState.teamPoints[playerAtPos(posOrder[1]).team]}` : ''}</div>
+        </div>
       </div>
 
       {/* Bottom player (YOU) + hand */}
@@ -465,16 +465,23 @@ function App() {
             })}
           </div>
         )}
-        <div className="tricks">{me?.team && gameState.teamPoints?.[me.team] > 0 ? `Pts ${gameState.teamPoints[me.team]}` : ''}</div>
+        </div>
+      </div>
+
+      {/* Team scores */}
+      <div className="team-scores">
+        <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span></div>
+        <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span></div>
+        <div style={{ fontSize: 10, color: '#a0d0a0', marginTop: 2 }}>HCP: N-S {gameState.teamPoints?.['N-S'] || 0} · E-W {gameState.teamPoints?.['E-W'] || 0}</div>
       </div>
 
       {/* Action buttons */}
       {isPlaying && !isSpectator && (
         <div className="action-bar">
-          {isPlaying && !isDeclarer && !gameState.trumpRevealed && (
+          {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && (
             <button className="action-btn" onClick={() => socket.emit('ask_trump')}>Ask Trump</button>
           )}
-          {isPlaying && isDeclarer && gameState.trumpCard && (
+          {isPlaying && isDeclarer && !isAdmin && gameState.trumpCard && (
             <button className="action-btn" onClick={() => socket.emit('play_trump')}>Play Trump</button>
           )}
           {isAdmin && (
