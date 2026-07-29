@@ -390,6 +390,7 @@ class Game {
       if (hasSuit) return false;
     }
     const played = player.hand.splice(idx, 1)[0];
+    this.trumpRevealed = true;
     this.trumpCardPlayed = true;
     player.playedCard = played;
     this.currentTrick.push({ player, card: played });
