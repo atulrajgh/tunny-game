@@ -104,7 +104,7 @@ class Game {
     if (this.admin && this.admin.id === playerId) {
       this.admin = null;
       this.adminId = null;
-      return true;
+      // Fall through to also remove from players[] and save hand
     }
     const idx = this.players.findIndex(p => p.id === playerId);
     if (idx !== -1) {
