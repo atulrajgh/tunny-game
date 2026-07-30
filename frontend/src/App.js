@@ -522,6 +522,22 @@ function App() {
         </div>
       )}
 
+      {/* Room sidebar */}
+      <div className="room-sidebar">
+        <h3>Projects</h3>
+        {Object.keys(roomList).length === 0 && <p style={{ color: '#6a9a6a', textAlign: 'center', fontSize: 11 }}>No rooms</p>}
+        {Object.entries(roomList).filter(([id]) => id !== (gameState?.roomId || gameId)).map(([id, r]) => (
+          <div key={id} className="room-entry">
+            <span className="room-id">{id.slice(0, 8)}</span>
+            <span className="room-meta">{r.playerCount}/4 players</span>
+            <div>
+              <button className="join-btn" onClick={() => { if (confirm('Leave current room and join this one?')) { socket.emit('join_room', { gameId: id, playerName: name }); } }}>Join</button>
+              <button className="obs-btn" style={{ marginLeft: 4 }} onClick={() => { if (confirm('Leave current room and observe this one?')) { socket.emit('join_as_spectator', { gameId: id, playerName: name + ' (obs)' }); } }}>Obs</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Top player */}
       <div className="table-seat top">
         <div className="seat-info">{playerAtPos(posOrder[0])?.name || POSITION_NAMES[posOrder[0]]}{playerAtPos(posOrder[0]) && <span className="team-badge">{playerAtPos(posOrder[0]).team}</span>}</div>
