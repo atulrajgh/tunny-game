@@ -488,9 +488,10 @@ function App() {
                   {gameState.handNumber >= 6 ? 'End Game' : 'Confirm Hand'}
                 </button>
               )}
-            </div>
           </div>
+          <a href="/instructions" target="_blank" className="help-link">How to Play</a>
         </div>
+      </div>
 
         {/* All Hands */}
         <div className="ac-panel ac-wide" style={{ marginTop: 12 }}>
