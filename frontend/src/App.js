@@ -416,8 +416,9 @@ function App() {
                           {pos}
                         </button>
                       ))}
-                    </div>
-                  </div>
+          </div>
+          <a href="/instructions" target="_blank" className="help-link">How to Play</a>
+        </div>
                 ))}
               </>
             )}
@@ -547,6 +548,7 @@ function App() {
               {gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm'}
               {gameState.state === 'game_over' && `${gameState.winner} wins!`}
             </div>
+            <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 8 }}>How to Play</a>
             {gameState.contractLevel && <div>Contract: Level {gameState.contractLevel} ({gameState.targetTricks} tricks)</div>}
             {isPlaying && gameState.currentTrick?.length > 0 && (
               <div className="current-trick">

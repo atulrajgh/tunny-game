@@ -203,3 +203,6 @@ input, button { font-family: inherit; }
   .ac-toggle { min-width: 48px; min-height: 48px; font-size: 16px; }
   .ac-player-row .ac-actions { gap: 8px; }
 }
+
+.help-link { display: block; text-align: center; color: #f0c040; font-size: 14px; margin-top: 12px; text-decoration: none; }
+.help-link:hover { text-decoration: underline; }

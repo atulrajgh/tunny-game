@@ -28,6 +28,101 @@ if (hasFrontendBuild) {
   console.log('Serving frontend build');
 }
 
+// Instructions page
+app.get('/instructions', (req, res) => {
+  res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tunny — Rules</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#1a2a1a;color:#e0e8e0;line-height:1.6;padding:20px}
+h1{color:#f0c040;text-align:center;font-size:28px;margin-bottom:8px}
+.sub{text-align:center;color:#a0d0a0;margin-bottom:24px}
+h2{color:#c0e8c0;margin:20px 0 8px;border-bottom:1px solid #3a5a3a;padding-bottom:4px}
+h3{color:#a0d0a0;margin:14px 0 6px}
+p,li{color:#d0d8d0;margin-bottom:6px}
+ul{padding-left:20px;margin-bottom:12px}
+.card{display:inline-block;background:#fff;color:#222;border-radius:4px;padding:1px 6px;font-weight:700;font-size:14px}
+.card.red{color:#c0392b}
+code{background:#2a3a2a;padding:1px 5px;border-radius:3px;font-size:13px}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{border:1px solid #3a5a3a;padding:6px 10px;text-align:center}
+th{background:#2d4a2d;color:#f0c040;font-size:13px}
+td{font-size:13px}
+.back{display:block;text-align:center;margin:20px 0;font-size:14px}
+.back a{color:#f0c040}
+@media(min-width:768px){body{max-width:720px;margin:auto}}
+</style></head><body>
+<h1>♠ TUNNY ♥</h1>
+<p class="sub">A 4-player trick-taking card game</p>
+<h2>Overview</h2>
+<p>Tunny is played by <strong>4 players</strong> in fixed partnerships: <strong>North+South</strong> vs <strong>East+West</strong>. A match consists of <strong>6 hands</strong>. Teams score points based on high-card-point (HCP) bidding.</p>
+
+<h2>Cards</h2>
+<p>24 cards: 6 ranks × 4 suits. Rank order (high to low):</p>
+<p><span class="card">J</span> <span class="card">9</span> <span class="card">A</span> <span class="card">10</span> <span class="card">K</span> <span class="card">Q</span></p>
+<p>Each card has an HCP value:</p>
+<table><tr><th>Card</th><td><span class="card">J</span></td><td><span class="card">9</span></td><td><span class="card">A</span></td><td><span class="card">10</span></td><td><span class="card">K</span></td><td><span class="card">Q</span></td></tr>
+<tr><th>HCP</th><td>20</td><td>15</td><td>15</td><td>10</td><td>5</td><td>5</td></tr></table>
+<p>Total HCP in each hand: <strong>280</strong> (4 cards per player × 6).</p>
+
+<h2>Game Flow</h2>
+<h3>1. Waiting Room</h3>
+<p>Players join and the admin assigns positions (N/S/E/W). Once all 4 seats are filled, the admin can <strong>Start Game</strong>.</p>
+
+<h3>2. Cut</h3>
+<p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>. The first bidder is the player to the dealer's left.</p>
+
+<h3>3. Bidding</h3>
+<p>Starting from the player left of the dealer, each player may <strong>Pass</strong> or bid a multiple of <strong>10 between 50 and 140</strong>. A bid must be higher than the current highest bid. Bidding ends when <strong>3 consecutive passes</strong> follow a bid. If all 4 pass without any bid, the hand is re-dealt with the same dealer.</p>
+<p>The winning bidder becomes <strong>declarer</strong>.</p>
+
+<h3>4. Contract Level</h3>
+<table><tr><th>Bid</th><th>Level</th><th>Tricks to Win</th></tr>
+<tr><td>&lt; 100</td><td>1</td><td>4</td></tr>
+<tr><td>≥ 100</td><td>2</td><td>5</td></tr></table>
+
+<h3>5. Trump Selection</h3>
+<p>The declarer selects a card from their hand. That card's suit becomes <strong>trump</strong>. The trump card stays face-up in the declarer's hand until played. After selection, the remaining deck cards are dealt.</p>
+
+<h3>6. Play</h3>
+<p>Players play tricks clockwise. You must <strong>follow suit</strong> if possible. If you cannot follow suit, you may play any card (including trump). The highest card of the lead suit wins the trick, unless a trump is played — then the highest trump wins.</p>
+<p><strong>Trump visibility:</strong> Non-admin players cannot see the trump suit until the declarer uses <strong>Ask Trump</strong> (reveals the suit to the declarer) or <strong>Play Trump</strong> (reveals the suit+card to everyone). The trump card is always visible to the declarer and admin.</p>
+
+<h3>7. Scoring</h3>
+<p>After all tricks, the admin reviews and confirms the hand:</p>
+<ul>
+<li><strong>Declarer's team</strong> earns <strong>1 point</strong> if their total HCP ≥ their bid</li>
+<li><strong>Bonus point</strong> (slam) if their HCP ≥ 280</li>
+<li><strong>Defenders</strong> earn <strong>1 point</strong> if declarer's team fails to meet the bid</li>
+<li><strong>Bonus point</strong> for defenders if they collect all 280 HCP</li>
+</ul>
+
+<h2>Winning</h2>
+<p>After 6 hands, the team with more points wins. Ties are possible.</p>
+
+<h2>Timeouts &amp; Disconnects</h2>
+<ul>
+<li>Players have <strong>5 minutes</strong> to bid or play. If they time out, the admin can <strong>Take Over</strong> their turn.</li>
+<li>If a player disconnects mid-game, their hand and state are saved. The admin can <strong>promote a spectator</strong> to fill the seat, restoring their saved cards and turn.</li>
+<li>If the admin disconnects mid-game, the room is closed immediately.</li>
+</ul>
+
+<h2>Admin Controls</h2>
+<p>The admin panel (collapsible below the game table) provides:</p>
+<ul>
+<li><strong>Gallery</strong> — unseated players with position assign buttons and kick</li>
+<li><strong>Table</strong> — seated players and kick</li>
+<li><strong>Spectators</strong> — promote to player</li>
+<li><strong>Game State</strong> — hand/trick, state, level, declarer, bid, trump</li>
+<li><strong>Bids</strong> — each player's bid</li>
+<li><strong>Current Trick</strong> — cards played</li>
+<li><strong>Scores</strong> — running scores, HCP, tricks</li>
+<li><strong>Controls</strong> — Move Dealer, Reset Scores, Reset Game, Take Over, Confirm Hand</li>
+<li><strong>All Hands</strong> — every player's cards visible</li>
+</ul>
+
+<div class="back"><a href="/">← Back to Game</a></div>
+</body></html>`);
+});
+
 function saveRooms() {
   try {
     const data = {};
