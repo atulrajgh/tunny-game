@@ -21,7 +21,7 @@ function App() {
   const [error, setError] = useState('');
   const [cutCard, setCutCard] = useState(null);
   const [timedOut, setTimedOut] = useState(null);
-  const [showAdminPanel, setShowAdminPanel] = useState(true);
+
 
   const showError = useCallback((msg) => { setError(msg); setTimeout(() => setError(''), 5000); }, []);
 
@@ -328,6 +328,14 @@ function App() {
   const declarerPos = gameState.declarer?.position;
   const isDefender = myPos && declarerPos && PARTNER[myPos] !== declarerPos && myPos !== declarerPos;
 
+  // Trump action rules: can't be first action unless last hand and declarer has only trump card
+  const isFirstTrick = gameState.trickNumber === 0 && (gameState.currentTrick?.length || 0) === 0;
+  const isLastHand = gameState.handNumber >= 5;
+  const declarer = players.find(p => p.id === gameState.declarer?.id);
+  const declarerOnlyTrump = declarer?.hand?.length === 1;
+  const canAskTrump = !isFirstTrick || (isLastHand && declarerOnlyTrump);
+  const canPlayTrump = !isFirstTrick || (isLastHand && declarerOnlyTrump);
+
   // Build table positions relative to viewer (admin has no position — fixed N/E/S/W)
   const ORDER = ['N', 'E', 'S', 'W'];
   let posOrder = ORDER.slice();
@@ -346,7 +354,7 @@ function App() {
   }
 
   let adminPanel = null;
-  if (isAdmin && !isSpectator && showAdminPanel) {
+  if (isAdmin && !isSpectator) {
     const unseated = players.filter(p => !p.position);
     adminPanel = (
       <div className="admin-panel">
@@ -422,6 +430,7 @@ function App() {
               <div className="ac-state-item"><span className="ac-label">Hand</span><span className="ac-value">{gameState.handNumber}/6</span></div>
               <div className="ac-state-item"><span className="ac-label">Trick</span><span className="ac-value">{gameState.trickNumber + 1}/6</span></div>
               <div className="ac-state-item"><span className="ac-label">State</span><span className="ac-value" style={{ fontSize: 11 }}>{gameState.state}</span></div>
+              {gameState.dealer && <div className="ac-state-item"><span className="ac-label">Dealer</span><span className="ac-value" style={{ fontSize: 11 }}>{players.find(p => p.id === gameState.dealer.id)?.name || gameState.dealer.position}</span></div>}
               {gameState.contractLevel && <div className="ac-state-item"><span className="ac-label">Level</span><span className="ac-value">{gameState.contractLevel} ({gameState.targetTricks} tr)</span></div>}
               {gameState.declarer && <div className="ac-state-item"><span className="ac-label">Declarer</span><span className="ac-value" style={{ fontSize: 11 }}>{players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position}</span></div>}
               {gameState.highestBid && <div className="ac-state-item"><span className="ac-label">Bid</span><span className="ac-value">{gameState.highestBid}</span></div>}
@@ -465,6 +474,8 @@ function App() {
 
             <h3 style={{ marginTop: 12 }}>Controls</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <button className="ac-btn blue" onClick={() => socket.emit('rotate_dealer')}>Move Dealer</button>
+              <button className="ac-btn orange" onClick={() => socket.emit('reset_scores')}>Reset Scores</button>
               <button className="ac-btn orange" onClick={() => socket.emit('reset_game')}>Reset Game</button>
               {timedOut && (
                 <button className="ac-btn blue" onClick={() => { setTimedOut(null); socket.emit('admin_play', { targetId: timedOut.playerId }); }}>
@@ -528,6 +539,14 @@ function App() {
             {gameState.trumpCard && <div className="trump-card-display"><span className="trump-card-label">Trump card:</span>{renderCard(gameState.trumpCard)}</div>}
             {gameState.trumpRevealed && <div className="trump-revealed">♠ Trump Revealed! ♠</div>}
             <div className="round-info">Hand {gameState.handNumber}/6 · Trick {gameState.trickNumber + 1}/6</div>
+            <div className="current-action">
+              {gameState.state === 'cut' && `Waiting for ${players.find(p => p.isAdmin)?.name || 'admin'} to cut the deck`}
+              {isBidding && `${curPlayer?.name} is bidding`}
+              {isTrump && `${gameState.declarer?.position || 'Declarer'} is selecting trump`}
+              {isPlaying && `${curPlayer?.name}'s turn`}
+              {gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm'}
+              {gameState.state === 'game_over' && `${gameState.winner} wins!`}
+            </div>
             {gameState.contractLevel && <div>Contract: Level {gameState.contractLevel} ({gameState.targetTricks} tricks)</div>}
             {isPlaying && gameState.currentTrick?.length > 0 && (
               <div className="current-trick">
@@ -633,21 +652,16 @@ function App() {
       <div className="action-bar">
         {(isPlaying || isBidding || isTrump) && !isSpectator && (
           <>
-            {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && (
+            {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && canAskTrump && (
               <button className="action-btn" onClick={() => socket.emit('ask_trump')}>Ask Trump</button>
             )}
-            {isPlaying && isDeclarer && !isAdmin && gameState.trumpCard && (
+            {isPlaying && isDeclarer && !isAdmin && gameState.trumpCard && canPlayTrump && (
               <button className="action-btn" onClick={() => socket.emit('play_trump')}>Play Trump</button>
-            )}
-            {(isBidding || isTrump || isPlaying) && isAdmin && (
-              <button className="action-btn reset" onClick={() => socket.emit('reset_game')}>Reset Game</button>
             )}
           </>
         )}
         {isAdmin && !isSpectator && (
-          <button className="action-btn" onClick={() => setShowAdminPanel(v => !v)}>
-            {showAdminPanel ? '▲ Hide Panel' : '▼ Admin Panel'}
-          </button>
+          <button className="action-btn reset" onClick={() => socket.emit('reset_game')}>Reset Game</button>
         )}
       </div>
 

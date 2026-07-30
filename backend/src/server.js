@@ -288,6 +288,13 @@ io.on('connection', (socket) => {
     updateAll();
   });
 
+  socket.on('reset_scores', () => {
+    const g = game(); if (!g) return;
+    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    g.resetScores(playerId);
+    updateAll();
+  });
+
   socket.on('admin_play', ({ targetId, card }) => {
     const g = game(); if (!g) return;
     const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');

@@ -372,6 +372,9 @@ class Game {
     const player = this.getPlayer(playerId);
     if (!player || !this.declarer || player.id === this.declarer.id) return false;
     if (this.trumpRevealed) return false;
+    if (this.trickNumber === 0 && this.currentTrick.length === 0) {
+      if (!(this.handNumber >= MAX_HANDS - 1 && this.declarer.hand.length === 1)) return false;
+    }
     this.trumpRevealed = true;
     this.lastActivity = Date.now();
     return true;
@@ -383,6 +386,9 @@ class Game {
     const player = this.getPlayer(playerId);
     if (!player || !this.trumpCard) return false;
     if (this.trumpCardPlayed) return false;
+    if (this.trickNumber === 0 && this.currentTrick.length === 0) {
+      if (!(this.handNumber >= MAX_HANDS - 1 && this.declarer.hand.length === 1)) return false;
+    }
     const idx = player.hand.findIndex(c => c.equals(this.trumpCard));
     if (idx === -1) return false;
     if (this.currentTrick.length > 0 && this.leadSuit) {
@@ -433,7 +439,7 @@ class Game {
     return true;
   }
 
-  resetForNextHand(rotateDealer = true) {
+  resetForNextHand(rotateDealer = false) {
     for (const p of this.players) {
       p.hand = []; p.bid = null; p.playedCard = null;
       p.cutCard = null;
@@ -463,6 +469,17 @@ class Game {
     const admin = this.getPlayer(adminId);
     if (!admin || !admin.isAdmin || !this.dealer) return false;
     this.dealer = this.getNextPlayer(this.dealer.id);
+    this.lastActivity = Date.now();
+    return true;
+  }
+
+  resetScores(adminId) {
+    const admin = this.getPlayer(adminId);
+    if (!admin || !admin.isAdmin) return false;
+    this.scores = { 'N-S': 0, 'E-W': 0 };
+    this.teamTricks = { 'N-S': 0, 'E-W': 0 };
+    this.teamPoints = { 'N-S': 0, 'E-W': 0 };
+    for (const p of this.players) p.score = 0;
     this.lastActivity = Date.now();
     return true;
   }

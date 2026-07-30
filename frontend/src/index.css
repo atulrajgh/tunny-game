@@ -76,6 +76,7 @@ input, button { font-family: inherit; }
 .trump-revealed { background: #f0c040; color: #2d4a2d; padding: 4px 16px; border-radius: 20px; font-weight: 700; display: inline-block; margin-bottom: 8px; animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 .round-info { color: #a0d0a0; margin-bottom: 4px; }
+.current-action { font-size: 16px; font-weight: 700; color: #f0c040; margin: 8px 0; text-align: center; }
 
 .current-trick { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
 .trick-entry { display: flex; flex-direction: column; align-items: center; font-size: 12px; }
