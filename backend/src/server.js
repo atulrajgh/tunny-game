@@ -13,7 +13,7 @@ const io = socketIo(server, { cors: { origin: "*", methods: ["GET", "POST"] } })
 
 const PORT = process.env.PORT || 3001;
 const ROOMS_FILE = path.join(__dirname, '..', 'rooms.json');
-const TIMEOUT_MS = 120000;
+const TIMEOUT_MS = 300000;
 const SAVE_INTERVAL = 30000;
 const ROOMS = {};
 const PLAYER_SOCKETS = {}; // playerId -> Set<socketId>

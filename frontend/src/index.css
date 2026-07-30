@@ -112,7 +112,7 @@ input, button { font-family: inherit; }
 .trump-card-display { margin-top: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .trump-card-label { font-size: 11px; color: #a0d0a0; }
 .action-bar { grid-column: 1 / -1; grid-row: 4; display: flex; gap: 8px; justify-content: center; padding: 8px; }
-.action-btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: #3498db; color: #fff; font-size: 14px; }
+.action-btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: #3498db; color: #fff; font-size: 14px; touch-action: manipulation; }
 .action-btn.reset { background: #7f8c8d; }
 
 /* ---- Turn indicator ---- */
@@ -162,27 +162,27 @@ input, button { font-family: inherit; }
   .login-box { padding: 20px; }
 }
 
-/* ---- Admin Console ---- */
-.admin-console { background: #1a3a1a; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 13px; min-height: 90vh; }
+/* ---- Admin Panel ---- */
+.admin-panel { background: #1a3a1a; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 13px; grid-column: 1 / -1; }
 .ac-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid #3a6a3a; }
 .ac-header h2 { font-size: 20px; color: #f0c040; }
-.ac-header .ac-toggle { padding: 4px 12px; border: none; border-radius: 4px; background: #3498db; color: #fff; cursor: pointer; font-size: 12px; }
 .ac-grid { display: grid; grid-template-columns: 240px 1fr 200px; gap: 12px; flex: 1; }
 .ac-panel { background: #2d4a2d; border-radius: 8px; padding: 10px; }
 .ac-panel h3 { font-size: 13px; color: #f0c040; margin-bottom: 8px; border-bottom: 1px solid #4a6a4a; padding-bottom: 4px; }
 .ac-panel.ac-wide { grid-column: 1 / -1; }
-.ac-player-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 4px; border-radius: 4px; margin-bottom: 2px; font-size: 12px; }
+.ac-player-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 4px; margin-bottom: 4px; font-size: 13px; }
 .ac-player-row:hover { background: #3a5a3a; }
 .ac-player-row .ac-name { font-weight: 600; }
-.ac-player-row .ac-team { font-size: 10px; background: #1a3a1a; padding: 1px 6px; border-radius: 3px; }
-.ac-player-row .ac-actions { display: flex; gap: 3px; }
-.ac-btn { padding: 2px 6px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; color: #fff; }
+.ac-player-row .ac-team { font-size: 11px; background: #1a3a1a; padding: 2px 8px; border-radius: 3px; }
+.ac-player-row .ac-actions { display: flex; gap: 6px; }
+.ac-btn { min-width: 44px; min-height: 44px; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; color: #fff; touch-action: manipulation; display: inline-flex; align-items: center; justify-content: center; }
 .ac-btn.blue { background: #3498db; }
 .ac-btn.green { background: #27ae60; }
 .ac-btn.red { background: #c0392b; }
 .ac-btn.orange { background: #e67e22; }
 .ac-btn.gray { background: #7f8c8d; }
 .ac-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ac-toggle { min-width: 44px; min-height: 44px; padding: 8px 16px; border: none; border-radius: 6px; background: #3498db; color: #fff; cursor: pointer; font-size: 14px; touch-action: manipulation; }
 .ac-state { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; }
 .ac-state-item { display: flex; flex-direction: column; align-items: center; background: #1a3a1a; padding: 6px 12px; border-radius: 6px; min-width: 80px; }
 .ac-state-item .ac-label { font-size: 10px; color: #a0d0a0; }
@@ -192,3 +192,13 @@ input, button { font-family: inherit; }
 .ac-trick-winner { font-weight: 600; color: #f0c040; }
 .ac-trick-cards { display: flex; gap: 2px; font-size: 11px; }
 .ac-empty { color: #6a9a6a; font-size: 12px; padding: 8px; text-align: center; }
+
+@media (max-width: 768px) {
+  .ac-grid { grid-template-columns: 1fr; }
+  .ac-state { gap: 8px; }
+  .ac-state-item { min-width: 60px; padding: 4px 8px; }
+  .ac-player-row { padding: 10px 12px; margin-bottom: 6px; }
+  .ac-btn { min-width: 48px; min-height: 48px; padding: 10px 18px; font-size: 16px; }
+  .ac-toggle { min-width: 48px; min-height: 48px; font-size: 16px; }
+  .ac-player-row .ac-actions { gap: 8px; }
+}

@@ -21,7 +21,7 @@ function App() {
   const [error, setError] = useState('');
   const [cutCard, setCutCard] = useState(null);
   const [timedOut, setTimedOut] = useState(null);
-  const [showAdminConsole, setShowAdminConsole] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(true);
 
   const showError = useCallback((msg) => { setError(msg); setTimeout(() => setError(''), 5000); }, []);
 
@@ -316,182 +316,6 @@ function App() {
     );
   }
 
-  // --- Admin Console ---
-  if (isAdmin && showAdminConsole) {
-    const nsPlayers = players.filter(p => p.team === 'N-S');
-    const ewPlayers = players.filter(p => p.team === 'E-W');
-    const unseated = players.filter(p => !p.position);
-    return (
-      <div className="app">
-        <div className="admin-console">
-          <div className="ac-header">
-            <h2>☰ Admin Console</h2>
-            <span style={{ fontSize: 12, color: '#a0d0a0' }}>{gameState.roomId?.slice(0, 8)}</span>
-            <button className="ac-toggle" onClick={() => setShowAdminConsole(false)}>✕ Close</button>
-          </div>
-
-          <div className="ac-grid">
-            {/* Left: Gallery + Table Seats */}
-            <div className="ac-panel">
-              <h3>Gallery ({unseated.length})</h3>
-              {unseated.length === 0 ? (
-                <div className="ac-empty">No waiting players</div>
-              ) : unseated.map(p => (
-                <div key={p.id} className="ac-player-row">
-                  <span className="ac-name">{p.name}</span>
-                  <div className="ac-actions">
-                    {['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
-                      <button key={pos} className="ac-btn green"
-                        onClick={() => socket.emit('assign_position', { playerId: p.id, position: pos })}>
-                        {pos}
-                      </button>
-                    ))}
-                    {p.id !== playerId && (
-                      <button className="ac-btn red" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <h3 style={{ marginTop: 12 }}>Table</h3>
-              {['N','S','E','W'].map(pos => {
-                const pid = gameState.positions?.[pos];
-                const p = players.find(x => x.id === pid);
-                return (
-                  <div key={pos} className="ac-player-row">
-                    <span style={{ fontWeight: 700, width: 20 }}>{pos}</span>
-                    {p ? (
-                      <>
-                        <span className="ac-name">{p.name}</span>
-                        <span className="ac-team">{p.team || '—'}</span>
-                        <div className="ac-actions">
-                          {isAdmin && p.id !== playerId && (
-                            <button className="ac-btn red" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <span className="ac-empty">— empty —</span>
-                    )}
-                  </div>
-                );
-              })}
-              {gameState.spectators?.length > 0 && (
-                <>
-                  <h3 style={{ marginTop: 12 }}>Spectators ({gameState.spectators.length})</h3>
-                  {gameState.spectators.map(s => (
-                    <div key={s.id} className="ac-player-row">
-                      <span className="ac-name">{s.name}</span>
-                      <div className="ac-actions">
-                        {players.length < 4 && ['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
-                          <button key={pos} className="ac-btn green"
-                            onClick={() => socket.emit('promote_to_player', { spectatorId: s.id, position: pos })}>
-                            {pos}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-
-            {/* Center: Game State + Completed Tricks */}
-            <div className="ac-panel">
-              <h3>Game State</h3>
-              <div className="ac-state">
-                <div className="ac-state-item"><span className="ac-label">Hand</span><span className="ac-value">{gameState.handNumber}/6</span></div>
-                <div className="ac-state-item"><span className="ac-label">Trick</span><span className="ac-value">{gameState.trickNumber + 1}/6</span></div>
-                <div className="ac-state-item"><span className="ac-label">State</span><span className="ac-value" style={{ fontSize: 11 }}>{gameState.state}</span></div>
-                {gameState.contractLevel && <div className="ac-state-item"><span className="ac-label">Level</span><span className="ac-value">{gameState.contractLevel} ({gameState.targetTricks} tr)</span></div>}
-                {gameState.declarer && <div className="ac-state-item"><span className="ac-label">Declarer</span><span className="ac-value" style={{ fontSize: 11 }}>{players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position}</span></div>}
-                {gameState.highestBid && <div className="ac-state-item"><span className="ac-label">Bid</span><span className="ac-value">{gameState.highestBid}</span></div>}
-                {gameState.trumpSuit && <div className="ac-state-item"><span className="ac-label">Trump</span><span className="ac-value">{gameState.trumpSuit}</span></div>}
-              </div>
-
-              <h3 style={{ marginTop: 12 }}>Bids</h3>
-              {players.map(p => (
-                <div key={p.id} className="ac-player-row">
-                  <span className="ac-name">{p.name}</span>
-                  <span>{p.bid || '—'}</span>
-                </div>
-              ))}
-
-              <h3 style={{ marginTop: 12 }}>Current Trick</h3>
-              {gameState.currentTrick?.length > 0 ? (
-                <div className="ac-tricks">
-                  {gameState.currentTrick.map((t, i) => (
-                    <div key={i} className="ac-trick-row">
-                      <span className="ac-trick-winner">{t.playerName}</span>
-                      <span className="ac-trick-cards">{t.card?.rank}{t.card?.suit}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="ac-empty">No cards played yet</div>
-              )}
-            </div>
-
-            {/* Right: Scores + Controls */}
-            <div className="ac-panel">
-              <h3>Scores</h3>
-              <div className="ac-player-row" style={{ background: '#2d4a7a', borderRadius: 4 }}><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span></div>
-              <div className="ac-player-row" style={{ background: '#7a2d2d', borderRadius: 4 }}><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span></div>
-              <div style={{ fontSize: 10, color: '#a0d0a0', marginTop: 6 }}>This hand HCP:</div>
-              <div className="ac-player-row"><span>N-S</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
-              <div className="ac-player-row"><span>E-W</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
-              <div style={{ fontSize: 10, color: '#a0d0a0', marginTop: 2 }}>Tricks this hand:</div>
-              <div className="ac-player-row"><span>N-S</span><span>{gameState.teamTricks?.['N-S'] || 0}</span></div>
-              <div className="ac-player-row"><span>E-W</span><span>{gameState.teamTricks?.['E-W'] || 0}</span></div>
-
-              <h3 style={{ marginTop: 12 }}>Controls</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <button className="ac-btn orange" onClick={() => socket.emit('reset_game')}>Reset Game</button>
-                {timedOut && (
-                  <button className="ac-btn blue" onClick={() => { setTimedOut(null); socket.emit('admin_play', { targetId: timedOut.playerId }); }}>
-                    Take Over ({timedOut.playerName})
-                  </button>
-                )}
-                {gameState.state === 'hand_review' && (
-                  <button className="ac-btn green" onClick={() => socket.emit('confirm_hand')}>
-                    {gameState.handNumber >= 6 ? 'End Game' : 'Confirm Hand'}
-                  </button>
-                )}
-              </div>
-
-              {gameState.spectators?.length > 0 && (
-                <>
-                  <h3 style={{ marginTop: 12 }}>Spectators</h3>
-                  {gameState.spectators.map(s => (
-                    <div key={s.id} className="ac-player-row">
-                      <span className="ac-name">{s.name}</span>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Bottom: All Player Hands */}
-          <div className="ac-panel ac-wide">
-            <h3>All Hands {isAdmin && <span style={{ fontWeight: 400, fontSize: 11, color: '#a0d0a0' }}>(admin visibility)</span>}</h3>
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-              {players.map(p => (
-                <div key={p.id} style={{ textAlign: 'center', minWidth: 120 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{p.name} <span style={{ fontWeight: 400, color: '#a0d0a0' }}>({p.position} · {p.team})</span></div>
-                  <div className="review-cards">
-                    {(p.hand || []).map((c, i) => (
-                      <span key={i} className={`mini-card ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''}`}>{c.rank}{c.suit}</span>
-                    ))}
-                    {(!p.hand || p.hand.length === 0) && <span className="ac-empty">No cards</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // ─── GAME TABLE (bidding / trump / playing) ───
   const isBidding = gameState.state === 'bidding';
@@ -519,6 +343,162 @@ function App() {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
     return <span className={`card-face${small ? ' small' : ''}${isRed ? ' red' : ''}`}>{c.rank}{c.suit}</span>;
+  }
+
+  let adminPanel = null;
+  if (isAdmin && !isSpectator && showAdminPanel) {
+    const unseated = players.filter(p => !p.position);
+    adminPanel = (
+      <div className="admin-panel">
+        <div className="ac-grid">
+          {/* Left: Gallery + Table Seats */}
+          <div className="ac-panel">
+            <h3>Gallery ({unseated.length})</h3>
+            {unseated.length === 0 ? (
+              <div className="ac-empty">No waiting players</div>
+            ) : unseated.map(p => (
+              <div key={p.id} className="ac-player-row">
+                <span className="ac-name">{p.name}</span>
+                <div className="ac-actions">
+                  {['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
+                    <button key={pos} className="ac-btn green"
+                      onClick={() => socket.emit('assign_position', { playerId: p.id, position: pos })}>
+                      {pos}
+                    </button>
+                  ))}
+                  {p.id !== playerId && (
+                    <button className="ac-btn red" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
+                  )}
+                </div>
+              </div>
+            ))}
+            <h3 style={{ marginTop: 12 }}>Table</h3>
+            {['N','S','E','W'].map(pos => {
+              const pid = gameState.positions?.[pos];
+              const p = players.find(x => x.id === pid);
+              return (
+                <div key={pos} className="ac-player-row">
+                  <span style={{ fontWeight: 700, width: 20 }}>{pos}</span>
+                  {p ? (
+                    <>
+                      <span className="ac-name">{p.name}</span>
+                      <span className="ac-team">{p.team || '—'}</span>
+                      <div className="ac-actions">
+                        {isAdmin && p.id !== playerId && (
+                          <button className="ac-btn red" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <span className="ac-empty">— empty —</span>
+                  )}
+                </div>
+              );
+            })}
+            {gameState.spectators?.length > 0 && (
+              <>
+                <h3 style={{ marginTop: 12 }}>Spectators ({gameState.spectators.length})</h3>
+                {gameState.spectators.map(s => (
+                  <div key={s.id} className="ac-player-row">
+                    <span className="ac-name">{s.name}</span>
+                    <div className="ac-actions">
+                      {players.length < 4 && ['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
+                        <button key={pos} className="ac-btn green"
+                          onClick={() => socket.emit('promote_to_player', { spectatorId: s.id, position: pos })}>
+                          {pos}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+
+          {/* Center: Game State + Bids + Current Trick */}
+          <div className="ac-panel">
+            <h3>Game State</h3>
+            <div className="ac-state">
+              <div className="ac-state-item"><span className="ac-label">Hand</span><span className="ac-value">{gameState.handNumber}/6</span></div>
+              <div className="ac-state-item"><span className="ac-label">Trick</span><span className="ac-value">{gameState.trickNumber + 1}/6</span></div>
+              <div className="ac-state-item"><span className="ac-label">State</span><span className="ac-value" style={{ fontSize: 11 }}>{gameState.state}</span></div>
+              {gameState.contractLevel && <div className="ac-state-item"><span className="ac-label">Level</span><span className="ac-value">{gameState.contractLevel} ({gameState.targetTricks} tr)</span></div>}
+              {gameState.declarer && <div className="ac-state-item"><span className="ac-label">Declarer</span><span className="ac-value" style={{ fontSize: 11 }}>{players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position}</span></div>}
+              {gameState.highestBid && <div className="ac-state-item"><span className="ac-label">Bid</span><span className="ac-value">{gameState.highestBid}</span></div>}
+              {gameState.trumpSuit && <div className="ac-state-item"><span className="ac-label">Trump</span><span className="ac-value">{gameState.trumpSuit}</span></div>}
+            </div>
+
+            <h3 style={{ marginTop: 12 }}>Bids</h3>
+            {players.map(p => (
+              <div key={p.id} className="ac-player-row">
+                <span className="ac-name">{p.name}</span>
+                <span>{p.bid || '—'}</span>
+              </div>
+            ))}
+
+            <h3 style={{ marginTop: 12 }}>Current Trick</h3>
+            {gameState.currentTrick?.length > 0 ? (
+              <div className="ac-tricks">
+                {gameState.currentTrick.map((t, i) => (
+                  <div key={i} className="ac-trick-row">
+                    <span className="ac-trick-winner">{t.playerName}</span>
+                    <span className="ac-trick-cards">{t.card?.rank}{t.card?.suit}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="ac-empty">No cards played yet</div>
+            )}
+          </div>
+
+          {/* Right: Scores + Controls */}
+          <div className="ac-panel">
+            <h3>Scores</h3>
+            <div className="ac-player-row" style={{ background: '#2d4a7a', borderRadius: 4 }}><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span></div>
+            <div className="ac-player-row" style={{ background: '#7a2d2d', borderRadius: 4 }}><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span></div>
+            <div style={{ fontSize: 10, color: '#a0d0a0', marginTop: 6 }}>This hand HCP:</div>
+            <div className="ac-player-row"><span>N-S</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
+            <div className="ac-player-row"><span>E-W</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
+            <div style={{ fontSize: 10, color: '#a0d0a0', marginTop: 2 }}>Tricks this hand:</div>
+            <div className="ac-player-row"><span>N-S</span><span>{gameState.teamTricks?.['N-S'] || 0}</span></div>
+            <div className="ac-player-row"><span>E-W</span><span>{gameState.teamTricks?.['E-W'] || 0}</span></div>
+
+            <h3 style={{ marginTop: 12 }}>Controls</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <button className="ac-btn orange" onClick={() => socket.emit('reset_game')}>Reset Game</button>
+              {timedOut && (
+                <button className="ac-btn blue" onClick={() => { setTimedOut(null); socket.emit('admin_play', { targetId: timedOut.playerId }); }}>
+                  Take Over ({timedOut.playerName})
+                </button>
+              )}
+              {gameState.state === 'hand_review' && (
+                <button className="ac-btn green" onClick={() => socket.emit('confirm_hand')}>
+                  {gameState.handNumber >= 6 ? 'End Game' : 'Confirm Hand'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* All Hands */}
+        <div className="ac-panel ac-wide" style={{ marginTop: 12 }}>
+          <h3>All Hands <span style={{ fontWeight: 400, fontSize: 11, color: '#a0d0a0' }}>(admin visibility)</span></h3>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {players.map(p => (
+              <div key={p.id} style={{ textAlign: 'center', minWidth: 120 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{p.name} <span style={{ fontWeight: 400, color: '#a0d0a0' }}>({p.position} · {p.team})</span></div>
+                <div className="review-cards">
+                  {(p.hand || []).map((c, i) => (
+                    <span key={i} className={`mini-card ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''}`}>{c.rank}{c.suit}</span>
+                  ))}
+                  {(!p.hand || p.hand.length === 0) && <span className="ac-empty">No cards</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -665,14 +645,17 @@ function App() {
           </>
         )}
         {isAdmin && !isSpectator && (
-          <button className="action-btn" onClick={() => setShowAdminConsole(v => !v)}>
-            {showAdminConsole ? '◁ Table View' : '☰ Console'}
+          <button className="action-btn" onClick={() => setShowAdminPanel(v => !v)}>
+            {showAdminPanel ? '▲ Hide Panel' : '▼ Admin Panel'}
           </button>
         )}
       </div>
 
       {/* Turn indicator */}
       {isMyTurn && isPlaying && !isSpectator && <div className="turn-indicator">Your turn!</div>}
+
+      {/* Admin Panel (collapsible) */}
+      {adminPanel}
     </div>
   );
 }
