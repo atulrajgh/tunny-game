@@ -660,9 +660,6 @@ function App() {
             )}
           </>
         )}
-        {isAdmin && !isSpectator && (
-          <button className="action-btn reset" onClick={() => socket.emit('reset_game')}>Reset Game</button>
-        )}
       </div>
 
       {/* Turn indicator */}
