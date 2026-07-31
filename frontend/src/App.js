@@ -329,13 +329,9 @@ function App() {
   const declarerPos = gameState.declarer?.position;
   const isDefender = myPos && declarerPos && PARTNER[myPos] !== declarerPos && myPos !== declarerPos;
 
-  // Trump action rules: can't be first action unless last hand and declarer has only trump card
-  const isFirstTrick = (gameState.currentTrick?.length || 0) === 0;
-  const isLastHand = gameState.handNumber >= 5;
-  const declarer = players.find(p => p.id === gameState.declarer?.id);
-  const declarerOnlyTrump = declarer?.hand?.length === 1;
-  const canAskTrump = !isFirstTrick || (isLastHand && declarerOnlyTrump);
-  const canPlayTrump = !isFirstTrick || (isLastHand && declarerOnlyTrump);
+  // Trump action rules: available whenever the current trick has started
+  const canAskTrump = (gameState.currentTrick?.length || 0) > 0;
+  const canPlayTrump = (gameState.currentTrick?.length || 0) > 0;
 
   // Build table positions relative to viewer (admin has no position — fixed N/E/S/W)
   const ORDER = ['N', 'E', 'S', 'W'];

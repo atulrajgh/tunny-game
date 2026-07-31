@@ -372,9 +372,7 @@ class Game {
     const player = this.getPlayer(playerId);
     if (!player || !this.declarer || player.id === this.declarer.id) return false;
     if (this.trumpRevealed) return false;
-    if (this.currentTrick.length === 0) {
-      if (!(this.handNumber >= MAX_HANDS - 1 && this.declarer.hand.length === 1)) return false;
-    }
+    if (this.currentTrick.length === 0) return false;
     this.trumpRevealed = true;
     this.lastActivity = Date.now();
     return true;
@@ -386,9 +384,7 @@ class Game {
     const player = this.getPlayer(playerId);
     if (!player || !this.trumpCard) return false;
     if (this.trumpCardPlayed) return false;
-    if (this.currentTrick.length === 0) {
-      if (!(this.handNumber >= MAX_HANDS - 1 && this.declarer.hand.length === 1)) return false;
-    }
+    if (this.currentTrick.length === 0) return false;
     const idx = player.hand.findIndex(c => c.equals(this.trumpCard));
     if (idx === -1) return false;
     if (this.currentTrick.length > 0 && this.leadSuit) {
