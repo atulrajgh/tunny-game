@@ -112,7 +112,7 @@ function App() {
     return (
       <div className="app login-screen">
         <h1 className="title">♠ TUNNY ♥</h1>
-        <a href="/instructions" target="_blank" className="help-link" style={{ marginBottom: 16 }}>How to Play</a>
+        <a href="/instructions" target="_blank" className="help-link" style={{ marginBottom: 12 }}>How to Play</a>
         {error && <div className="toast error">{error}</div>}
         <div className="login-box">
           <input placeholder="Your Name" value={name} onChange={e => setName(e.target.value)}

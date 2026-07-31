@@ -8,7 +8,7 @@ input, button { font-family: inherit; }
 
 /* ---- Login ---- */
 .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-.title { font-size: 48px; margin-bottom: 32px; letter-spacing: 8px; }
+.title { font-size: 48px; margin-bottom: 8px; letter-spacing: 8px; }
 .login-box { background: #2d6e2d; border-radius: 16px; padding: 32px; width: 400px; max-width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
 .login-box input { width: 100%; padding: 12px 16px; border: none; border-radius: 8px; font-size: 16px; margin-bottom: 12px; background: #3a8a3a; color: #fff; }
 .login-box input::placeholder { color: #a0d0a0; }
