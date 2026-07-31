@@ -209,8 +209,10 @@ io.on('connection', (socket) => {
     clearTimeout(g._timeout);
     if (g.state !== 'playing' && g.state !== 'bidding') return;
     g._timeout = setTimeout(() => {
+      const cp = g.currentPlayer;
       io.to(g.id).emit('player_timed_out', {
-        playerId: g.currentPlayer.id, playerName: g.currentPlayer.name
+        playerId: cp ? cp.id : null,
+        playerName: cp ? cp.name : 'Unknown (vacant seat)'
       });
     }, TIMEOUT_MS);
   }
@@ -390,13 +392,28 @@ io.on('connection', (socket) => {
     updateAll();
   });
 
-  socket.on('admin_play', ({ targetId, card }) => {
+  socket.on('admin_play', ({ targetId, card, position }) => {
     const g = game(); if (!g) return;
     const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
-    const target = g.getPlayer(targetId);
-    if (!target) return;
-    g.currentPlayer = target;
-    if (card && g.state === 'playing') g.playCard(targetId, card);
+    if (position) {
+      if (g.state === 'playing') {
+        if (!card) return error('Pick a card to play');
+        if (!g.playVacatedCard(position, card)) return error('Invalid play');
+      } else if (g.state === 'bidding') {
+        if (card === undefined) return error('Pick a bid');
+        if (!g.placeVacatedBid(position, card)) return error('Invalid bid');
+      } else if (g.state === 'trump_selection') {
+        if (!card) return error('Pick a trump card');
+        if (!g.selectVacatedTrump(position, card)) return error('Invalid trump');
+      } else {
+        return error('Cannot act for vacant seat in this state');
+      }
+    } else {
+      const target = g.getPlayer(targetId);
+      if (!target) return error('Player no longer in game');
+      g.currentPlayer = target;
+      if (card && g.state === 'playing' && !g.playCard(targetId, card)) return error('Invalid play');
+    }
     clearTimeout(g._timeout);
     if (g.state === 'hand_review') {
       io.to(g.id).emit('hand_end', { handNumber: g.handNumber, scores: g.scores });

@@ -22,7 +22,7 @@ No lint, typecheck, or formatter scripts exist. `backend/tests/` is empty.
 - All state is in-memory, persisted to `backend/rooms.json` every 30s. Restart restores rooms but not active games.
 - Real-time via Socket.IO WebSockets; REST API at `/api/games` for room listing/creation.
 - First player to join a room becomes admin automatically.
-- Room lifecycle: rooms visible in public list in any state. Empty rooms deleted on last disconnect. Mid-game admin disconnect deletes room immediately; non-admin mid-game disconnect saves their hand/state in `vacatedHands` for spectator promotion.
+- Room lifecycle: rooms visible in public list in any state. Empty rooms deleted on last disconnect. Mid-game admin disconnect deletes room immediately; non-admin mid-game disconnect saves their hand/state in `vacatedHands` for spectator promotion. A vacant seat's turn pauses; the admin can take over that seat (bid/choose trump/play its saved hand via `admin_play` with a `position`) until a spectator is promoted to fill it.
 - CORS: `origin: "*"` — wide open.
 
 ## Game state machine
@@ -54,9 +54,9 @@ On mobile (< 768px) the 3-column grid stacks to single column; button sizes incr
 
 Timeout is 300 seconds (5 minutes) for bidding and playing states. When a player times out, a banner appears allowing the admin to take over their turn via `admin_play`.
 
-## Mid-game disconnect / Spectator promotion
+## Mid-game disconnect / Admin take-over / Spectator promotion
 
-When a player disconnects mid-game, their hand, bid, played card, and role (currentPlayer/declarer/dummy) are saved in `vacatedHands` keyed by position. When the admin promotes a spectator to fill that seat, the saved state is restored — cards remain unchanged for other players, and turn/declarer/dummy references are reassigned to the new player object.
+When a player disconnects mid-game, their hand, bid, played card, and role (currentPlayer/declarer/dummy) are saved in `vacatedHands` keyed by position. The turn becomes a vacated pseudo-player (`id: null`) at that position, and the admin plays that seat — bidding via `admin_play` with a `position` + `card` (bid number), choosing trump for a vacated declarer, or clicking the seat's saved cards in the table. The game never freezes while the seat stays vacant; vacated seats are re-dealt fresh hands on the next hand. When the admin promotes a spectator to fill the seat, the saved state is restored — cards remain unchanged for other players, and turn/declarer/dummy references are reassigned to the new player object.
 
 ## Trump visibility
 

@@ -328,6 +328,8 @@ function App() {
   const isDeclarer = gameState.declarer?.id === playerId;
   const declarerPos = gameState.declarer?.position;
   const isDefender = myPos && declarerPos && PARTNER[myPos] !== declarerPos && myPos !== declarerPos;
+  const vacatedTurnPos = curPlayer && curPlayer.id === null ? curPlayer.position : null;
+  const declarerVacated = gameState.declarer ? vacatedAt(gameState.declarer.position) : null;
 
   // Trump action rules: available whenever the current trick has started
   const canAskTrump = (gameState.currentTrick?.length || 0) > 0;
@@ -354,6 +356,34 @@ function App() {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
     return <span className={`card-face${small ? ' small' : ''}${isRed ? ' red' : ''}`}>{c.rank}{c.suit}</span>;
+  }
+
+  function miniCard(c) {
+    if (!c) return null;
+    const isRed = c.suit === '♥' || c.suit === '♦';
+    return <span className={`mini-card ${isRed ? ' red' : ''}`}>{c.rank}{c.suit}</span>;
+  }
+
+  function vacatedAt(pos) {
+    return (gameState.vacatedHands || []).find(v => v.position === pos) || null;
+  }
+
+  function renderVacated(pos, vertical) {
+    const v = vacatedAt(pos);
+    if (!v) return null;
+    const isTurn = curPlayer && curPlayer.id === null && curPlayer.position === pos;
+    const clickable = isAdmin && isPlaying && isTurn;
+    return (
+      <div className={`vacated-hand${vertical ? ' vert' : ''}`}>
+        {isAdmin && isTurn && <div className="vacated-tag">Play for {v.playerName}</div>}
+        {v.hand.map((c, i) => (
+          <button key={i} className="vacated-card-btn" disabled={!clickable}
+            onClick={() => clickable && (setTimedOut(null), socket.emit('admin_play', { position: pos, card: { suit: c.suit, rank: c.rank } }))}>
+            {miniCard(c)}
+          </button>
+        ))}
+      </div>
+    );
   }
 
   let adminPanel = null;
@@ -481,7 +511,7 @@ function App() {
               <button className="ac-btn blue" onClick={() => socket.emit('rotate_dealer')}>Move Dealer</button>
               <button className="ac-btn orange" onClick={() => socket.emit('reset_scores')}>Reset Scores</button>
               <button className="ac-btn orange" onClick={() => socket.emit('reset_game')}>Reset Game</button>
-              {timedOut && (
+              {timedOut && timedOut.playerId && (
                 <button className="ac-btn blue" onClick={() => { setTimedOut(null); socket.emit('admin_play', { targetId: timedOut.playerId }); }}>
                   Take Over ({timedOut.playerName})
                 </button>
@@ -522,18 +552,24 @@ function App() {
       {error && <div className="toast error">{error}</div>}
       {timedOut && (
         <div className="timeout-banner">
-          {timedOut.playerName} timed out! {isAdmin && <button onClick={() => { setTimedOut(null); socket.emit('admin_play', { targetId: timedOut.playerId }); }}>Take Over</button>}
+          {timedOut.playerId ? `${timedOut.playerName} timed out!` : `${timedOut.playerName}'s seat needs you!`}
+          {isAdmin && timedOut.playerId && (
+            <button onClick={() => { setTimedOut(null); socket.emit('admin_play', { targetId: timedOut.playerId }); }}>Take Over</button>
+          )}
+          {isAdmin && !timedOut.playerId && <span> — play their seat below</span>}
         </div>
       )}
 
       {/* Top player */}
       <div className="table-seat top">
         <div className="seat-info">{playerAtPos(posOrder[0])?.name || POSITION_NAMES[posOrder[0]]}{playerAtPos(posOrder[0]) && <span className="team-badge">{playerAtPos(posOrder[0]).team}</span>}</div>
-        <div className="hand-cards">
-          {Array.from({ length: faceDownCount(playerAtPos(posOrder[0])) }).map((_, i) => (
-            <span key={i} className="card-back" />
-          ))}
-        </div>
+        {vacatedAt(posOrder[0]) ? renderVacated(posOrder[0]) : (
+          <div className="hand-cards">
+            {Array.from({ length: faceDownCount(playerAtPos(posOrder[0])) }).map((_, i) => (
+              <span key={i} className="card-back" />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Center area */}
@@ -546,9 +582,9 @@ function App() {
             <div className="round-info">Hand {gameState.handNumber}/6 · Trick {gameState.trickNumber + 1}/6</div>
             <div className="current-action">
               {gameState.state === 'cut' && `Waiting for ${players.find(p => p.isAdmin)?.name || 'admin'} to cut the deck`}
-              {isBidding && `${curPlayer?.name} is bidding`}
-              {isTrump && `${players.find(p => p.id === gameState.declarer?.id)?.name || 'Declarer'} is selecting trump`}
-              {isPlaying && `${curPlayer?.name}'s turn`}
+              {isBidding && `${curPlayer?.name} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`}
+              {isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`}
+              {isPlaying && `${curPlayer?.name}'s turn${isAdmin && vacatedTurnPos ? ' — you play this seat' : ''}`}
               {gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm'}
               {gameState.state === 'game_over' && `${gameState.winner} wins!`}
             </div>
@@ -569,7 +605,7 @@ function App() {
 
         {/* Bidding overlay */}
         {isBidding && (
-          <div className={`overlay${isMyTurn ? ' active' : ''}`}>
+          <div className={`overlay${isMyTurn || (isAdmin && vacatedTurnPos) ? ' active' : ''}`}>
             <h3>Bidding</h3>
             <p>Current bidder: {curPlayer?.name}</p>
             {isMyTurn && (
@@ -580,8 +616,19 @@ function App() {
                 ))}
               </div>
             )}
+            {isAdmin && vacatedTurnPos && (
+              <>
+                <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
+                <div className="bid-buttons">
+                  <button onClick={() => socket.emit('admin_play', { position: vacatedTurnPos, card: 'pass' })} className="bid-pass">Pass</button>
+                  {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
+                    <button key={b} onClick={() => socket.emit('admin_play', { position: vacatedTurnPos, card: b })} className="bid-num">{b}</button>
+                  ))}
+                </div>
+              </>
+            )}
             <div className="bid-summary">
-              {players.map(p => <div key={p.id}>{p.name}: {p.bid || '—'}</div>)}
+              {players.map(p => <div key={p.id || p.position}>{p.name}: {p.bid || '—'}</div>)}
             </div>
           </div>
         )}
@@ -598,8 +645,19 @@ function App() {
                   </button>
                 ))}
               </div>
+            ) : isAdmin && declarerVacated ? (
+              <div>
+                <p style={{ marginBottom: 8, color: '#a0d0a0' }}>Choose trump for {declarerVacated.playerName}</p>
+                <div className="trump-cards">
+                  {(declarerVacated.hand || []).map((c, i) => (
+                    <button key={i} className="card-btn" onClick={() => socket.emit('admin_play', { position: declarerVacated.position, card: { suit: c.suit, rank: c.rank } })}>
+                      {renderCard(c)}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : (
-              <p>Waiting for {players.find(p => p.id === gameState.declarer?.id)?.name || 'declarer'} to choose trump...</p>
+              <p>Waiting for {players.find(p => p.position === gameState.declarer?.position)?.name || 'declarer'} to choose trump...</p>
             )}
           </div>
         )}
@@ -608,42 +666,48 @@ function App() {
       {/* Left player */}
       <div className="table-seat left">
         <div className="seat-info">{playerAtPos(posOrder[3])?.name || POSITION_NAMES[posOrder[3]]}{playerAtPos(posOrder[3]) && <span className="team-badge">{playerAtPos(posOrder[3]).team}</span>}</div>
-        <div className="hand-cards vert">
-          {Array.from({ length: faceDownCount(playerAtPos(posOrder[3])) }).map((_, i) => (
-            <span key={i} className="card-back mini" />
-          ))}
-        </div>
+        {vacatedAt(posOrder[3]) ? renderVacated(posOrder[3], true) : (
+          <div className="hand-cards vert">
+            {Array.from({ length: faceDownCount(playerAtPos(posOrder[3])) }).map((_, i) => (
+              <span key={i} className="card-back mini" />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Right player */}
       <div className="table-seat right">
         <div className="seat-info">{playerAtPos(posOrder[1])?.name || POSITION_NAMES[posOrder[1]]}{playerAtPos(posOrder[1]) && <span className="team-badge">{playerAtPos(posOrder[1]).team}</span>}</div>
-        <div className="hand-cards vert">
-          {Array.from({ length: faceDownCount(playerAtPos(posOrder[1])) }).map((_, i) => (
-            <span key={i} className="card-back mini" />
-          ))}
-        </div>
+        {vacatedAt(posOrder[1]) ? renderVacated(posOrder[1], true) : (
+          <div className="hand-cards vert">
+            {Array.from({ length: faceDownCount(playerAtPos(posOrder[1])) }).map((_, i) => (
+              <span key={i} className="card-back mini" />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Bottom player (YOU) + hand */}
       <div className="table-seat bottom">
         <div className="seat-info">{playerAtPos(posOrder[2])?.name || POSITION_NAMES[posOrder[2]]}</div>
-        {(isAdmin || isSpectator) ? (
-          <div className="spectator-label">{isSpectator ? 'Observing' : 'Admin'} — all hands visible</div>
-        ) : (
-          <div className="my-hand">
-            {(me?.hand || []).map((c, i) => {
-              const isTrumpCard = isPlaying && gameState.trumpSuit && c.suit === gameState.trumpSuit && me.hand.length > 4;
-              const canPlay = isMyTurn && isPlaying && !isBidding && !isTrump;
-              return (
-                <button key={i} className={`hand-card${isTrumpCard ? ' trump' : ''}`}
-                  disabled={!canPlay}
-                  onClick={() => canPlay && socket.emit('play', { card: { suit: c.suit, rank: c.rank } })}>
-                  {renderCard(c)}
-                </button>
-              );
-            })}
-          </div>
+        {vacatedAt(posOrder[2]) ? renderVacated(posOrder[2]) : (
+          (isAdmin || isSpectator) ? (
+            <div className="spectator-label">{isSpectator ? 'Observing' : 'Admin'} — all hands visible</div>
+          ) : (
+            <div className="my-hand">
+              {(me?.hand || []).map((c, i) => {
+                const isTrumpCard = isPlaying && gameState.trumpSuit && c.suit === gameState.trumpSuit && me.hand.length > 4;
+                const canPlay = isMyTurn && isPlaying && !isBidding && !isTrump;
+                return (
+                  <button key={i} className={`hand-card${isTrumpCard ? ' trump' : ''}`}
+                    disabled={!canPlay}
+                    onClick={() => canPlay && socket.emit('play', { card: { suit: c.suit, rank: c.rank } })}>
+                    {renderCard(c)}
+                  </button>
+                );
+              })}
+            </div>
+          )
         )}
       </div>
 
