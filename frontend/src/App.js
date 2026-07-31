@@ -252,8 +252,11 @@ function App() {
     const rows = tricks.map(t => {
       const cardAt = {};
       for (const c of t.cards) cardAt[c.position] = c.card;
-      if (t.winnerTeam === 'N-S') nsRunning += (t.teamPoints?.['N-S'] || 0);
-      else ewRunning += (t.teamPoints?.['E-W'] || 0);
+      const winValue = t.winnerPoints != null
+        ? t.winnerPoints
+        : (t.teamPoints?.['N-S'] || 0) + (t.teamPoints?.['E-W'] || 0);
+      if (t.winnerTeam === 'N-S') nsRunning += winValue;
+      else ewRunning += winValue;
       return {
         cards: cardAt,
         winner: t.winnerTeam,
