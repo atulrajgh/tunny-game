@@ -330,7 +330,7 @@ function App() {
   const isDefender = myPos && declarerPos && PARTNER[myPos] !== declarerPos && myPos !== declarerPos;
 
   // Trump action rules: can't be first action unless last hand and declarer has only trump card
-  const isFirstTrick = gameState.trickNumber === 0 || (gameState.currentTrick?.length || 0) === 0;
+  const isFirstTrick = (gameState.currentTrick?.length || 0) === 0;
   const isLastHand = gameState.handNumber >= 5;
   const declarer = players.find(p => p.id === gameState.declarer?.id);
   const declarerOnlyTrump = declarer?.hand?.length === 1;
