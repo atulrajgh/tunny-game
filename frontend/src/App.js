@@ -310,8 +310,9 @@ function App() {
             <div className="score-num">{gameState.scores?.['E-W'] || 0}</div>
             {players.filter(p => p.team === 'E-W').map(p => <div key={p.id}>{p.name}</div>)}
           </div>
+          </div>
+          <a href="/instructions" target="_blank" className="help-link">How to Play</a>
         </div>
-        {isAdmin && <button className="start-btn" onClick={() => socket.emit('reset_game')}>Play Again</button>}
       </div>
     );
   }
