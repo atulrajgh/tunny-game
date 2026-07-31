@@ -8,10 +8,6 @@ const POSITION_NAMES = { N: 'North', S: 'South', E: 'East', W: 'West' };
 const PARTNER = { N: 'S', S: 'N', E: 'W', W: 'E' };
 const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E' };
 
-function bidRequirement(bid) {
-  return bid + 120;
-}
-
 function App() {
   const [socket, setSocket] = useState(null);
   const [gameState, setGameState] = useState(null);
@@ -288,9 +284,6 @@ function App() {
             </div>
           ))}
         </div>
-        <div className="review-score">
-          Tricks: N-S {gameState.teamTricks?.['N-S'] || 0} · E-W {gameState.teamTricks?.['E-W'] || 0} — Running: N-S {gameState.scores?.['N-S'] || 0} · E-W {gameState.scores?.['E-W'] || 0}
-        </div>
         {isAdmin && (
           <button className="start-btn" onClick={() => socket.emit('confirm_hand')}>
             {gameState.handNumber >= 6 ? 'End Game' : 'Confirm & Next Hand'}
@@ -554,7 +547,7 @@ function App() {
             <div className="current-action">
               {gameState.state === 'cut' && `Waiting for ${players.find(p => p.isAdmin)?.name || 'admin'} to cut the deck`}
               {isBidding && `${curPlayer?.name} is bidding`}
-              {isTrump && `${gameState.declarer?.position || 'Declarer'} is selecting trump`}
+              {isTrump && `${players.find(p => p.id === gameState.declarer?.id)?.name || 'Declarer'} is selecting trump`}
               {isPlaying && `${curPlayer?.name}'s turn`}
               {gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm'}
               {gameState.state === 'game_over' && `${gameState.winner} wins!`}
@@ -583,15 +576,10 @@ function App() {
               <div className="bid-buttons">
                 <button onClick={() => socket.emit('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
                 {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
-                  <button key={b} title={`Need ${bidRequirement(b)} points`} onClick={() => socket.emit('bid', { bid: b })} className="bid-num">{b}</button>
+                  <button key={b} onClick={() => socket.emit('bid', { bid: b })} className="bid-num">{b}</button>
                 ))}
               </div>
             )}
-            <div className="bid-legend">
-              {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
-                <span key={b} className="legend-item"><b>{b}</b> → {bidRequirement(b)} pts</span>
-              ))}
-            </div>
             <div className="bid-summary">
               {players.map(p => <div key={p.id}>{p.name}: {p.bid || '—'}</div>)}
             </div>
@@ -611,7 +599,7 @@ function App() {
                 ))}
               </div>
             ) : (
-              <p>Waiting for {gameState.declarer?.position || 'declarer'} to choose trump...</p>
+              <p>Waiting for {players.find(p => p.id === gameState.declarer?.id)?.name || 'declarer'} to choose trump...</p>
             )}
           </div>
         )}

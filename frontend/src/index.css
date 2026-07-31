@@ -103,9 +103,6 @@ input, button { font-family: inherit; }
 .bid-num { padding: 8px 14px; border: none; border-radius: 6px; background: #3498db; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; }
 .bid-num:hover, .bid-pass:hover { opacity: 0.85; }
 .bid-summary { margin-top: 12px; font-size: 13px; }
-.bid-legend { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; font-size: 11px; color: #a0d0a0; }
-.bid-legend .legend-item { background: #1a3a1a; padding: 2px 6px; border-radius: 4px; }
-.bid-legend .legend-item b { color: #f0c040; }
 
 .trump-cards { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .card-btn { background: none; border: none; cursor: pointer; padding: 4px; }
