@@ -270,9 +270,12 @@ function App() {
         {error && <div className="toast error">{error}</div>}
         <div className="review-grid">
           <div className="review-grid-row header">
-            {posOrder.map(pos => (
-              <div key={pos}>{POSITION_NAMES[pos]}{gameState.declarer?.position === pos && gameState.trumpSuit ? <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span> : null}</div>
-            ))}
+            {posOrder.map(pos => {
+              const p = players.find(x => x.position === pos);
+              return (
+                <div key={pos}>{p?.name || POSITION_NAMES[pos]}{gameState.declarer?.position === pos && gameState.trumpSuit ? <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span> : null}</div>
+              );
+            })}
             <div>N-S</div><div>E-W</div>
           </div>
           {rows.map((r, i) => (
