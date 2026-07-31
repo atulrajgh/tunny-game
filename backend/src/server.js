@@ -60,8 +60,8 @@ td{font-size:13px}
 <p><span class="card">J</span> <span class="card">9</span> <span class="card">A</span> <span class="card">10</span> <span class="card">K</span> <span class="card">Q</span></p>
 <p>Each card has an HCP value:</p>
 <table><tr><th>Card</th><td><span class="card">J</span></td><td><span class="card">9</span></td><td><span class="card">A</span></td><td><span class="card">10</span></td><td><span class="card">K</span></td><td><span class="card">Q</span></td></tr>
-<tr><th>HCP</th><td>20</td><td>15</td><td>15</td><td>10</td><td>5</td><td>5</td></tr></table>
-<p>Total HCP in each hand: <strong>280</strong> (4 cards per player × 6).</p>
+<tr><th>HCP</th><td>30</td><td>20</td><td>15</td><td>10</td><td>5</td><td>5</td></tr></table>
+<p>Total HCP in each hand: <strong>340</strong> (4 cards per player × 6).</p>
 
 <h2>Game Flow</h2>
 <h3>1. Waiting Room</h3>
@@ -89,10 +89,10 @@ td{font-size:13px}
 <h3>7. Scoring</h3>
 <p>After all tricks, the admin reviews and confirms the hand:</p>
 <ul>
-<li><strong>Declarer's team</strong> earns <strong>1 point</strong> if their total HCP ≥ their bid</li>
-<li><strong>Bonus point</strong> (slam) if their HCP ≥ 280</li>
+<li><strong>Declarer's team</strong> earns <strong>1 point</strong> if their total HCP ≥ bid + 120 (e.g. bid 50 → need 170, bid 100 → need 220, bid 160 → need 280)</li>
+<li><strong>Bonus point</strong> (slam) if their HCP ≥ 340</li>
 <li><strong>Defenders</strong> earn <strong>1 point</strong> if declarer's team fails to meet the bid</li>
-<li><strong>Bonus point</strong> for defenders if they collect all 280 HCP</li>
+<li><strong>Bonus point</strong> for defenders if they collect all 340 HCP</li>
 </ul>
 
 <h2>Winning</h2>

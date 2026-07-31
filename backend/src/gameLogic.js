@@ -4,8 +4,12 @@ const { v4: uuidv4 } = require('uuid');
 const SUITS = ['♠', '♥', '♦', '♣'];
 const RANKS = ['J', '9', 'A', '10', 'K', 'Q'];
 const RANK_ORDER = { J: 6, 9: 5, A: 4, 10: 3, K: 2, Q: 1 };
-const HCP_VALUES = { J: 20, 9: 15, A: 15, 10: 10, K: 5, Q: 5 };
+const HCP_VALUES = { J: 30, 9: 20, A: 15, 10: 10, K: 5, Q: 5 };
 const MAX_HANDS = 6;
+
+function bidRequirement(bid) {
+  return bid + 120;
+}
 
 class Card {
   constructor(suit, rank) {
@@ -271,7 +275,7 @@ class Game {
     if (bid === 'pass') {
       player.bid = 'pass';
       this.passCount++;
-    } else if (typeof bid === 'number' && bid >= 50 && bid <= 140 && bid > (this.highestBid || 0)) {
+    } else if (typeof bid === 'number' && bid >= 50 && bid <= 170 && bid > (this.highestBid || 0)) {
       player.bid = bid;
       this.lastBidder = player;
       this.highestBid = bid;
@@ -413,14 +417,14 @@ class Game {
     const declarerTricks = this.teamTricks[declarerTeam];
     const defendingTeam = declarerTeam === 'N-S' ? 'E-W' : 'N-S';
     const declarerHCP = this.teamPoints[declarerTeam];
-    if (declarerHCP >= this.declarer.bid) {
+    if (declarerHCP >= bidRequirement(this.declarer.bid)) {
       this.scores[declarerTeam] += 1;
-      if (declarerHCP >= 280) {
+      if (declarerHCP >= 340) {
         this.scores[declarerTeam] += 1;
       }
     } else {
       this.scores[defendingTeam] += 1;
-      if (this.teamPoints[defendingTeam] >= 280) {
+      if (this.teamPoints[defendingTeam] >= 340) {
         this.scores[defendingTeam] += 1;
       }
     }
@@ -616,4 +620,4 @@ class Game {
   }
 }
 
-module.exports = { Game, Player, Card, SUITS, RANKS, RANK_ORDER, HCP_VALUES, MAX_HANDS };
+module.exports = { Game, Player, Card, SUITS, RANKS, RANK_ORDER, HCP_VALUES, MAX_HANDS, bidRequirement };

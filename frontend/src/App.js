@@ -8,6 +8,10 @@ const POSITION_NAMES = { N: 'North', S: 'South', E: 'East', W: 'West' };
 const PARTNER = { N: 'S', S: 'N', E: 'W', W: 'E' };
 const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E' };
 
+function bidRequirement(bid) {
+  return bid + 120;
+}
+
 function App() {
   const [socket, setSocket] = useState(null);
   const [gameState, setGameState] = useState(null);
@@ -575,11 +579,16 @@ function App() {
             {isMyTurn && (
               <div className="bid-buttons">
                 <button onClick={() => socket.emit('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
-                {[50,60,70,80,90,100,110,120,130,140].map(b => (
-                  <button key={b} onClick={() => socket.emit('bid', { bid: b })} className="bid-num">{b}</button>
+                {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
+                  <button key={b} title={`Need ${bidRequirement(b)} points`} onClick={() => socket.emit('bid', { bid: b })} className="bid-num">{b}</button>
                 ))}
               </div>
             )}
+            <div className="bid-legend">
+              {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
+                <span key={b} className="legend-item"><b>{b}</b> → {bidRequirement(b)} pts</span>
+              ))}
+            </div>
             <div className="bid-summary">
               {players.map(p => <div key={p.id}>{p.name}: {p.bid || '—'}</div>)}
             </div>
