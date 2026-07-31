@@ -348,6 +348,12 @@ function App() {
 
   function playerAtPos(pos) { return players.find(p => p.position === pos); }
 
+  function faceDownCount(p) {
+    if (!p) return 0;
+    if (p.hand) return p.hand.length;
+    return p.cardCount || 0;
+  }
+
   function renderCard(c, small) {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
@@ -528,7 +534,7 @@ function App() {
       <div className="table-seat top">
         <div className="seat-info">{playerAtPos(posOrder[0])?.name || POSITION_NAMES[posOrder[0]]}{playerAtPos(posOrder[0]) && <span className="team-badge">{playerAtPos(posOrder[0]).team}</span>}</div>
         <div className="hand-cards">
-          {playerAtPos(posOrder[0])?.hand?.map((c, i) => (
+          {Array.from({ length: faceDownCount(playerAtPos(posOrder[0])) }).map((_, i) => (
             <span key={i} className="card-back" />
           ))}
         </div>
@@ -607,7 +613,7 @@ function App() {
       <div className="table-seat left">
         <div className="seat-info">{playerAtPos(posOrder[3])?.name || POSITION_NAMES[posOrder[3]]}{playerAtPos(posOrder[3]) && <span className="team-badge">{playerAtPos(posOrder[3]).team}</span>}</div>
         <div className="hand-cards vert">
-          {playerAtPos(posOrder[3])?.hand?.map((c, i) => (
+          {Array.from({ length: faceDownCount(playerAtPos(posOrder[3])) }).map((_, i) => (
             <span key={i} className="card-back mini" />
           ))}
         </div>
@@ -617,7 +623,7 @@ function App() {
       <div className="table-seat right">
         <div className="seat-info">{playerAtPos(posOrder[1])?.name || POSITION_NAMES[posOrder[1]]}{playerAtPos(posOrder[1]) && <span className="team-badge">{playerAtPos(posOrder[1]).team}</span>}</div>
         <div className="hand-cards vert">
-          {playerAtPos(posOrder[1])?.hand?.map((c, i) => (
+          {Array.from({ length: faceDownCount(playerAtPos(posOrder[1])) }).map((_, i) => (
             <span key={i} className="card-back mini" />
           ))}
         </div>
