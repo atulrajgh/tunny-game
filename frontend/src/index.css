@@ -136,6 +136,20 @@ input, button { font-family: inherit; }
 .mini-card.red { color: #c0392b; }
 .review-score { font-size: 20px; font-weight: 700; margin: 16px; }
 
+/* ---- Review Grid (6 columns) ---- */
+.review-grid { display: flex; flex-direction: column; gap: 2px; max-width: 720px; margin: 16px auto; }
+.review-grid-row { display: grid; grid-template-columns: repeat(4, 1fr) 90px 90px; align-items: center; gap: 2px; padding: 4px 2px; border-radius: 6px; }
+.review-grid-row.header { font-size: 12px; font-weight: 700; color: #f0c040; background: #1a3a1a; }
+.review-grid-row.header .trump-suit { margin-left: 4px; font-size: 14px; color: #f0c040; }
+.review-grid-row.header .trump-suit.red { color: #ff7b6b; }
+.review-grid-row.header div { padding: 6px 4px; }
+.review-grid-row.win-ns { background: #2d4a7a; }
+.review-grid-row.win-ew { background: #7a2d2d; }
+.review-grid-card { display: flex; justify-content: center; }
+.review-grid-card .mini-card { font-size: 13px; padding: 3px 6px; }
+.review-grid-pts { font-size: 14px; font-weight: 700; color: #f0c040; text-align: center; }
+.review-grid-pts:empty { color: #6a9a6a; }
+
 /* ---- Game Over ---- */
 .gameover-screen { text-align: center; }
 .winner-banner { font-size: 36px; font-weight: 700; margin: 32px 0; color: #f0c040; }

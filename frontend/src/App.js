@@ -249,44 +249,47 @@ function App() {
 
   // --- Hand Review ---
   if (gameState.state === 'hand_review' && screen === 'review') {
-    const nsPlayers = players.filter(p => p.team === 'N-S');
-    const ewPlayers = players.filter(p => p.team === 'E-W');
+    const tricks = gameState.trickHistory || [];
+    const posOrder = ['N', 'S', 'E', 'W'];
+    let nsRunning = 0;
+    let ewRunning = 0;
+    const rows = tricks.map(t => {
+      const cardAt = {};
+      for (const c of t.cards) cardAt[c.position] = c.card;
+      if (t.winnerTeam === 'N-S') nsRunning += (t.teamPoints?.['N-S'] || 0);
+      else ewRunning += (t.teamPoints?.['E-W'] || 0);
+      return {
+        cards: cardAt,
+        winner: t.winnerTeam,
+        nsTotal: t.winnerTeam === 'N-S' ? nsRunning : null,
+        ewTotal: t.winnerTeam === 'E-W' ? ewRunning : null
+      };
+    });
     return (
       <div className="app review-screen">
         <h2>Hand {gameState.handNumber} Review</h2>
         {error && <div className="toast error">{error}</div>}
-        <div className="review-teams">
-          <div className="review-team">
-            <h3>N-S</h3>
-            <div className="team-points">Tricks: {gameState.teamTricks?.['N-S'] || 0} · Points: {gameState.teamPoints?.['N-S'] || 0}</div>
-            {nsPlayers.map(p => (
-              <div key={p.id} className="review-hand">
-                <div className="review-player">{p.name} {p.id === gameState.declarer?.id ? '(Declarer)' : ''}</div>
-                <div className="review-cards">
-                  {(p.hand || []).map((c, i) => (
-                    <span key={i} className={`mini-card ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''}`}>{c.rank}{c.suit}</span>
-                  ))}
-                </div>
-              </div>
+        <div className="review-grid">
+          <div className="review-grid-row header">
+            {posOrder.map(pos => (
+              <div key={pos}>{POSITION_NAMES[pos]}{gameState.declarer?.position === pos && gameState.trumpSuit ? <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span> : null}</div>
             ))}
+            <div>N-S</div><div>E-W</div>
           </div>
-          <div className="review-team">
-            <h3>E-W</h3>
-            <div className="team-points">Tricks: {gameState.teamTricks?.['E-W'] || 0} · Points: {gameState.teamPoints?.['E-W'] || 0}</div>
-            {ewPlayers.map(p => (
-              <div key={p.id} className="review-hand">
-                <div className="review-player">{p.name} {p.id === gameState.declarer?.id ? '(Declarer)' : ''}</div>
-                <div className="review-cards">
-                  {(p.hand || []).map((c, i) => (
-                    <span key={i} className={`mini-card ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''}`}>{c.rank}{c.suit}</span>
-                  ))}
+          {rows.map((r, i) => (
+            <div key={i} className={`review-grid-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
+              {posOrder.map(pos => (
+                <div key={pos} className="review-grid-card">
+                  {r.cards[pos] ? <span className={`mini-card ${r.cards[pos].suit === '♥' || r.cards[pos].suit === '♦' ? 'red' : ''}`}>{r.cards[pos].rank}{r.cards[pos].suit}</span> : <span className="ac-empty">—</span>}
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+              <div className="review-grid-pts">{r.nsTotal != null ? r.nsTotal : ''}</div>
+              <div className="review-grid-pts">{r.ewTotal != null ? r.ewTotal : ''}</div>
+            </div>
+          ))}
         </div>
         <div className="review-score">
-          Running: N-S {gameState.scores?.['N-S'] || 0} · E-W {gameState.scores?.['E-W'] || 0}
+          Tricks: N-S {gameState.teamTricks?.['N-S'] || 0} · E-W {gameState.teamTricks?.['E-W'] || 0} — Running: N-S {gameState.scores?.['N-S'] || 0} · E-W {gameState.scores?.['E-W'] || 0}
         </div>
         {isAdmin && (
           <button className="start-btn" onClick={() => socket.emit('confirm_hand')}>

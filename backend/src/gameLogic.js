@@ -51,6 +51,7 @@ class Game {
     this.trumpRevealed = false;
     this.trumpCardPlayed = false;
     this.currentTrick = [];
+    this.trickHistory = [];
     this.leadSuit = null;
     this.trickNumber = 0;
     this.handNumber = 0;
@@ -359,7 +360,22 @@ class Game {
       }
     }
     this.teamTricks[winner.player.team]++;
-    for (const entry of this.currentTrick) this.teamPoints[winner.player.team] += entry.card.hcp;
+    const trickPoints = {};
+    for (const entry of this.currentTrick) {
+      this.teamPoints[winner.player.team] += entry.card.hcp;
+      trickPoints[entry.player.team] = (trickPoints[entry.player.team] || 0) + entry.card.hcp;
+    }
+    this.trickHistory.push({
+      trickNumber: this.trickNumber,
+      cards: this.currentTrick.map(e => ({
+        playerId: e.player.id,
+        playerName: e.player.name,
+        position: e.player.position,
+        card: { suit: e.card.suit, rank: e.card.rank, hcp: e.card.hcp }
+      })),
+      winnerTeam: winner.player.team,
+      teamPoints: trickPoints
+    });
     this.currentTrick = [];
     this.currentPlayer = winner.player;
     this.trickNumber++;
@@ -447,7 +463,7 @@ class Game {
     this.teamTricks = { 'N-S': 0, 'E-W': 0 };
     this.teamPoints = { 'N-S': 0, 'E-W': 0 };
     this.trumpSuit = null; this.trumpCard = null; this.trumpCardIndex = -1;
-    this.trumpRevealed = false; this.trumpCardPlayed = false; this.currentTrick = []; this.trickNumber = 0;
+    this.trumpRevealed = false; this.trumpCardPlayed = false; this.currentTrick = []; this.trickHistory = []; this.trickNumber = 0;
     this.declarer = null; this.dummy = null; this.lastBidder = null;
     this.highestBid = null; this.passCount = 0;
     this.contractLevel = null; this.targetTricks = null;
@@ -511,6 +527,7 @@ class Game {
         position: e.player.position,
         card: { suit: e.card.suit, rank: e.card.rank }
       })),
+      trickHistory: this.trickHistory,
       spectators: this.spectators.map(s => ({ id: s.id, name: s.name }))
     };
     state.teamTricks = { ...this.teamTricks };
@@ -606,7 +623,7 @@ class Game {
     this.players = []; this.state = 'waiting'; this.dealer = null;
     this.currentPlayer = null; this.declarer = null; this.dummy = null;
     this.trumpSuit = null; this.trumpCard = null; this.trumpCardIndex = -1;
-    this.trumpRevealed = false; this.currentTrick = []; this.trickNumber = 0;
+    this.trumpRevealed = false; this.currentTrick = []; this.trickHistory = []; this.trickNumber = 0;
     this.handNumber = 0; this.deck = []; this.lastBidder = null;
     this.highestBid = null; this.passCount = 0;
     this.contractLevel = null; this.targetTricks = null;
