@@ -129,6 +129,7 @@ function App() {
               </div>
             ))}
           </div>
+          <a href="/instructions" target="_blank" className="help-link">How to Play</a>
         </div>
       </div>
     );
@@ -311,9 +312,8 @@ function App() {
             {players.filter(p => p.team === 'E-W').map(p => <div key={p.id}>{p.name}</div>)}
           </div>
           </div>
-          <a href="/instructions" target="_blank" className="help-link">How to Play</a>
+          <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 16 }}>How to Play</a>
         </div>
-      </div>
     );
   }
 
