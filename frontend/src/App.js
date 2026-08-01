@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import io from 'socket.io-client';
 import './index.css';
 
@@ -21,6 +21,15 @@ function App() {
   const [error, setError] = useState('');
   const [cutCard, setCutCard] = useState(null);
   const [timedOut, setTimedOut] = useState(null);
+  const actionLockRef = useRef(false);
+
+  const sendOnce = useCallback((type, payload) => {
+    if (actionLockRef.current) return;
+    actionLockRef.current = true;
+    socket.emit(type, payload);
+  }, [socket]);
+
+  const unlockAction = useCallback(() => { actionLockRef.current = false; }, []);
 
 
   const showError = useCallback((msg) => { setError(msg); setTimeout(() => setError(''), 5000); }, []);
@@ -29,7 +38,7 @@ function App() {
     const s = SOCKET_URL ? io(SOCKET_URL) : io();
     setSocket(s);
     s.on('room_list', (list) => setRoomList(list));
-    s.on('error', (e) => showError(e.message));
+    s.on('error', (e) => { showError(e.message); unlockAction(); });
     s.on('kicked', () => { setScreen('login'); setGameState(null); showError('You were kicked'); });
     return () => s.disconnect();
   }, [showError]);
@@ -44,6 +53,7 @@ function App() {
       setScreen('room');
     });
     socket.on('state', (state) => {
+      unlockAction();
       setGameState(state);
       if (state.me) {
         setIsAdmin(state.me.isAdmin);
@@ -210,12 +220,12 @@ function App() {
         {isAdmin && gameState.state === 'waiting' && (
           <button className="start-btn"
             disabled={Object.keys(gameState.positions || {}).length < 4}
-            onClick={() => socket.emit('start_game')}>
+            onClick={() => sendOnce('start_game')}>
             Start Game
           </button>
         )}
         {gameState.state === 'cut' && isAdmin && (
-          <button className="start-btn" onClick={() => socket.emit('cut_done')}>Reveal Cut Results</button>
+          <button className="start-btn" onClick={() => sendOnce('cut_done')}>Reveal Cut Results</button>
         )}
       </div>
     );
@@ -234,7 +244,7 @@ function App() {
               <span className="suit">{myCut.suit}</span>
             </div>
             <p>Your card: {myCut.rank}{myCut.suit}</p>
-            {isAdmin && <button className="start-btn" onClick={() => socket.emit('cut_done')}>Continue</button>}
+            {isAdmin && <button className="start-btn" onClick={() => sendOnce('cut_done')}>Continue</button>}
           </div>
         ) : (
           <p>Waiting for cut results...</p>
@@ -291,7 +301,7 @@ function App() {
           ))}
         </div>
         {isAdmin && (
-          <button className="start-btn" onClick={() => socket.emit('confirm_hand')}>
+          <button className="start-btn" onClick={() => sendOnce('confirm_hand')}>
             {gameState.handNumber >= 6 ? 'End Game' : 'Confirm & Next Hand'}
           </button>
         )}
@@ -384,7 +394,7 @@ function App() {
         {isAdmin && isTurn && <div className="vacated-tag">Play for {v.playerName}</div>}
         {v.hand.map((c, i) => (
           <button key={i} className="vacated-card-btn" disabled={!clickable}
-            onClick={() => clickable && (setTimedOut(null), socket.emit('admin_play', { position: pos, card: { suit: c.suit, rank: c.rank } }))}>
+            onClick={() => clickable && (setTimedOut(null), sendOnce('admin_play', { position: pos, card: { suit: c.suit, rank: c.rank } }))}>
             {miniCard(c)}
           </button>
         ))}
@@ -514,16 +524,16 @@ function App() {
 
             <h3 style={{ marginTop: 12 }}>Controls</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <button className="ac-btn blue" onClick={() => socket.emit('rotate_dealer')}>Move Dealer</button>
-              <button className="ac-btn orange" onClick={() => socket.emit('reset_scores')}>Reset Scores</button>
-              <button className="ac-btn orange" onClick={() => socket.emit('reset_game')}>Reset Game</button>
+                <button className="ac-btn blue" onClick={() => sendOnce('rotate_dealer')}>Move Dealer</button>
+                <button className="ac-btn orange" onClick={() => sendOnce('reset_scores')}>Reset Scores</button>
+                <button className="ac-btn orange" onClick={() => sendOnce('reset_game')}>Reset Game</button>
               {timedOut && timedOut.playerId && (
-                <button className="ac-btn blue" onClick={() => { setTimedOut(null); socket.emit('admin_play', { targetId: timedOut.playerId }); }}>
+                <button className="ac-btn blue" onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOut.playerId }); }}>
                   Take Over ({timedOut.playerName})
                 </button>
               )}
-              {gameState.state === 'hand_review' && (
-                <button className="ac-btn green" onClick={() => socket.emit('confirm_hand')}>
+              {!timedOut && (
+                <button className="ac-btn green" onClick={() => sendOnce('confirm_hand')}>
                   {gameState.handNumber >= 6 ? 'End Game' : 'Confirm Hand'}
                 </button>
               )}
@@ -560,7 +570,7 @@ function App() {
         <div className="timeout-banner">
           {timedOut.playerId ? `${timedOut.playerName} timed out!` : `${timedOut.playerName}'s seat needs you!`}
           {isAdmin && timedOut.playerId && (
-            <button onClick={() => { setTimedOut(null); socket.emit('admin_play', { targetId: timedOut.playerId }); }}>Take Over</button>
+            <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOut.playerId }); }}>Take Over</button>
           )}
           {isAdmin && !timedOut.playerId && <span> — play their seat below</span>}
         </div>
@@ -616,9 +626,9 @@ function App() {
             <p>Current bidder: {curPlayer?.name}</p>
             {isMyTurn && (
               <div className="bid-buttons">
-                <button onClick={() => socket.emit('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
+                <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
                 {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
-                  <button key={b} onClick={() => socket.emit('bid', { bid: b })} className="bid-num">{b}</button>
+                  <button key={b} onClick={() => sendOnce('bid', { bid: b })} className="bid-num">{b}</button>
                 ))}
               </div>
             )}
@@ -626,9 +636,9 @@ function App() {
               <>
                 <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
                 <div className="bid-buttons">
-                  <button onClick={() => socket.emit('admin_play', { position: vacatedTurnPos, card: 'pass' })} className="bid-pass">Pass</button>
+                  <button onClick={() => sendOnce('admin_play', { position: vacatedTurnPos, card: 'pass' })} className="bid-pass">Pass</button>
                   {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
-                    <button key={b} onClick={() => socket.emit('admin_play', { position: vacatedTurnPos, card: b })} className="bid-num">{b}</button>
+                    <button key={b} onClick={() => sendOnce('admin_play', { position: vacatedTurnPos, card: b })} className="bid-num">{b}</button>
                   ))}
                 </div>
               </>
@@ -646,7 +656,7 @@ function App() {
             {isDeclarer ? (
               <div className="trump-cards">
                 {(me?.hand || []).map((c, i) => (
-                  <button key={i} className="card-btn" onClick={() => socket.emit('choose_trump', { card: { suit: c.suit, rank: c.rank } })}>
+                  <button key={i} className="card-btn" onClick={() => sendOnce('choose_trump', { card: { suit: c.suit, rank: c.rank } })}>
                     {renderCard(c)}
                   </button>
                 ))}
@@ -656,7 +666,7 @@ function App() {
                 <p style={{ marginBottom: 8, color: '#a0d0a0' }}>Choose trump for {declarerVacated.playerName}</p>
                 <div className="trump-cards">
                   {(declarerVacated.hand || []).map((c, i) => (
-                    <button key={i} className="card-btn" onClick={() => socket.emit('admin_play', { position: declarerVacated.position, card: { suit: c.suit, rank: c.rank } })}>
+                    <button key={i} className="card-btn" onClick={() => sendOnce('admin_play', { position: declarerVacated.position, card: { suit: c.suit, rank: c.rank } })}>
                       {renderCard(c)}
                     </button>
                   ))}
@@ -707,7 +717,7 @@ function App() {
                 return (
                   <button key={i} className={`hand-card${isTrumpCard ? ' trump' : ''}`}
                     disabled={!canPlay}
-                    onClick={() => canPlay && socket.emit('play', { card: { suit: c.suit, rank: c.rank } })}>
+                    onClick={() => canPlay && sendOnce('play', { card: { suit: c.suit, rank: c.rank } })}>
                     {renderCard(c)}
                   </button>
                 );
@@ -729,10 +739,10 @@ function App() {
         {(isPlaying || isBidding || isTrump) && !isSpectator && (
           <>
             {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && canAskTrump && (
-              <button className="action-btn" onClick={() => socket.emit('ask_trump')}>Ask Trump</button>
+              <button className="action-btn" onClick={() => sendOnce('ask_trump')}>Ask Trump</button>
             )}
             {isPlaying && isDeclarer && !isAdmin && gameState.trumpCard && canPlayTrump && (
-              <button className="action-btn" onClick={() => socket.emit('play_trump')}>Play Trump</button>
+              <button className="action-btn" onClick={() => sendOnce('play_trump')}>Play Trump</button>
             )}
           </>
         )}
