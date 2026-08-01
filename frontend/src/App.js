@@ -604,7 +604,6 @@ function App() {
               {gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm'}
               {gameState.state === 'game_over' && `${gameState.winner} wins!`}
             </div>
-            <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 8 }}>How to Play</a>
             {gameState.contractLevel && <div>Contract: Level {gameState.contractLevel} ({gameState.targetTricks} tricks)</div>}
             {isPlaying && gameState.currentTrick?.length > 0 && (
               <div className="current-trick">
@@ -732,6 +731,7 @@ function App() {
         <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
         <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
         <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
+        <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 8 }}>How to Play</a>
       </div>
 
       {/* Action buttons */}
