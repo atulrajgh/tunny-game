@@ -474,7 +474,6 @@ function App() {
               </>
             )}
           </div>
-          <a href="/instructions" target="_blank" className="help-link">How to Play</a>
 
           {/* Center: Game State + Bids + Current Trick */}
           <div className="ac-panel">
