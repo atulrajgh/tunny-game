@@ -757,8 +757,10 @@ function App() {
       <div className="table-seat bottom">
         <div className="seat-info">{playerAtPos(posOrder[2])?.name || POSITION_NAMES[posOrder[2]]}</div>
         {vacatedAt(posOrder[2]) ? renderVacated(posOrder[2]) : (
-          (isAdmin || isSpectator) ? (
-            <div className="spectator-label">{isSpectator ? 'Observing' : 'Admin'} — all hands visible</div>
+          (isAdmin && !isSpectator) ? (
+            <div style={{ minHeight: 30 }} />
+          ) : isSpectator ? (
+            <div className="spectator-label">Observing</div>
           ) : (
             <div className="my-hand">
               {(me?.hand || []).map((c, i) => {
