@@ -50,7 +50,7 @@ function App() {
       setIsAdmin(data.isAdmin);
       setIsSpectator(!!data.isSpectator);
       setGameId(data.gameId);
-      setScreen('room');
+      setScreen(data.isAdmin ? 'game' : 'room');
     });
     socket.on('state', (state) => {
       unlockAction();
@@ -60,10 +60,12 @@ function App() {
         setIsSpectator(!!state.me.isSpectator);
         setPlayerId(state.me.id);
       }
-      if (state.state === 'cut') {
-        setScreen('cut');
-      } else if (state.state === 'hand_review') {
+      if (state.state === 'hand_review') {
         setScreen('review');
+      } else if (state.me?.isAdmin) {
+        setScreen('game');
+      } else if (state.state === 'cut') {
+        setScreen('cut');
       } else if (state.state === 'waiting') {
         setScreen('room');
       } else {
@@ -155,8 +157,8 @@ function App() {
 
   function cardAt(idx) { return me?.hand?.[idx]; }
 
-  // --- Room view ---
-  if (gameState.state === 'waiting' || gameState.state === 'cut') {
+  // --- Room view (admin uses the admin/game screen instead) ---
+  if (!isAdmin && (gameState.state === 'waiting' || gameState.state === 'cut')) {
     return (
       <div className="app room-screen">
         <h2>Room: {gameId || gameState.roomId?.slice(0, 8)}</h2>
@@ -525,6 +527,16 @@ function App() {
 
             <h3 style={{ marginTop: 12 }}>Controls</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {gameState.state === 'waiting' && (
+                <button className="ac-btn green"
+                  disabled={Object.keys(gameState.positions || {}).length < 4}
+                  onClick={() => sendOnce('start_game')}>
+                  Start Game
+                </button>
+              )}
+              {gameState.state === 'cut' && (
+                <button className="ac-btn green" onClick={() => sendOnce('cut_done')}>Reveal Cut Results</button>
+              )}
                 <button className="ac-btn blue" onClick={() => sendOnce('rotate_dealer')}>Move Dealer</button>
                 <button className="ac-btn orange" onClick={() => sendOnce('reset_scores')}>Reset Scores</button>
                 <button className="ac-btn orange" onClick={() => sendOnce('reset_game')}>Reset Game</button>
@@ -649,6 +661,7 @@ function App() {
             {gameState.trumpRevealed && <div className="trump-revealed">♠ Trump Revealed! ♠</div>}
             <div className="round-info">Hand {gameState.handNumber}/6 · Trick {gameState.trickNumber + 1}/6</div>
             <div className="current-action">
+              {gameState.state === 'waiting' && `Waiting — assign positions and start the game`}
               {gameState.state === 'cut' && `Waiting for ${players.find(p => p.isAdmin)?.name || 'admin'} to cut the deck`}
               {isBidding && `${curPlayer?.name} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`}
               {isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`}
