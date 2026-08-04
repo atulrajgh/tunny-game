@@ -494,6 +494,7 @@ class Game {
         card: { suit: e.card.suit, rank: e.card.rank, hcp: e.card.hcp }
       })),
       winnerTeam: winner.player.team,
+      winnerPosition: winner.player.position,
       teamPoints: trickPoints,
       winnerPoints: (trickPoints['N-S'] || 0) + (trickPoints['E-W'] || 0)
     });

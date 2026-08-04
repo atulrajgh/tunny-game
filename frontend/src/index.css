@@ -218,6 +218,21 @@ input, button { font-family: inherit; }
 .ac-trick-cards { display: flex; gap: 2px; font-size: 11px; }
 .ac-empty { color: #6a9a6a; font-size: 12px; padding: 8px; text-align: center; }
 
+/* Live trick + score table */
+.ac-trick-table { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; }
+.ac-trick-table-header, .ac-trick-table-row { display: grid; grid-template-columns: 48px repeat(4, 1fr) 56px 40px 40px; gap: 6px; align-items: center; padding: 4px 6px; border-radius: 4px; }
+.ac-trick-table-header { font-size: 11px; color: #a0d0a0; background: #1a3a1a; position: sticky; top: 0; z-index: 1; }
+.ac-trick-table-row { background: #1a3a1a; font-size: 12px; }
+.ac-trick-table-row.win-ns { background: #243d5e; }
+.ac-trick-table-row.win-ew { background: #5e2424; }
+.ac-trick-table-row.current { border: 1px dashed #f0c040; }
+.ac-tt-trick { font-weight: 700; color: #f0c040; }
+.ac-tt-card { display: flex; justify-content: center; }
+.ac-tt-win { font-size: 11px; font-weight: 700; color: #f0c040; }
+.ac-tt-pts { font-size: 11px; text-align: center; }
+.mini-card.trick-winner { position: relative; border: 2px solid #f0c040; border-radius: 4px; padding: 2px 4px; }
+.mini-card.trick-winner::after { content: '✓'; position: absolute; top: -8px; right: -8px; background: #27ae60; color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 11px; line-height: 16px; text-align: center; }
+
 @media (max-width: 768px) {
   .ac-grid { grid-template-columns: 1fr; }
   .ac-state { gap: 8px; }

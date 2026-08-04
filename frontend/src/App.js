@@ -405,6 +405,7 @@ function App() {
   let adminPanel = null;
   if (isAdmin && !isSpectator) {
     const unseated = players.filter(p => !p.position);
+    const trickOrder = ['N', 'S', 'E', 'W'];
     adminPanel = (
       <div className="admin-panel">
         <div className="ac-grid">
@@ -542,22 +543,71 @@ function App() {
         </div>
       </div>
 
-        {/* All Hands */}
+        {/* Live Tricks + Scores */}
         <div className="ac-panel ac-wide" style={{ marginTop: 12 }}>
-          <h3>All Hands <span style={{ fontWeight: 400, fontSize: 11, color: '#a0d0a0' }}>(admin visibility)</span></h3>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {players.map(p => (
-              <div key={p.id} style={{ textAlign: 'center', minWidth: 120 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{p.name} <span style={{ fontWeight: 400, color: '#a0d0a0' }}>({p.position} · {p.team})</span></div>
-                <div className="review-cards">
-                  {(p.hand || []).map((c, i) => (
-                    <span key={i} className={`mini-card ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''}`}>{c.rank}{c.suit}</span>
-                  ))}
-                  {(!p.hand || p.hand.length === 0) && <span className="ac-empty">No cards</span>}
-                </div>
+          <h3>Tricks & Scores <span style={{ fontWeight: 400, fontSize: 11, color: '#a0d0a0' }}>(live)</span></h3>
+          {(gameState.trickHistory?.length > 0 || gameState.currentTrick?.length > 0) ? (
+            <div className="ac-trick-table">
+              <div className="ac-trick-table-header">
+                <span className="ac-tt-trick">Trick</span>
+                {trickOrder.map(pos => (
+                  <span key={pos} className="ac-tt-card">{POSITION_NAMES[pos]}</span>
+                ))}
+                <span className="ac-tt-win">Winner</span>
+                <span className="ac-tt-pts">N-S</span>
+                <span className="ac-tt-pts">E-W</span>
               </div>
-            ))}
-          </div>
+              {gameState.currentTrick?.length > 0 && (
+                <div className="ac-trick-table-row current">
+                  <span className="ac-tt-trick">{gameState.trickNumber + 1}*</span>
+                  {trickOrder.map(pos => {
+                    const entry = gameState.currentTrick.find(t => t.position === pos);
+                    return (
+                      <span key={pos} className="ac-tt-card">
+                        {entry?.card ? (
+                          <span className={`mini-card ${entry.card.suit === '♥' || entry.card.suit === '♦' ? 'red' : ''}`}>
+                            {entry.card.rank}{entry.card.suit}
+                          </span>
+                        ) : <span className="ac-empty" style={{ padding: 0 }}>·</span>}
+                      </span>
+                    );
+                  })}
+                  <span className="ac-tt-win">…</span>
+                  <span className="ac-tt-pts">—</span>
+                  <span className="ac-tt-pts">—</span>
+                </div>
+              )}
+              {gameState.trickHistory.map((t, i) => {
+                const winValue = t.winnerPoints != null
+                  ? t.winnerPoints
+                  : (t.teamPoints?.['N-S'] || 0) + (t.teamPoints?.['E-W'] || 0);
+                const winnerIdx = t.cards.findIndex(c => c.position === t.winnerPosition);
+                return (
+                  <div key={i} className={`ac-trick-table-row${t.winnerTeam === 'N-S' ? ' win-ns' : ' win-ew'}`}>
+                    <span className="ac-tt-trick">{t.trickNumber + 1}</span>
+                    {trickOrder.map(pos => {
+                      const entry = t.cards.find(c => c.position === pos);
+                      const isWinner = entry && winnerIdx !== -1 && t.cards[winnerIdx].position === pos;
+                      return (
+                        <span key={pos} className="ac-tt-card">
+                          {entry ? (
+                            <span className={`mini-card${isWinner ? ' trick-winner' : ''} ${entry.card.suit === '♥' || entry.card.suit === '♦' ? 'red' : ''}`}>
+                              {entry.card.rank}{entry.card.suit}
+                            </span>
+                          ) : <span className="ac-empty" style={{ padding: 0 }}>—</span>}
+                        </span>
+                      );
+                    })}
+                    <span className="ac-tt-win">{t.winnerTeam}</span>
+                    <span className="ac-tt-pts">{t.winnerTeam === 'N-S' ? `+${winValue}` : '·'}</span>
+                    <span className="ac-tt-pts">{t.winnerTeam === 'E-W' ? `+${winValue}` : '·'}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="ac-empty">No tricks yet — waiting for play to start</div>
+          )}
         </div>
       </div>
     );
@@ -576,17 +626,19 @@ function App() {
         </div>
       )}
 
-      {/* Top player */}
-      <div className="table-seat top">
-        <div className="seat-info">{playerAtPos(posOrder[0])?.name || POSITION_NAMES[posOrder[0]]}{playerAtPos(posOrder[0]) && <span className="team-badge">{playerAtPos(posOrder[0]).team}</span>}</div>
-        {vacatedAt(posOrder[0]) ? renderVacated(posOrder[0]) : (
-          <div className="hand-cards">
-            {Array.from({ length: faceDownCount(playerAtPos(posOrder[0])) }).map((_, i) => (
-              <span key={i} className="card-back" />
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Top player (hidden for admin — admin panel below shows the info) */}
+      {!(isAdmin && !isSpectator) && (
+        <div className="table-seat top">
+          <div className="seat-info">{playerAtPos(posOrder[0])?.name || POSITION_NAMES[posOrder[0]]}{playerAtPos(posOrder[0]) && <span className="team-badge">{playerAtPos(posOrder[0]).team}</span>}</div>
+          {vacatedAt(posOrder[0]) ? renderVacated(posOrder[0]) : (
+            <div className="hand-cards">
+              {Array.from({ length: faceDownCount(playerAtPos(posOrder[0])) }).map((_, i) => (
+                <span key={i} className="card-back" />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Center area */}
       <div className="table-center">
