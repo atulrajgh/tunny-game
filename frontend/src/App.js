@@ -464,17 +464,17 @@ function App() {
                     <div className="ac-actions">
                       {players.length < 4 && ['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
                         <button key={pos} className="ac-btn green"
-                          onClick={() => socket.emit('promote_to_player', { spectatorId: s.id, position: pos })}>
+                          onClick={() => sendOnce('promote_to_player', { spectatorId: s.id, position: pos })}>
                           {pos}
                         </button>
                       ))}
-          </div>
-          <a href="/instructions" target="_blank" className="help-link">How to Play</a>
-        </div>
+                    </div>
+                  </div>
                 ))}
               </>
             )}
           </div>
+          <a href="/instructions" target="_blank" className="help-link">How to Play</a>
 
           {/* Center: Game State + Bids + Current Trick */}
           <div className="ac-panel">
@@ -796,7 +796,6 @@ function App() {
         <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
         <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
         <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
-        <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 8 }}>How to Play</a>
       </div>
 
       {/* Action buttons */}
