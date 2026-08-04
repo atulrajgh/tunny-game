@@ -624,52 +624,69 @@ function App() {
         </div>
       )}
 
-      {/* Top player (hidden for admin — admin panel below shows the info) */}
-      {!(isAdmin && !isSpectator) && (
-        <div className="table-seat top">
-          <div className="seat-info">{playerAtPos(posOrder[0])?.name || POSITION_NAMES[posOrder[0]]}{playerAtPos(posOrder[0]) && <span className="team-badge">{playerAtPos(posOrder[0]).team}</span>}</div>
-          {vacatedAt(posOrder[0]) ? renderVacated(posOrder[0]) : (
-            <div className="hand-cards">
-              {Array.from({ length: faceDownCount(playerAtPos(posOrder[0])) }).map((_, i) => (
-                <span key={i} className="card-back" />
-              ))}
-            </div>
-          )}
+      {/* Top: current state message + scores */}
+      <div className="state-bar">
+        <div className="team-scores">
+          <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
+          <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
+          <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
+          <a href="/instructions" target="_blank" className="help-link">How to Play</a>
         </div>
-      )}
-
-      {/* Center area */}
-      <div className="table-center">
-        <div className="table-felt">
-          <div className="table-info">
+        <div className="state-info">
+          <div className="round-info">Hand {gameState.handNumber}/6 · Trick {gameState.trickNumber + 1}/6</div>
+          <div className="current-action">
+            {gameState.state === 'waiting' && `Waiting — assign positions and start the game`}
+            {gameState.state === 'cut' && `Waiting for ${players.find(p => p.isAdmin)?.name || 'admin'} to cut the deck`}
+            {isBidding && `${curPlayer?.name} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`}
+            {isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`}
+            {isPlaying && `${curPlayer?.name}'s turn${isAdmin && vacatedTurnPos ? ' — you play this seat' : ''}`}
+            {gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm'}
+            {gameState.state === 'game_over' && `${gameState.winner} wins!`}
+          </div>
+          <div className="state-details">
             {isPlaying && gameState.trumpSuit && <div className="trump-indicator">Trump: {gameState.trumpSuit}</div>}
             {gameState.trumpCard && <div className="trump-card-display"><span className="trump-card-label">Trump card:</span>{renderCard(gameState.trumpCard)}</div>}
             {gameState.trumpRevealed && <div className="trump-revealed">♠ Trump Revealed! ♠</div>}
-            <div className="round-info">Hand {gameState.handNumber}/6 · Trick {gameState.trickNumber + 1}/6</div>
-            <div className="current-action">
-              {gameState.state === 'waiting' && `Waiting — assign positions and start the game`}
-              {gameState.state === 'cut' && `Waiting for ${players.find(p => p.isAdmin)?.name || 'admin'} to cut the deck`}
-              {isBidding && `${curPlayer?.name} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`}
-              {isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`}
-              {isPlaying && `${curPlayer?.name}'s turn${isAdmin && vacatedTurnPos ? ' — you play this seat' : ''}`}
-              {gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm'}
-              {gameState.state === 'game_over' && `${gameState.winner} wins!`}
-            </div>
             {gameState.contractLevel && <div>Contract: Level {gameState.contractLevel} ({gameState.targetTricks} tricks)</div>}
-            {isPlaying && gameState.currentTrick?.length > 0 && (
-              <div className="current-trick">
-                {gameState.currentTrick.map((t, i) => (
-                  <div key={i} className="trick-entry">
-                    <span>{t.playerName}</span>
-                    {t.card ? renderCard(t.card) : <span className="card-back tiny" />}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
+        {isPlaying && gameState.currentTrick?.length > 0 && (
+          <div className="current-trick">
+            {gameState.currentTrick.map((t, i) => (
+              <div key={i} className="trick-entry">
+                <span>{t.playerName}</span>
+                {t.card ? renderCard(t.card) : <span className="card-back tiny" />}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-        {/* Bidding overlay */}
+      {/* Opponents + partner */}
+      <div className="opponents-row">
+        {[
+          { cls: 'opp1', pos: posOrder[3], label: 'Opponent 1' },
+          { cls: 'partner', pos: posOrder[0], label: 'Partner' },
+          { cls: 'opp2', pos: posOrder[1], label: 'Opponent 2' }
+        ].map(({ cls, pos, label }) => {
+          const p = playerAtPos(pos);
+          return (
+            <div key={cls} className={`table-seat ${cls}`}>
+              <div className="seat-info">{p?.name || POSITION_NAMES[pos]}<span className="seat-role">{label}</span>{p && <span className="team-badge">{p.team}</span>}</div>
+              {vacatedAt(pos) ? renderVacated(pos, true) : (
+                <div className="hand-cards vert">
+                  {Array.from({ length: faceDownCount(p) }).map((_, i) => (
+                    <span key={i} className="card-back mini" />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Center stage for overlays (bidding / trump) */}
+      <div className="center-stage">
         {isBidding && (
           <div className={`overlay${isMyTurn || (isAdmin && vacatedTurnPos) ? ' active' : ''}`}>
             <h3>Bidding</h3>
@@ -699,7 +716,6 @@ function App() {
           </div>
         )}
 
-        {/* Trump selection overlay */}
         {isTrump && (
           <div className="overlay active">
             <h3>Select Trump</h3>
@@ -729,33 +745,8 @@ function App() {
         )}
       </div>
 
-      {/* Left player */}
-      <div className="table-seat left">
-        <div className="seat-info">{playerAtPos(posOrder[3])?.name || POSITION_NAMES[posOrder[3]]}{playerAtPos(posOrder[3]) && <span className="team-badge">{playerAtPos(posOrder[3]).team}</span>}</div>
-        {vacatedAt(posOrder[3]) ? renderVacated(posOrder[3], true) : (
-          <div className="hand-cards vert">
-            {Array.from({ length: faceDownCount(playerAtPos(posOrder[3])) }).map((_, i) => (
-              <span key={i} className="card-back mini" />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Right player */}
-      <div className="table-seat right">
-        <div className="seat-info">{playerAtPos(posOrder[1])?.name || POSITION_NAMES[posOrder[1]]}{playerAtPos(posOrder[1]) && <span className="team-badge">{playerAtPos(posOrder[1]).team}</span>}</div>
-        {vacatedAt(posOrder[1]) ? renderVacated(posOrder[1], true) : (
-          <div className="hand-cards vert">
-            {Array.from({ length: faceDownCount(playerAtPos(posOrder[1])) }).map((_, i) => (
-              <span key={i} className="card-back mini" />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Bottom player (YOU) + hand */}
-      <div className="table-seat bottom">
-        <div className="seat-info">{playerAtPos(posOrder[2])?.name || POSITION_NAMES[posOrder[2]]}</div>
+      {/* My hand */}
+      <div className="my-area">
         {vacatedAt(posOrder[2]) ? renderVacated(posOrder[2]) : (
           (isAdmin && !isSpectator) ? (
             <div style={{ minHeight: 30 }} />
@@ -777,14 +768,6 @@ function App() {
             </div>
           )
         )}
-      </div>
-
-      {/* Team scores */}
-      <div className="team-scores">
-        <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
-        <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
-        <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
-        <a href="/instructions" target="_blank" className="help-link">How to Play</a>
       </div>
 
       {/* Action buttons */}

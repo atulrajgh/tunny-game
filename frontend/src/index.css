@@ -46,9 +46,10 @@ input, button { font-family: inherit; }
 .cut-display p { font-size: 18px; margin: 16px 0; }
 
 /* ---- Game Table ---- */
-.game-table { display: grid; grid-template-columns: 100px 1fr 100px; grid-template-rows: auto 1fr auto auto; gap: 8px; min-height: 85vh; }
+.game-table { display: flex; flex-direction: column; gap: 10px; min-height: 85vh; }
 .table-seat { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; }
-.seat-info { font-size: 13px; font-weight: 600; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.seat-info { font-size: 13px; font-weight: 600; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; text-align: center; }
+.seat-role { display: block; font-size: 10px; font-weight: 400; color: #8fbf8f; }
 .team-badge { font-size: 10px; background: #2d4a2d; color: #a0d0a0; padding: 1px 5px; border-radius: 4px; margin-left: 4px; }
 .host-info { font-size: 14px; color: #c0e8c0; margin-bottom: 12px; }
 .spectator-label { font-size: 12px; color: #a0d0a0; padding: 8px; }
@@ -69,28 +70,35 @@ input, button { font-family: inherit; }
 .vacated-card-btn:disabled { opacity: 0.6; }
 .vacated-tag { font-size: 10px; color: #f0c040; font-weight: 700; margin-bottom: 3px; text-align: center; width: 100%; }
 
-.table-seat.top { grid-column: 2; grid-row: 1; }
-.table-seat.left { grid-column: 1; grid-row: 2; }
-.table-seat.right { grid-column: 3; grid-row: 2; }
-.table-seat.bottom { grid-column: 2; grid-row: 3; }
-.team-scores { grid-column: 1; grid-row: 1; background: #1e3a1e; border-radius: 8px; padding: 8px; font-size: 14px; display: flex; flex-direction: column; gap: 4px; align-self: start; }
+.team-scores { background: #1e3a1e; border-radius: 8px; padding: 8px; font-size: 14px; display: flex; flex-direction: column; gap: 4px; align-self: stretch; min-width: 130px; }
 .team-scores .help-link { margin-top: 4px; font-size: 12px; }
 .team-scores .ts-row { display: grid; grid-template-columns: 30px 1fr 1fr; gap: 4px; padding: 2px 4px; border-radius: 4px; }
 .team-scores .ts-row.header { font-size: 12px; color: #a0d0a0; }
 .team-scores .ts-row.ns { background: #2d4a7a; }
 .team-scores .ts-row.ew { background: #7a2d2d; }
 
-.table-center { grid-column: 2; grid-row: 2; position: relative; display: flex; align-items: center; justify-content: center; }
-.table-felt { background: #2d6e2d; border-radius: 50%; width: 100%; height: 100%; min-height: 200px; display: flex; align-items: center; justify-content: center; border: 3px solid #4a9a4a; box-shadow: inset 0 0 40px rgba(0,0,0,0.3); }
-.table-info { text-align: center; font-size: 14px; }
-.trump-indicator { font-size: 20px; font-weight: 700; color: #f0c040; margin-bottom: 8px; }
-.trump-revealed { background: #f0c040; color: #2d4a2d; padding: 4px 16px; border-radius: 20px; font-weight: 700; display: inline-block; margin-bottom: 8px; animation: pulse 1s infinite; }
-@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+/* ---- State bar (top) ---- */
+.state-bar { display: flex; align-items: center; gap: 12px; padding: 8px; background: #1a2e1a; border-radius: 8px; flex-wrap: wrap; }
+.state-info { flex: 1; text-align: center; min-width: 200px; }
+.state-details { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 6px; font-size: 13px; color: #a0d0a0; }
 .round-info { color: #a0d0a0; margin-bottom: 4px; }
-.current-action { font-size: 16px; font-weight: 700; color: #f0c040; margin: 8px 0; text-align: center; }
+.current-action { font-size: 16px; font-weight: 700; color: #f0c040; text-align: center; }
+.trump-indicator { font-size: 18px; font-weight: 700; color: #f0c040; }
+.trump-revealed { background: #f0c040; color: #2d4a2d; padding: 2px 12px; border-radius: 20px; font-weight: 700; display: inline-block; animation: pulse 1s infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
-.current-trick { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+.current-trick { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-width: 140px; }
 .trick-entry { display: flex; flex-direction: column; align-items: center; font-size: 12px; }
+
+/* ---- Opponents row ---- */
+.opponents-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.opponents-row .table-seat { background: #1e3a1e; border-radius: 8px; }
+
+/* ---- Center stage (overlays only) ---- */
+.center-stage { position: relative; min-height: 60px; display: flex; align-items: center; justify-content: center; }
+
+/* ---- My hand ---- */
+.my-area { display: flex; align-items: center; justify-content: center; padding: 4px 0; }
 
 /* ---- Cards ---- */
 .card-face { display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 86px; background: #fff; color: #222; border-radius: 8px; font-weight: 700; font-size: 26px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
@@ -123,12 +131,12 @@ input, button { font-family: inherit; }
 /* ---- Action bar ---- */
 .trump-card-display { margin-top: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .trump-card-label { font-size: 11px; color: #a0d0a0; }
-.action-bar { grid-column: 1 / -1; grid-row: 4; display: flex; gap: 8px; justify-content: center; padding: 8px; }
+.action-bar { display: flex; gap: 8px; justify-content: center; padding: 8px; }
 .action-btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: #3498db; color: #fff; font-size: 14px; touch-action: manipulation; }
 .action-btn.reset { background: #7f8c8d; }
 
 /* ---- Turn indicator ---- */
-.turn-indicator { grid-column: 1 / -1; grid-row: 5; text-align: center; padding: 8px; background: #f0c040; color: #2d4a2d; font-weight: 700; border-radius: 8px; animation: pulse 1s infinite; }
+.turn-indicator { text-align: center; padding: 8px; background: #f0c040; color: #2d4a2d; font-weight: 700; border-radius: 8px; animation: pulse 1s infinite; }
 
 /* ---- Timeout banner ---- */
 .timeout-banner { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #e67e22; padding: 12px 24px; border-radius: 8px; z-index: 100; font-weight: 600; animation: pulse 1s infinite; }
