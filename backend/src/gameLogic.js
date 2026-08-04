@@ -217,6 +217,19 @@ class Game {
     this.positions[pos] = playerId;
     player.position = pos;
     player.team = (pos === 'N' || pos === 'S') ? 'N-S' : 'E-W';
+    // Restore saved state when assigning a player to a vacated seat mid-game
+    if (this.state !== 'waiting' && this.state !== 'cut') {
+      const saved = this.vacatedHands[pos];
+      if (saved) {
+        player.hand = saved.hand;
+        player.bid = saved.bid || null;
+        player.playedCard = saved.playedCard || null;
+        if (saved.wasCurrentPlayer) this.currentPlayer = player;
+        if (saved.wasDeclarer) this.declarer = player;
+        if (saved.wasDummy) this.dummy = player;
+        delete this.vacatedHands[pos];
+      }
+    }
     this.lastActivity = Date.now();
     return true;
   }
