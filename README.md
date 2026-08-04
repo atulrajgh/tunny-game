@@ -1,148 +1,43 @@
-# TUNNY Web Game
+# Tunny Game
 
-A multi-player online card game based on the <co>TUNNY game rules.</co: 4:[0]>
+Real-time multiplayer card game: Node.js/Express/Socket.IO backend + React frontend. Live at https://tunny-hyderabad.onrender.com
 
-## Overview
+## Rules
 
-This is a <co>real-time web-based implementation</co: 4:[0]> of the <co>TUNNY card game</co: 4:[0]> that supports <co>4 players</co: 4:[0]> with an <co>admin coordinating the game.</co: 4:[0]> The game can be played from anywhere over the internet.
-
-## Features
-
-### Game Rules (based on <co>tunny.txt</co: 4:[0]>)
-
-- <co>24 cards</co: 4:[0]>: <co>A, K, Q, J, 10, 9 (6 suits with 4 ranks each)</co: 4:[0]>
-- <co>Card ranking</co: 4:[0]>: <co>J > 9 > A > 10 > K > Q</co: 4:[0]>
-- <co>4 players</co: 4:[0]> with <co>teams (opposite players form teams)</co: 4:[0]>
-- <co>Admin oversees</co: 4:[0]> but <co>does not participate</co: 4:[0]>
-- <co>Bidding system</co: 4:[0]>: <co>5-16 range</co: 4:[0]>, <co>players can pass</co: 4:[0]>
-- <co>Trump selection</co: 4:[0]> by the <co>highest bidder</co: 4:[0]>
-- <co>6 rounds</co: 4:[0]> of <co>6 hands each</co: 4:[0]>
-- <co>Trick-taking gameplay</co: 4:[0]> with <co>suit enforcement</co: 4:[0]>
-- <co>Admin scores points</co: 4:[0]> to the <co>winning team</co: 4:[0]>
-
-### Real-time Gameplay
-
-- <co>WebSocket-based communication</co: 4:[0]> for <co>instant updates</co: 4:[0]>
-- <co>Live game state synchronization</co: 4:[0]> across all clients
-- <co>Real-time bidding, playing, and scoring</co: 4:[0]>
-
-### Game Flow
-
-1. **Setup**: <co>Players join and admin starts the game</co: 4:[0]>
-2. **Dealing**: <co>Cards are dealt according to game rules</co: 4:[0]>
-3. **Bidding**: <co>Players bid or pass in clockwise order</co: 4:[0]>
-4. **Trump Selection**: <co>Highest bidder selects trump suit</co: 4:[0]>
-5. **Playing**: <co>Players play cards following suit rules</co: 4:[0]>
-6. **Scoring**: <co>Admin tracks points and determines round winners</co: 4:[0]>
-7. **Repeat**: <co>6 hands per round, 6 rounds total</co: 4:[0]>
-
-### Interface
-
-**For Players**:
-- <co>View personal hand and card information</co: 4:[0]>
-- <co>Place bids during bidding phase</co: 4:[0]>
-- <co>Play cards following game rules</co: 4:[0]>
-- <co>See trick progress and scores</co: 4:[0]>
-- <co>Hidden information for other players (as per game rules)</co: 4:[0]>
-
-**For Admin**:
-- <co>Start/stop games</co: 4:[0]>
-- <co>Monitor game state</co: 4:[0]>
-- <co>Observe all player actions</co: 4:[0]>
-- <co>View full game information</co: 4:[0]>
-
-## Setup Instructions
-
-### Backend (Node.js)
-
-```bash
-# Navigate to backend directory
-<co>cd springarm/tunny-game/backend</co: 24:[0]>
-
-# Install dependencies
-<co>npm install</co: 24:[0]>
-
-# Start server
-<co>npm start</co: 24:[0]>
-
-# Or run with nodemon for development
-<co>npm run dev</co: 24:[0]>
-```
-
-### Frontend (React)
-
-```bash
-# Navigate to frontend directory
-cd springarm/tunny-game/frontend
-
-# Install dependencies
-<co>npm install</co: 24:[0]>
-
-# Start development server
-<co>npm start</co: 24:[0]>
-```
-
-## Technology Stack
-
-- **Backend**: Node.js, Express, Socket.IO
-- **Frontend**: React, CSS3
-- **Game Logic**: Custom implementation based on <co>tunny.txt rules</co: 4:[0]>
-- **Real-time**: WebSockets via Socket.IO
+- 24 cards (J, 9, A, 10, K, Q in 4 suits ♠♥♦♣); ranking J > 9 > A > 10 > K > Q. 6 hands per game.
+- HCP values: J=20, 9=15, A=15, 10=10, K=5, Q=5.
+- Bidding 50–140 (multiples of 10) plus Pass. Highest bidder is declarer, chooses a trump suit (hidden).
+- Contract: bid < 100 → level 1 (4 tricks), bid ≥ 100 → level 2 (5 tricks).
+- Scoring: declarer's team earns 1 point if their HCP total ≥ bid (2 if ≥ 280, slam); otherwise defenders earn 1 point (2 if they take all 280).
+- Teams: N+S vs E+W. Admin (host, does not play) assigns positions and coordinates.
 
 ## Architecture
 
-1. **Game Logic Module** (<co>backend/src/gameLogic.js</co: 24:[0]>):
-   - <co>Core game rules implementation</co: 4:[0]>
-   - <co>Card management, dealing, bidding, scoring</co: 4:[0]>
-   - <co>State management</co: 4:[0]>
+- `backend/` — Express + Socket.IO server (port 3001). All state in-memory, persisted to `backend/rooms.json` every 30s. Entry: `src/server.js`, game rules in `src/gameLogic.js`.
+- `frontend/` — React (CRA, port 3000). Entry: `src/App.js`, `src/index.js`. Styling in `src/index.css`.
+- REST API at `/api/games` for room listing/creation; real-time via Socket.IO WebSockets.
+- In production the backend serves the built frontend from `frontend/build/` when present.
 
-2. **Server** (<co>backend/src/server.js</co: 24:[0]>):
-   - <co>HTTP API endpoints</co: 4:[0]>
-   - <co>WebSocket server for real-time communication</co: 4:[0]>
-   - <co>Player management and game lifecycle</co: 4:[0]>
+## Development
 
-3. **Client Interface** (<co>frontend/src/App.js</co: 24:[0]>):
-   - <co>Player and admin UI components</co: 4:[0]>
-   - <co>Real-time game state updates</co: 4:[0]>
-   - <co>Interactive game controls</co: 4:[0]>
+Two terminals:
 
-## Usage
+```bash
+cd backend && npm install && npm run dev
+cd frontend && npm install && npm start
+# open http://localhost:3000
+```
 
-1. **Start the backend server** on port <co>3001</co: 24:[0]>
-2. **Start the frontend** on port <co>3000</co: 24:[0]>
-3. **Open browser** to <co>http://localhost:3000</co: 24:[0]>
-4. **Create a game** by joining with admin privileges
-5. **Wait for 4 players** (including admin)
-6. **Admin starts the game**
-7. **Play the game** according to the rules
+## Deployment (Render)
 
-## Files
+`render.yaml` auto-deploys the `main` branch. Build: `cd backend && npm install && cd ../frontend && npm install && npm run build`. Start: `node backend/src/server.js`. Set `PORT` via Render; no database service needed.
 
-### Backend
-- <co>`backend/package.json` - Node.js dependencies</co: 24:[0]>
-- <co>`backend/src/gameLogic.js` - Core game logic</co: 24:[0]>
-- <co>`backend/src/server.js` - HTTP/WebSocket server</co: 24:[0]>
+## Admin visibility
 
-### Frontend
-- <co>`frontend/package.json` - React dependencies</co: 24:[0]>
-- <co>`frontend/src/App.js` - Main application component</co: 24:[0]>
-- <co>`frontend/src/index.js` - React entry point</co: 24:[0]>
-- <co>`frontend/src/index.css` - Styling</co: 24:[0]>
+- Admin sees no players' hands normally (only card counts), the trump suit, and all played trick cards.
+- Admin sees a player's hand when the seat is vacated (mid-game disconnect, `vacatedHands`) or the player has timed out (`timedOutHand`), and can play for that seat via `admin_play`.
+- Non-admin players see only their own hand and the dummy's face-up hand. Trump suit is hidden until declared/asked; the trump card is only visible to the declarer until "Play Trump" reveals it.
 
-### Documentation
-- <co>`docs/` - Additional documentation files</co: 24:[0]>
+## Game flow
 
-## Testing
-
-The game includes basic validation and error handling. For comprehensive testing, you can add unit tests for the game logic module.
-
-## Notes
-
-- This is a demonstration implementation based on the <co>tunny.txt game rules</co: 4:[0]>
-- The frontend provides a basic UI for gameplay
-- Production deployment would require authentication, database integration, and deployment to cloud services
-- Game balance and additional features can be added based on user feedback
-
-## License
-
-This project is for educational purposes and demonstrates a web-based card game implementation.
+`waiting` → `cut` → `bidding` → `trump_selection` → `playing` → `hand_review` → (next hand or `game_over`). Rooms are visible in the public list in any state; empty rooms are deleted on last disconnect.

@@ -739,14 +739,6 @@ class Game {
     return state;
   }
 
-  canViewCard(viewer, cardOwner) {
-    if (!viewer || !cardOwner) return false;
-    if (viewer.isAdmin) return true;
-    if (viewer.id === cardOwner.id) return true;
-    if (this.dummy && cardOwner.id === this.dummy.id) return true;
-    return false;
-  }
-
   toJSON() {
     return {
       id: this.id, roomId: this.roomId, state: this.state,
