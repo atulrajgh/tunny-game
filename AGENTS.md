@@ -46,13 +46,12 @@ Embedded below the game table as a collapsible section (toggle at bottom of acti
 - **Current Trick** — cards played this trick
 - **Scores** — running scores, HCP this hand, tricks this hand
 - **Controls** — Reset Game, Take Over (timed-out player), Confirm Hand / End Game
-- **All Hands** — every player's cards visible (admin only)
 
 On mobile (< 768px) the 3-column grid stacks to single column; button sizes increase for touch targets. All admin buttons have `touch-action: manipulation` for reliable Android tap handling.
 
 ## Player timeout
 
-Timeout is 300 seconds (5 minutes) for bidding and playing states. When a player times out, a banner appears allowing the admin to take over their turn via `admin_play`.
+Timeout is 300 seconds (5 minutes) for bidding and playing states. When a player times out, a banner appears allowing the admin to take over their turn via `admin_play`. The timed-out player's hand is exposed to the admin (as `state.timedOutHand`) while it is their turn, so the admin can click their cards, bid for them, or choose trump for a timed-out declarer. `g._timedOutPlayerId` is cleared when that player resumes (bids/plays) or when a new hand starts.
 
 ## Mid-game disconnect / Admin take-over / Spectator promotion
 
@@ -61,7 +60,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 ## Trump visibility
 
 - Trump suit is hidden from non-admin players until either: the declarer uses "Ask Trump" (reveals suit to declarer), or the declarer uses "Play Trump" (reveals suit + card to everyone).
-- Admin and declarer always see the trump suit. `trumpRevealed` controls general visibility.
+- Admin and declarer always see the trump suit; the trump card is only visible to the declarer (admin sees it once revealed). `trumpRevealed` controls general visibility.
 
 ## WebSocket events (server → client)
 
@@ -75,7 +74,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 - Card display format: `rank + suit` (e.g. `J♠`). Red suits (♥♦) render with red color.
 - `getGameState(playerId)` hides non-admin player names as `[Hidden]` and only shows own hand + dummy's face-up hand.
-- Admin sees all hands always.
+- Admin (host-only, not a seated player) sees **no** players' cards normally — only card counts. The admin sees a player's hand only when that seat is vacated (`vacatedHands`) or that player has timed out (`timedOutHand`). Admin still sees the trump suit and all played trick cards.
 - Table view rotates so each player sees themselves at South (bottom).
 
 ## Deployment

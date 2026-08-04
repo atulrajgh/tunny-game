@@ -353,6 +353,7 @@ class Game {
     }
     this.currentPlayer = this.seatAfter(player.position);
     this.lastActivity = Date.now();
+    if (this._timedOutPlayerId === playerId) this._timedOutPlayerId = null;
     return true;
   }
 
@@ -409,6 +410,7 @@ class Game {
     this.trickNumber = 0;
     this.currentPlayer = this.seatAfter(this.dealer.position);
     this.lastActivity = Date.now();
+    if (this._timedOutPlayerId === playerId) this._timedOutPlayerId = null;
     return true;
   }
 
@@ -454,6 +456,7 @@ class Game {
       this.currentPlayer = this.seatAfter(player.position);
     }
     this.lastActivity = Date.now();
+    if (this._timedOutPlayerId === playerId) this._timedOutPlayerId = null;
     return true;
   }
 
@@ -559,6 +562,7 @@ class Game {
       this.currentPlayer = this.seatAfter(player.position);
     }
     this.lastActivity = Date.now();
+    if (this._timedOutPlayerId === playerId) this._timedOutPlayerId = null;
     return true;
   }
 
@@ -610,6 +614,7 @@ class Game {
     this.highestBid = null; this.passCount = 0;
     this.contractLevel = null; this.targetTricks = null;
     this.currentPlayer = null; this.leadSuit = null;
+    this._timedOutPlayerId = null;
     if (rotateDealer && this.dealer) this.dealer = this.seatAfter(this.dealer.position);
     this.setupDeck();
     this.dealCards(4);
@@ -658,7 +663,7 @@ class Game {
       dealer: this.dealer ? { id: this.dealer.id, name: this.dealer.name, position: this.dealer.position } : null,
       currentPlayer: this.currentPlayer ? { id: this.currentPlayer.id, name: this.currentPlayer.name, position: this.currentPlayer.position } : null,
       trumpSuit: ((viewer && viewer.isAdmin) || this.trumpRevealed || viewer?.id === this.declarer?.id) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
-      trumpCard: ((viewer && viewer.isAdmin) || this.trumpRevealed || viewer?.id === this.declarer?.id) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
+      trumpCard: (this.trumpRevealed || viewer?.id === this.declarer?.id) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
       trickNumber: this.trickNumber, handNumber: this.handNumber,
       contractLevel: this.contractLevel, targetTricks: this.targetTricks,
       declarer: this.declarer ? { id: this.declarer.id, position: this.declarer.position } : null,
@@ -702,11 +707,10 @@ class Game {
           id: p.id, name: p.name,
           position: p.position, team: p.team,
           isAdmin: p.isAdmin, bid: p.bid, score: p.score,
-          hand: (p.id === viewer.id || (this.state === 'playing' && this.dummy && p.id === this.dummy.id))
+          hand: (p.id === viewer.id || (!viewer.isAdmin && this.state === 'playing' && this.dummy && p.id === this.dummy.id))
             ? this.sortHand(p.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined,
           cardCount: p.hand.length
-        }));
-        for (const [pos, v] of Object.entries(this.vacatedHands)) {
+        }));        for (const [pos, v] of Object.entries(this.vacatedHands)) {
           state.players.push({
             id: null, name: v.playerName || pos, position: pos, team: v.team,
             isAdmin: false, bid: v.bid, score: 0,
@@ -722,6 +726,14 @@ class Game {
           wasCurrentPlayer: !!v.wasCurrentPlayer,
           hand: this.sortHand(v.hand).map(c => ({ suit: c.suit, rank: c.rank }))
         }));
+        const tpid = this._timedOutPlayerId;
+        const tp = tpid && this.currentPlayer && this.currentPlayer.id === tpid && this.getPlayer(tpid);
+        if (tp && tp.position) {
+          state.timedOutHand = {
+            playerId: tp.id, playerName: tp.name, position: tp.position, team: tp.team,
+            hand: this.sortHand(tp.hand).map(c => ({ suit: c.suit, rank: c.rank }))
+          };
+        }
       }
     }
     return state;
@@ -800,6 +812,7 @@ class Game {
     this.admin = savedAdmin;
     this.adminId = savedAdmin ? savedAdmin.id : null;
     this.positions = {}; this.leadSuit = null;
+    this._timedOutPlayerId = null;
   }
 }
 

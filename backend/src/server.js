@@ -210,6 +210,7 @@ io.on('connection', (socket) => {
     if (g.state !== 'playing' && g.state !== 'bidding') return;
     g._timeout = setTimeout(() => {
       const cp = g.currentPlayer;
+      g._timedOutPlayerId = cp ? cp.id : null;
       io.to(g.id).emit('player_timed_out', {
         playerId: cp ? cp.id : null,
         playerName: cp ? cp.name : 'Unknown (vacant seat)'
@@ -412,7 +413,15 @@ io.on('connection', (socket) => {
       const target = g.getPlayer(targetId);
       if (!target) return error('Player no longer in game');
       g.currentPlayer = target;
-      if (card && g.state === 'playing' && !g.playCard(targetId, card)) return error('Invalid play');
+      if (card !== undefined && card !== null) {
+        if (g.state === 'playing') {
+          if (!g.playCard(targetId, card)) return error('Invalid play');
+        } else if (g.state === 'bidding') {
+          if (!g.placeBid(targetId, card)) return error('Invalid bid');
+        } else if (g.state === 'trump_selection') {
+          if (!g.selectTrump(targetId, card)) return error('Invalid trump');
+        }
+      }
     }
     clearTimeout(g._timeout);
     if (g.state === 'hand_review') {

@@ -353,6 +353,9 @@ function App() {
   const isDefender = myPos && declarerPos && PARTNER[myPos] !== declarerPos && myPos !== declarerPos;
   const vacatedTurnPos = curPlayer && curPlayer.id === null ? curPlayer.position : null;
   const declarerVacated = gameState.declarer ? vacatedAt(gameState.declarer.position) : null;
+  const timedOutHand = gameState.timedOutHand;
+  const timedOutTurn = isAdmin && timedOutHand && curPlayer && curPlayer.id === timedOutHand.playerId;
+  const timedOutDeclarer = isAdmin && timedOutHand && gameState.declarer && gameState.declarer.id === timedOutHand.playerId;
 
   // Trump action rules: available whenever the current trick has started
   const canAskTrump = (gameState.currentTrick?.length || 0) > 0;
@@ -402,6 +405,23 @@ function App() {
         {v.hand.map((c, i) => (
           <button key={i} className="vacated-card-btn" disabled={!clickable}
             onClick={() => clickable && (setTimedOut(null), sendOnce('admin_play', { position: pos, card: { suit: c.suit, rank: c.rank } }))}>
+            {miniCard(c)}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  function renderTimedOut() {
+    if (!timedOutHand) return null;
+    const isTurn = curPlayer && curPlayer.id === timedOutHand.playerId;
+    const clickable = isAdmin && isPlaying && isTurn;
+    return (
+      <div className="vacated-hand">
+        {isAdmin && isTurn && <div className="vacated-tag">Play for {timedOutHand.playerName}</div>}
+        {timedOutHand.hand.map((c, i) => (
+          <button key={i} className="vacated-card-btn" disabled={!clickable}
+            onClick={() => clickable && (setTimedOut(null), sendOnce('admin_play', { targetId: timedOutHand.playerId, card: { suit: c.suit, rank: c.rank } }))}>
             {miniCard(c)}
           </button>
         ))}
@@ -664,7 +684,7 @@ function App() {
 
       {/* Bidding overlay — top of screen */}
       {isBidding && (
-        <div className={`overlay bidding-top${isMyTurn || (isAdmin && vacatedTurnPos) ? ' active' : ''}`}>
+        <div className={`overlay bidding-top${isMyTurn || (isAdmin && (vacatedTurnPos || timedOutTurn)) ? ' active' : ''}`}>
           <h3>Bidding</h3>
           <p>Current bidder: {curPlayer?.name}</p>
           {isMyTurn && (
@@ -682,6 +702,17 @@ function App() {
                 <button onClick={() => sendOnce('admin_play', { position: vacatedTurnPos, card: 'pass' })} className="bid-pass">Pass</button>
                 {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
                   <button key={b} onClick={() => sendOnce('admin_play', { position: vacatedTurnPos, card: b })} className="bid-num">{b}</button>
+                ))}
+              </div>
+            </>
+          )}
+          {isAdmin && timedOutTurn && (
+            <>
+              <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
+              <div className="bid-buttons">
+                <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: 'pass' }); }} className="bid-pass">Pass</button>
+                {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
+                  <button key={b} onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: b }); }} className="bid-num">{b}</button>
                 ))}
               </div>
             </>
@@ -739,6 +770,17 @@ function App() {
                   ))}
                 </div>
               </div>
+            ) : isAdmin && timedOutDeclarer ? (
+              <div>
+                <p style={{ marginBottom: 8, color: '#a0d0a0' }}>Choose trump for {timedOutHand.playerName}</p>
+                <div className="trump-cards">
+                  {(timedOutHand.hand || []).map((c, i) => (
+                    <button key={i} className="card-btn" onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: { suit: c.suit, rank: c.rank } }); }}>
+                      {renderCard(c)}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : (
               <p>Waiting for {players.find(p => p.position === gameState.declarer?.position)?.name || 'declarer'} to choose trump...</p>
             )}
@@ -748,25 +790,27 @@ function App() {
 
       {/* My hand */}
       <div className="my-area">
-        {vacatedAt(posOrder[2]) ? renderVacated(posOrder[2]) : (
-          (isAdmin && !isSpectator) ? (
-            <div style={{ minHeight: 30 }} />
-          ) : isSpectator ? (
-            <div className="spectator-label">Observing</div>
-          ) : (
-            <div className="my-hand">
-              {(me?.hand || []).map((c, i) => {
-                const isTrumpCard = isPlaying && gameState.trumpSuit && c.suit === gameState.trumpSuit && me.hand.length > 4;
-                const canPlay = isMyTurn && isPlaying && !isBidding && !isTrump;
-                return (
-                  <button key={i} className={`hand-card${isTrumpCard ? ' trump' : ''}`}
-                    disabled={!canPlay}
-                    onClick={() => canPlay && sendOnce('play', { card: { suit: c.suit, rank: c.rank } })}>
-                    {renderCard(c)}
-                  </button>
-                );
-              })}
-            </div>
+        {timedOutHand ? renderTimedOut() : (
+          vacatedAt(posOrder[2]) ? renderVacated(posOrder[2]) : (
+            (isAdmin && !isSpectator) ? (
+              <div style={{ minHeight: 30 }} />
+            ) : isSpectator ? (
+              <div className="spectator-label">Observing</div>
+            ) : (
+              <div className="my-hand">
+                {(me?.hand || []).map((c, i) => {
+                  const isTrumpCard = isPlaying && gameState.trumpSuit && c.suit === gameState.trumpSuit && me.hand.length > 4;
+                  const canPlay = isMyTurn && isPlaying && !isBidding && !isTrump;
+                  return (
+                    <button key={i} className={`hand-card${isTrumpCard ? ' trump' : ''}`}
+                      disabled={!canPlay}
+                      onClick={() => canPlay && sendOnce('play', { card: { suit: c.suit, rank: c.rank } })}>
+                      {renderCard(c)}
+                    </button>
+                  );
+                })}
+              </div>
+            )
           )
         )}
       </div>
