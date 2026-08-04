@@ -462,12 +462,18 @@ function App() {
                   <div key={s.id} className="ac-player-row">
                     <span className="ac-name">{s.name}</span>
                     <div className="ac-actions">
-                      {players.length < 4 && ['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
+                      {['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
                         <button key={pos} className="ac-btn green pos"
                           onClick={() => sendOnce('promote_to_player', { spectatorId: s.id, position: pos })}>
                           {pos}
                         </button>
                       ))}
+                      {players.length < 4 && (
+                        <button className="ac-btn gray pos" title="Move to gallery"
+                          onClick={() => sendOnce('promote_to_player', { spectatorId: s.id })}>
+                          →
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
