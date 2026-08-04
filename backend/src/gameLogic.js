@@ -72,6 +72,7 @@ class Game {
     this.vacatedHands = {};
     this.roomId = null;
     this.lastActivity = Date.now();
+    this._timedOutPlayerId = null;
   }
 
   setupDeck() {
@@ -651,7 +652,7 @@ class Game {
   getGameState(playerId) {
     const viewer = this.getViewer(playerId);
     const isSpectator = viewer && !this.getPlayer(playerId);
-    const seesAll = viewer && (viewer.isAdmin || isSpectator);
+    const seesAll = viewer && !!isSpectator;
     const state = {
       roomId: this.id, state: this.state,
       dealer: this.dealer ? { id: this.dealer.id, name: this.dealer.name, position: this.dealer.position } : null,
