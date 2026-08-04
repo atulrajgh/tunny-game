@@ -503,34 +503,11 @@ function App() {
               </div>
             ))}
 
-            <h3 style={{ marginTop: 12 }}>Current Trick</h3>
-            {gameState.currentTrick?.length > 0 ? (
-              <div className="ac-tricks">
-                {gameState.currentTrick.map((t, i) => (
-                  <div key={i} className="ac-trick-row">
-                    <span className="ac-trick-winner">{t.playerName}</span>
-                    <span className="ac-trick-cards">{t.card?.rank}{t.card?.suit}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="ac-empty">No cards played yet</div>
-            )}
           </div>
 
-          {/* Right: Scores + Controls */}
+          {/* Right: Controls */}
           <div className="ac-panel">
-            <h3>Scores</h3>
-            <div className="ac-player-row" style={{ background: '#2d4a7a', borderRadius: 4 }}><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span></div>
-            <div className="ac-player-row" style={{ background: '#7a2d2d', borderRadius: 4 }}><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span></div>
-            <div style={{ fontSize: 10, color: '#a0d0a0', marginTop: 6 }}>This hand HCP:</div>
-            <div className="ac-player-row"><span>N-S</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
-            <div className="ac-player-row"><span>E-W</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
-            <div style={{ fontSize: 10, color: '#a0d0a0', marginTop: 2 }}>Tricks this hand:</div>
-            <div className="ac-player-row"><span>N-S</span><span>{gameState.teamTricks?.['N-S'] || 0}</span></div>
-            <div className="ac-player-row"><span>E-W</span><span>{gameState.teamTricks?.['E-W'] || 0}</span></div>
-
-            <h3 style={{ marginTop: 12 }}>Controls</h3>
+            <h3>Controls</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {gameState.state === 'waiting' && (
                 <button className="ac-btn green"
