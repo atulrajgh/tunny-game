@@ -662,6 +662,36 @@ function App() {
         )}
       </div>
 
+      {/* Bidding overlay — top of screen */}
+      {isBidding && (
+        <div className={`overlay bidding-top${isMyTurn || (isAdmin && vacatedTurnPos) ? ' active' : ''}`}>
+          <h3>Bidding</h3>
+          <p>Current bidder: {curPlayer?.name}</p>
+          {isMyTurn && (
+            <div className="bid-buttons">
+              <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
+              {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
+                <button key={b} onClick={() => sendOnce('bid', { bid: b })} className="bid-num">{b}</button>
+              ))}
+            </div>
+          )}
+          {isAdmin && vacatedTurnPos && (
+            <>
+              <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
+              <div className="bid-buttons">
+                <button onClick={() => sendOnce('admin_play', { position: vacatedTurnPos, card: 'pass' })} className="bid-pass">Pass</button>
+                {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
+                  <button key={b} onClick={() => sendOnce('admin_play', { position: vacatedTurnPos, card: b })} className="bid-num">{b}</button>
+                ))}
+              </div>
+            </>
+          )}
+          <div className="bid-summary">
+            {players.map(p => <div key={p.id || p.position}>{p.name}: {p.bid || '—'}</div>)}
+          </div>
+        </div>
+      )}
+
       {/* Opponents + partner */}
       <div className="opponents-row">
         {[
@@ -685,37 +715,8 @@ function App() {
         })}
       </div>
 
-      {/* Center stage for overlays (bidding / trump) */}
+      {/* Center stage for overlays (trump) */}
       <div className="center-stage">
-        {isBidding && (
-          <div className={`overlay${isMyTurn || (isAdmin && vacatedTurnPos) ? ' active' : ''}`}>
-            <h3>Bidding</h3>
-            <p>Current bidder: {curPlayer?.name}</p>
-            {isMyTurn && (
-              <div className="bid-buttons">
-                <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
-                {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
-                  <button key={b} onClick={() => sendOnce('bid', { bid: b })} className="bid-num">{b}</button>
-                ))}
-              </div>
-            )}
-            {isAdmin && vacatedTurnPos && (
-              <>
-                <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
-                <div className="bid-buttons">
-                  <button onClick={() => sendOnce('admin_play', { position: vacatedTurnPos, card: 'pass' })} className="bid-pass">Pass</button>
-                  {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
-                    <button key={b} onClick={() => sendOnce('admin_play', { position: vacatedTurnPos, card: b })} className="bid-num">{b}</button>
-                  ))}
-                </div>
-              </>
-            )}
-            <div className="bid-summary">
-              {players.map(p => <div key={p.id || p.position}>{p.name}: {p.bid || '—'}</div>)}
-            </div>
-          </div>
-        )}
-
         {isTrump && (
           <div className="overlay active">
             <h3>Select Trump</h3>
