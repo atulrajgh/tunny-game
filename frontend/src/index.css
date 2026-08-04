@@ -206,6 +206,7 @@ input, button { font-family: inherit; }
 .ac-btn.red { background: #c0392b; }
 .ac-btn.orange { background: #e67e22; }
 .ac-btn.gray { background: #7f8c8d; }
+.ac-btn.pos { min-width: 26px; min-height: 26px; padding: 2px 6px; font-size: 12px; }
 .ac-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .ac-toggle { min-width: 44px; min-height: 44px; padding: 8px 16px; border: none; border-radius: 6px; background: #3498db; color: #fff; cursor: pointer; font-size: 14px; touch-action: manipulation; }
 .ac-state { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; }
@@ -239,6 +240,7 @@ input, button { font-family: inherit; }
   .ac-state-item { min-width: 60px; padding: 4px 8px; }
   .ac-player-row { padding: 10px 12px; margin-bottom: 6px; }
   .ac-btn { min-width: 48px; min-height: 48px; padding: 10px 18px; font-size: 16px; }
+  .ac-btn.pos { min-width: 30px; min-height: 30px; padding: 2px 8px; font-size: 14px; }
   .ac-toggle { min-width: 48px; min-height: 48px; font-size: 16px; }
   .ac-player-row .ac-actions { gap: 8px; }
 }

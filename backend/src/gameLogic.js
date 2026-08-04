@@ -523,6 +523,7 @@ class Game {
   playTrumpCard(playerId) {
     if (this.state !== 'playing') return false;
     if (playerId !== this.declarer.id) return false;
+    if (!this.currentPlayer || this.currentPlayer.id !== playerId) return false;
     const player = this.getPlayer(playerId);
     if (!player || !this.trumpCard) return false;
     if (this.trumpCardPlayed) return false;

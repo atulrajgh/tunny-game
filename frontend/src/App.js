@@ -421,7 +421,7 @@ function App() {
                 <span className="ac-name">{p.name}</span>
                 <div className="ac-actions">
                   {['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
-                    <button key={pos} className="ac-btn green"
+                    <button key={pos} className="ac-btn green pos"
                       onClick={() => socket.emit('assign_position', { playerId: p.id, position: pos })}>
                       {pos}
                     </button>
@@ -463,7 +463,7 @@ function App() {
                     <span className="ac-name">{s.name}</span>
                     <div className="ac-actions">
                       {players.length < 4 && ['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
-                        <button key={pos} className="ac-btn green"
+                        <button key={pos} className="ac-btn green pos"
                           onClick={() => sendOnce('promote_to_player', { spectatorId: s.id, position: pos })}>
                           {pos}
                         </button>
@@ -804,7 +804,7 @@ function App() {
             {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && canAskTrump && (
               <button className="action-btn" onClick={() => sendOnce('ask_trump')}>Ask Trump</button>
             )}
-            {isPlaying && isDeclarer && !isAdmin && gameState.trumpCard && canPlayTrump && (
+            {isPlaying && isDeclarer && isMyTurn && !isAdmin && gameState.trumpCard && canPlayTrump && (
               <button className="action-btn" onClick={() => sendOnce('play_trump')}>Play Trump</button>
             )}
           </>
