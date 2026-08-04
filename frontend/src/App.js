@@ -280,25 +280,30 @@ function App() {
       <div className="app review-screen">
         <h2>Hand {gameState.handNumber} Review</h2>
         {error && <div className="toast error">{error}</div>}
-        <div className="review-grid">
-          <div className="review-grid-row header">
+        <div className="ac-trick-table review-table">
+          <div className="ac-trick-table-header">
+            <span className="ac-tt-trick">Trick</span>
             {posOrder.map(pos => {
               const p = players.find(x => x.position === pos);
               return (
-                <div key={pos}>{p?.name || POSITION_NAMES[pos]}{gameState.declarer?.position === pos && gameState.trumpSuit ? <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span> : null}</div>
+                <span key={pos} className="ac-tt-card">{p?.name || POSITION_NAMES[pos]}{gameState.declarer?.position === pos && gameState.trumpSuit ? <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span> : null}</span>
               );
             })}
-            <div>N-S</div><div>E-W</div>
+            <span className="ac-tt-win">Winner</span>
+            <span className="ac-tt-pts">N-S</span>
+            <span className="ac-tt-pts">E-W</span>
           </div>
           {rows.map((r, i) => (
-            <div key={i} className={`review-grid-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
+            <div key={i} className={`ac-trick-table-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
+              <span className="ac-tt-trick">{i + 1}</span>
               {posOrder.map(pos => (
-                <div key={pos} className="review-grid-card">
-                  {r.cards[pos] ? <span className={`mini-card ${r.cards[pos].suit === '♥' || r.cards[pos].suit === '♦' ? 'red' : ''}`}>{r.cards[pos].rank}{r.cards[pos].suit}</span> : <span className="ac-empty">—</span>}
-                </div>
+                <span key={pos} className="ac-tt-card">
+                  {r.cards[pos] ? <span className={`mini-card ${r.cards[pos].suit === '♥' || r.cards[pos].suit === '♦' ? 'red' : ''}`}>{r.cards[pos].rank}{r.cards[pos].suit}</span> : <span className="ac-empty" style={{ padding: 0 }}>—</span>}
+                </span>
               ))}
-              <div className="review-grid-pts">{r.nsTotal != null ? r.nsTotal : ''}</div>
-              <div className="review-grid-pts">{r.ewTotal != null ? r.ewTotal : ''}</div>
+              <span className="ac-tt-win">{r.winner || '—'}</span>
+              <span className="ac-tt-pts">{r.nsTotal != null ? `+${r.nsTotal}` : '·'}</span>
+              <span className="ac-tt-pts">{r.ewTotal != null ? `+${r.ewTotal}` : '·'}</span>
             </div>
           ))}
         </div>
