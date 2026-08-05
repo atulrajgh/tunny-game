@@ -53,7 +53,7 @@ td{font-size:13px}
 <h1>♠ TUNNY ♥</h1>
 <p class="sub">A 4-player trick-taking card game</p>
 <h2>Overview</h2>
-<p>Tunny is played by <strong>4 players</strong> in fixed partnerships: <strong>North+South</strong> vs <strong>East+West</strong>. A match consists of <strong>6 hands</strong>. Teams score points based on high-card-point (HCP) bidding.</p>
+<p>Tunny is played by <strong>4 players</strong> in fixed partnerships: <strong>North+South</strong> vs <strong>East+West</strong>. A match ends when the first team reaches <strong>12 points</strong>. Teams score points based on high-card-point (HCP) bidding.</p>
 
 <h2>Cards</h2>
 <p>24 cards: 6 ranks × 4 suits. Rank order (high to low):</p>
@@ -68,7 +68,7 @@ td{font-size:13px}
 <p>Players join and the admin assigns positions (N/S/E/W). Once all 4 seats are filled, the admin can <strong>Start Game</strong>.</p>
 
 <h3>2. Cut</h3>
-<p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>. The first bidder is the player to the dealer's left.</p>
+<p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>. The first bidder is the player to the dealer's left. The dealer <strong>rotates clockwise</strong> to the next seat at the start of each new hand.</p>
 
 <h3>3. Bidding</h3>
 <p>Starting from the player left of the dealer, each player may <strong>Pass</strong> or bid a multiple of <strong>10 between 50 and 140</strong>. A bid must be higher than the current highest bid. Bidding ends when <strong>3 consecutive passes</strong> follow a bid. If all 4 pass without any bid, the hand is re-dealt with the same dealer.</p>
@@ -96,7 +96,7 @@ td{font-size:13px}
 </ul>
 
 <h2>Winning</h2>
-<p>After 6 hands, the team with more points wins. Ties are possible.</p>
+<p>The first team to reach or cross <strong>12 points</strong> wins the match.</p>
 
 <h2>Timeouts &amp; Disconnects</h2>
 <ul>
@@ -116,7 +116,6 @@ td{font-size:13px}
 <li><strong>Current Trick</strong> — cards played</li>
 <li><strong>Scores</strong> — running scores, HCP, tricks</li>
 <li><strong>Controls</strong> — Move Dealer, Reset Scores, Reset Game, Take Over, Confirm Hand</li>
-<li><strong>All Hands</strong> — every player's cards visible</li>
 </ul>
 
 <div class="back"><a href="/">← Back to Game</a></div>

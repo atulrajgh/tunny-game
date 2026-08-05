@@ -6,6 +6,7 @@ const RANKS = ['J', '9', 'A', '10', 'K', 'Q'];
 const RANK_ORDER = { J: 6, 9: 5, A: 4, 10: 3, K: 2, Q: 1 };
 const HCP_VALUES = { J: 30, 9: 20, A: 15, 10: 10, K: 5, Q: 5 };
 const MAX_HANDS = 6;
+const WINNING_SCORE = 12;
 
 function bidRequirement(bid) {
   return bid + 120;
@@ -586,11 +587,11 @@ class Game {
       }
     }
     for (const p of this.players) p.score = this.scores[p.team] || 0;
-    if (this.handNumber >= MAX_HANDS) {
+    if (this.scores['N-S'] >= WINNING_SCORE || this.scores['E-W'] >= WINNING_SCORE) {
       this.state = 'game_over';
       this.winner = this.scores['N-S'] >= this.scores['E-W'] ? 'N-S' : 'E-W';
     } else {
-      this.resetForNextHand();
+      this.resetForNextHand(true);
     }
     this.lastActivity = Date.now();
     return true;
@@ -808,4 +809,4 @@ class Game {
   }
 }
 
-module.exports = { Game, Player, Card, SUITS, RANKS, RANK_ORDER, HCP_VALUES, MAX_HANDS, bidRequirement };
+module.exports = { Game, Player, Card, SUITS, RANKS, RANK_ORDER, HCP_VALUES, MAX_HANDS, WINNING_SCORE, bidRequirement };
