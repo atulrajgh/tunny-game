@@ -89,11 +89,17 @@ td{font-size:13px}
 <h3>7. Scoring</h3>
 <p>After all tricks, the admin reviews and confirms the hand:</p>
 <ul>
-<li><strong>Declarer's team</strong> earns <strong>1 point</strong> if their total HCP ≥ bid + 120 (e.g. bid 50 → need 170, bid 100 → need 220, bid 160 → need 280)</li>
+<li><strong>Declarer's team</strong> earns <strong>1 point</strong> if their total HCP ≥ bid + 120</li>
 <li><strong>Bonus point</strong> (slam) if their HCP ≥ 340</li>
 <li><strong>Defenders</strong> earn <strong>1 point</strong> if declarer's team fails to meet the bid</li>
 <li><strong>Bonus point</strong> for defenders if they collect all 340 HCP</li>
 </ul>
+<p><strong>Bid vs required HCP</strong> (your team must collect at least this many HCP to make the contract):</p>
+<table>
+<tr><th>Bid</th><td>50</td><td>60</td><td>70</td><td>80</td><td>90</td><td>100</td><td>110</td><td>120</td><td>130</td><td>140</td><td>150</td><td>160</td></tr>
+<tr><th>HCP needed</th><td>170</td><td>180</td><td>190</td><td>200</td><td>210</td><td>220</td><td>230</td><td>240</td><td>250</td><td>260</td><td>270</td><td>280</td></tr>
+</table>
+<p>Example: bidding <strong>100</strong> requires your team to win <strong>220 HCP</strong>; a <strong>160</strong> bid needs all <strong>280 HCP</strong>.</p>
 
 <h2>Winning</h2>
 <p>The first team to reach or cross <strong>12 points</strong> wins the match.</p>
