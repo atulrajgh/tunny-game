@@ -329,7 +329,7 @@ class Game {
     if (bid === 'pass') {
       player.bid = 'pass';
       this.passCount++;
-    } else if (typeof bid === 'number' && bid >= 50 && bid <= 170 && bid > (this.highestBid || 0)) {
+    } else if (typeof bid === 'number' && bid >= 50 && bid <= 160 && bid > (this.highestBid || 0)) {
       player.bid = bid;
       this.lastBidder = player;
       this.highestBid = bid;
@@ -367,7 +367,7 @@ class Game {
     if (bid === 'pass') {
       saved.bid = 'pass';
       this.passCount++;
-    } else if (typeof bid === 'number' && bid >= 50 && bid <= 170 && bid > (this.highestBid || 0)) {
+    } else if (typeof bid === 'number' && bid >= 50 && bid <= 160 && bid > (this.highestBid || 0)) {
       saved.bid = bid;
       this.lastBidder = saved;
       this.highestBid = bid;

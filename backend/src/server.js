@@ -71,7 +71,7 @@ td{font-size:13px}
 <p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>. The first bidder is the player to the dealer's left. The dealer <strong>rotates clockwise</strong> to the next seat at the start of each new hand.</p>
 
 <h3>3. Bidding</h3>
-<p>Starting from the player left of the dealer, each player may <strong>Pass</strong> or bid a multiple of <strong>10 between 50 and 140</strong>. A bid must be higher than the current highest bid. Bidding ends when <strong>3 consecutive passes</strong> follow a bid. If all 4 pass without any bid, the hand is re-dealt with the same dealer.</p>
+<p>Starting from the player left of the dealer, each player may <strong>Pass</strong> or bid a multiple of <strong>10 between 50 and 160</strong>. A bid must be higher than the current highest bid. Bidding ends when <strong>3 consecutive passes</strong> follow a bid. If all 4 pass without any bid, the hand is re-dealt with the same dealer.</p>
 <p>The winning bidder becomes <strong>declarer</strong>.</p>
 
 <h3>4. Contract Level</h3>

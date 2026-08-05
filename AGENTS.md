@@ -29,11 +29,11 @@ No lint, typecheck, or formatter scripts exist. `backend/tests/` is empty.
 
 `waiting` → `cut` → `bidding` → `trump_selection` → `playing` → `hand_review` → (next hand or `game_over`)
 
-Game ends when a team reaches/crosses 12 points (WINNING_SCORE); up to 6 hands per game (MAX_HANDS). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–140 (multiples of 10) plus Pass. HCP values: J=30, 9=20, A=15, 10=10, K=5, Q=5.
+Game ends when a team reaches/crosses 12 points (WINNING_SCORE); up to 6 hands per game (MAX_HANDS). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–160 (multiples of 10) plus Pass. HCP values: J=30, 9=20, A=15, 10=10, K=5, Q=5.
 
 Contract: bid < 100 → level 1 (4 tricks), bid ≥ 100 → level 2 (5 tricks). Scoring: declarer's team earns 1 point if their HCP total ≥ bid + 120 (2 if ≥ 340, slam); otherwise defenders earn 1 point (2 if they collect all 340).
 
-Teams: N+S vs E+W. Admin assigns positions in waiting room.
+Teams: N+S vs E+W. Admin assigns positions in waiting room. Dealer rotates clockwise to the next seat at the start of each new hand (`confirmHand` calls `resetForNextHand(true)`); the admin "Move Dealer" button is available for manual adjustment.
 
 ## Admin Panel
 
@@ -45,7 +45,7 @@ Embedded below the game table as a collapsible section (toggle at bottom of acti
 - **Bids** — each player's current bid
 - **Current Trick** — cards played this trick
 - **Scores** — running scores, HCP this hand, tricks this hand
-- **Controls** — Reset Game, Take Over (timed-out player), Confirm Hand / End Game
+- **Controls** — Move Dealer, Reset Scores, Reset Game, Take Over (timed-out player), Confirm Hand / End Game
 
 On mobile (< 768px) the 3-column grid stacks to single column; button sizes increase for touch targets. All admin buttons have `touch-action: manipulation` for reliable Android tap handling.
 
@@ -59,8 +59,8 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## Trump visibility
 
-- Trump suit is hidden from non-admin players until either: the declarer uses "Ask Trump" (reveals suit to declarer), or the declarer uses "Play Trump" (reveals suit + card to everyone).
-- Admin and declarer always see the trump suit; the trump card is only visible to the declarer (admin sees it once revealed). `trumpRevealed` controls general visibility.
+- Trump suit is hidden from non-admin players and admin until either: the declarer uses "Ask Trump" (reveals suit to declarer), or the declarer uses "Play Trump" (reveals suit + card to everyone).
+- The trump suit and trump card is only visible to the declarer (admin sees it once revealed). `trumpRevealed` controls general visibility.
 
 ## WebSocket events (server → client)
 
