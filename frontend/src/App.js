@@ -726,16 +726,18 @@ function App() {
       {/* Opponents + partner */}
       <div className="opponents-row">
         {[
-          { cls: 'opp1', pos: posOrder[3], label: 'Opponent 1' },
-          { cls: 'partner', pos: posOrder[0], label: 'Partner' },
-          { cls: 'opp2', pos: posOrder[1], label: 'Opponent 2' }
-        ].map(({ cls, pos, label }) => {
+          { cls: 'opp1', pos: posOrder[3] },
+          { cls: 'partner', pos: posOrder[0] },
+          { cls: 'opp2', pos: posOrder[1] }
+        ].map(({ cls, pos }) => {
           const p = playerAtPos(pos);
+          const label = cls === 'partner' ? 'Partner' : null;
           return (
             <div key={cls} className={`table-seat ${cls}`}>
-              <div className="seat-info">{p?.name || POSITION_NAMES[pos]}<span className="seat-role">{label}</span>{p && <span className="team-badge">{p.team}</span>}</div>
               {vacatedAt(pos) ? renderVacated(pos, true) : (
                 <div className="dummy-card" title={`${p?.name || POSITION_NAMES[pos]} — ${faceDownCount(p)} cards`}>
+                  <span className="dummy-name">{p?.name || POSITION_NAMES[pos]}</span>
+                  {label && <span className="dummy-role">{label}</span>}
                   <span className="dummy-count">{faceDownCount(p)}</span>
                 </div>
               )}
