@@ -164,6 +164,8 @@ input, button { font-family: inherit; }
 .review-grid-row { display: grid; grid-template-columns: repeat(4, 1fr) 90px 90px; align-items: center; gap: 2px; padding: 4px 2px; border-radius: 6px; }
 .review-grid-row.header { font-size: 12px; font-weight: 700; color: #f0c040; background: #1a3a1a; }
 .review-grid-row.header .trump-suit { margin-left: 4px; font-size: 14px; color: #f0c040; }
+.trump-suit { margin-left: 5px; font-weight: 700; color: #f0c040; }
+.trump-suit.red { color: #ff7b6b; }
 .review-grid-row.header .trump-suit.red { color: #ff7b6b; }
 .review-grid-row.header div { padding: 6px 4px; }
 .review-grid-row.win-ns { background: #2d4a7a; }

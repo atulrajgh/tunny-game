@@ -327,12 +327,12 @@ function App() {
           <div className="score-card">
             <h3>N-S</h3>
             <div className="score-num">{gameState.scores?.['N-S'] || 0}</div>
-            {players.filter(p => p.team === 'N-S').map(p => <div key={p.id}>{p.name}</div>)}
+            {players.filter(p => p.team === 'N-S').map(p => <div key={p.id}>{p.name}{gameState.declarer?.id === p.id && gameState.trumpSuit ? <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span> : null}</div>)}
           </div>
           <div className="score-card">
             <h3>E-W</h3>
             <div className="score-num">{gameState.scores?.['E-W'] || 0}</div>
-            {players.filter(p => p.team === 'E-W').map(p => <div key={p.id}>{p.name}</div>)}
+            {players.filter(p => p.team === 'E-W').map(p => <div key={p.id}>{p.name}{gameState.declarer?.id === p.id && gameState.trumpSuit ? <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span> : null}</div>)}
           </div>
           </div>
           <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 16 }}>How to Play</a>

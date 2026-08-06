@@ -663,7 +663,7 @@ class Game {
       roomId: this.id, state: this.state,
       dealer: this.dealer ? { id: this.dealer.id, name: this.dealer.name, position: this.dealer.position } : null,
       currentPlayer: this.currentPlayer ? { id: this.currentPlayer.id, name: this.currentPlayer.name, position: this.currentPlayer.position } : null,
-      trumpSuit: (this.trumpRevealed || viewer?.id === this.declarer?.id) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
+      trumpSuit: (this.trumpRevealed || this.state === 'game_over' || viewer?.id === this.declarer?.id) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
       trumpCard: (this.trumpRevealed || viewer?.id === this.declarer?.id) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
       trickNumber: this.trickNumber, handNumber: this.handNumber,
       contractLevel: this.contractLevel, targetTricks: this.targetTricks,
