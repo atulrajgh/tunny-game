@@ -59,8 +59,8 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## Trump visibility
 
-- Trump suit is hidden from non-admin players and admin until either: the declarer uses "Ask Trump" (reveals suit to declarer), or the declarer uses "Play Trump" (reveals suit + card to everyone).
-- The trump suit and trump card is only visible to the declarer (admin sees it once revealed). `trumpRevealed` controls general visibility.
+- Trump suit is hidden from all players and admin until either: the declarer uses "Ask Trump" (reveals suit to declarer), or the declarer uses "Play Trump" (reveals suit + card to everyone).
+- The trump suit and trump card is only visible to the declarer. `trumpRevealed` controls general visibility; the admin does not see the trump suit until it is revealed.
 
 ## WebSocket events (server → client)
 
@@ -73,7 +73,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 ## Key conventions
 
 - Card display format: `rank + suit` (e.g. `J♠`). Red suits (♥♦) render with red color.
-- `getGameState(playerId)` hides non-admin player names as `[Hidden]` and only shows own hand + dummy's face-up hand.
+- `getGameState(playerId)` hides non-admin player names as `[Hidden]` and only shows own hand + dummy's face-up hand. The dummy's hand is rendered as a single dummy-card image showing the card count, not individual cards.
 - Admin (host-only, not a seated player) sees **no** players' cards normally — only card counts. The admin sees a player's hand only when that seat is vacated (`vacatedHands`) or that player has timed out (`timedOutHand`). Admin still sees the trump suit and all played trick cards.
 - Table view rotates so each player sees themselves at South (bottom).
 

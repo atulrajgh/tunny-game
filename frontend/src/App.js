@@ -350,6 +350,7 @@ function App() {
   const isMyTurn = curPlayer?.id === playerId;
   const isDeclarer = gameState.declarer?.id === playerId;
   const declarerPos = gameState.declarer?.position;
+  const dummyPos = declarerPos ? PARTNER[declarerPos] : null;
   const isDefender = myPos && declarerPos && PARTNER[myPos] !== declarerPos && myPos !== declarerPos;
   const vacatedTurnPos = curPlayer && curPlayer.id === null ? curPlayer.position : null;
   const declarerVacated = gameState.declarer ? vacatedAt(gameState.declarer.position) : null;
@@ -735,11 +736,17 @@ function App() {
             <div key={cls} className={`table-seat ${cls}`}>
               <div className="seat-info">{p?.name || POSITION_NAMES[pos]}<span className="seat-role">{label}</span>{p && <span className="team-badge">{p.team}</span>}</div>
               {vacatedAt(pos) ? renderVacated(pos, true) : (
-                <div className="hand-cards vert">
-                  {Array.from({ length: faceDownCount(p) }).map((_, i) => (
-                    <span key={i} className="card-back mini" />
-                  ))}
-                </div>
+                pos === dummyPos && isPlaying && p ? (
+                  <div className="dummy-card" title={`${p.name} — ${faceDownCount(p)} cards`}>
+                    <span className="dummy-count">{faceDownCount(p)}</span>
+                  </div>
+                ) : (
+                  <div className="hand-cards vert">
+                    {Array.from({ length: faceDownCount(p) }).map((_, i) => (
+                      <span key={i} className="card-back mini" />
+                    ))}
+                  </div>
+                )
               )}
             </div>
           );
