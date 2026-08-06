@@ -215,11 +215,14 @@ io.on('connection', (socket) => {
     if (g.state !== 'playing' && g.state !== 'bidding') return;
     g._timeout = setTimeout(() => {
       const cp = g.currentPlayer;
+      const isAdminGame = !!g.admin;
       g._timedOutPlayerId = cp ? cp.id : null;
-      io.to(g.id).emit('player_timed_out', {
-        playerId: cp ? cp.id : null,
-        playerName: cp ? cp.name : 'Unknown (vacant seat)'
-      });
+      if (isAdminGame && g.admin) {
+        emitToPlayer(g.admin.id, 'player_timed_out', {
+          playerId: cp ? cp.id : null,
+          playerName: cp ? cp.name : 'Unknown (vacant seat)'
+        });
+      }
     }, TIMEOUT_MS);
   }
 

@@ -55,6 +55,7 @@ function App() {
     socket.on('state', (state) => {
       unlockAction();
       setGameState(state);
+      if (state.timedOutHand == null) setTimedOut(null);
       if (state.me) {
         setIsAdmin(state.me.isAdmin);
         setIsSpectator(!!state.me.isSpectator);
