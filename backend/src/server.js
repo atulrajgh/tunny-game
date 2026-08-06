@@ -151,7 +151,7 @@ setInterval(saveRooms, SAVE_INTERVAL);
 function getPublicList() {
   const list = {};
   for (const [id, g] of Object.entries(ROOMS)) {
-    list[id] = { id, playerCount: g.players.length, maxPlayers: 4 };
+    list[id] = { id, playerCount: g.players.length + (g.admin ? 1 : 0), maxPlayers: 4 };
   }
   return list;
 }
@@ -246,8 +246,8 @@ io.on('connection', (socket) => {
     if (g.state !== 'waiting') return error('Game already started');
     if (g.players.length >= 4) return error('Room full');
     const hasAdmin = !!g.admin;
-    if (!hasAdmin) return error('No host in this room');
-    const p = g.addPlayer(playerName, false);
+    const p = hasAdmin ? g.addPlayer(playerName, false) : g.addPlayer(playerName, true);
+    if (!p) return error(hasAdmin ? 'Room full' : 'Failed to join');
     gameId = g.id; playerId = p.id;
     socket.join(g.id); track();
     socket.emit('room_joined', { gameId: g.id, playerId: p.id, isAdmin: p.isAdmin });
