@@ -633,6 +633,7 @@ class Game {
       trumpCard: (this.trumpRevealed || viewer?.id === this.declarer?.id) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
       trickNumber: this.trickNumber, handNumber: this.handNumber,
       contractLevel: this.contractLevel, targetTricks: this.targetTricks,
+      highestBid: this.highestBid,
       declarer: this.declarer ? { id: this.declarer.id, position: this.declarer.position } : null,
       scores: { ...this.scores }, winner: this.winner,
       positions: { ...this.positions },

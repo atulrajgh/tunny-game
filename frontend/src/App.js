@@ -112,6 +112,11 @@ function App() {
 
   useEffect(() => { if (gameState?.state === 'bidding') setIncBid(50); }, [gameState?.state]);
 
+  const placeMyBid = () => {
+    sendOnce('bid', { bid: incBid });
+    setIncBid(prev => Math.min(prev + 10, 170));
+  };
+
   const joinGame = () => {
     if (!name) return showError('Enter your name');
     localStorage.setItem('tunny_name', name);
@@ -332,6 +337,7 @@ function App() {
   const isBidding = gameState.state === 'bidding';
   const isTrump = gameState.state === 'trump_selection';
   const isPlaying = gameState.state === 'playing';
+  const highestBid = gameState.highestBid;
 
   const curPlayer = gameState.currentPlayer;
   const isMyTurn = curPlayer?.id === playerId;
@@ -674,31 +680,37 @@ function App() {
   {isBidding && (
     <div className={`overlay bidding-top${isMyTurn || (isAdmin && (vacatedTurnPos || timedOutTurn)) ? ' active' : ''}`}>
       <h3>Bidding</h3>
-      <p>Current bidder: {curPlayer?.name} <span className="hcp-hint">(HCP {handHCP(me?.hand)})</span></p>
+      <div className="bid-info">
+        <span>Bidder: {curPlayer?.name}</span>
+        <span>Your HCP: {handHCP(me?.hand)}</span>
+        <span>Current high bid: {highestBid || '—'}</span>
+      </div>
       {isMyTurn && (
         <div className="bid-buttons">
           <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
-          <button onClick={() => { setIncBid(Math.min(incBid + 10, 170)); }} className="bid-inc">{incBid}</button>
-          <button onClick={() => sendOnce('bid', { bid: incBid })} className="bid-confirm">Bid {incBid}</button>
+          <div className="bid-inc-wrap">
+            <button onClick={placeMyBid} className="bid-inc">{incBid}</button>
+            <span className="bid-hcp">needs {handHCPRequirement(incBid)} HCP</span>
+          </div>
         </div>
       )}
       {isAdmin && (vacatedPlayer || timedOutTurn) && (
         <>
           <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
           <div className="bid-buttons">
-            <button onClick={() => sendOnce('admin_play', { position: (vacatedPlayer || {}).pos, targetId: timedOutHand?.playerId, card: 'pass' })} className="bid-pass">Pass</button>
             {vacatedPlayer && (
-              <>
-                <button onClick={() => setIncBid(Math.min(incBid + 10, 170))} className="bid-inc">{incBid}</button>
-                <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.pos, card: incBid })} className="bid-confirm">Bid {incBid}</button>
-              </>
+              <div className="bid-inc-wrap">
+                <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.pos, card: incBid })} className="bid-inc">{incBid}</button>
+                <span className="bid-hcp">needs {handHCPRequirement(incBid)} HCP</span>
+              </div>
             )}
             {timedOutTurn && (
-              <>
-                <button onClick={() => setIncBid(Math.min(incBid + 10, 170))} className="bid-inc">{incBid}</button>
-                <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: incBid }); }} className="bid-confirm">Bid {incBid}</button>
-              </>
+              <div className="bid-inc-wrap">
+                <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: incBid }); }} className="bid-inc">{incBid}</button>
+                <span className="bid-hcp">needs {handHCPRequirement(incBid)} HCP</span>
+              </div>
             )}
+            <button onClick={() => sendOnce('admin_play', { position: (vacatedPlayer || {}).pos, targetId: timedOutHand?.playerId, card: 'pass' })} className="bid-pass">Pass</button>
           </div>
         </>
       )}
