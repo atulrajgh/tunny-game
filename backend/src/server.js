@@ -225,6 +225,33 @@ io.on('connection', (socket) => {
     for (const s of g.spectators) emitToPlayer(s.id, 'state', g.getGameState(s.id));
   }
 
+  function attachPlayer(g, name, admin) {
+    const p = g.addPlayer(name, admin);
+    if (!p) return null;
+    gameId = g.id; playerId = p.id;
+    socket.join(g.id); track();
+    socket.emit('room_joined', { gameId: g.id, playerId: p.id, isAdmin: p.isAdmin });
+    io.to(g.id).emit('player_joined', { playerId: p.id, playerName: p.name, isAdmin: p.isAdmin, playerCount: g.players.length });
+    return p;
+  }
+
+  function attachSpectator(g, name) {
+    const s = g.addSpectator(name);
+    gameId = g.id; playerId = s.id;
+    socket.join(g.id); track();
+    socket.emit('room_joined', { gameId: g.id, playerId: s.id, isAdmin: false, isSpectator: true });
+    io.to(g.id).emit('spectator_joined', { playerId: s.id, playerName: s.name });
+    return s;
+  }
+
+  function finishTurn(g) {
+    clearTimeout(g._timeout);
+    if (g.state === 'hand_review') {
+      io.to(g.id).emit('hand_end', { handNumber: g.handNumber, scores: g.scores });
+    } else { timeoutStart(); }
+    updateAll();
+  }
+
   function timeoutStart() {
     const g = game();
     if (!g) return;
@@ -243,31 +270,19 @@ io.on('connection', (socket) => {
     }, TIMEOUT_MS);
   }
 
+  function autoJoin(g, playerName) {
+    if (!g.admin) {
+      return attachPlayer(g, playerName, true);
+    } else if (g.players.length < 4) {
+      return attachPlayer(g, playerName, false);
+    }
+    return attachSpectator(g, playerName);
+  }
+
   socket.on('create_room', ({ playerName }) => {
     if (!playerName) return error('Name required');
-    let g = GLOBAL_TABLE;
-    if (!g) { g = new Game(); g.roomId = g.id; GLOBAL_TABLE = g; ROOMS[g.id] = g; }
-    let p;
-    if (!g.admin) {
-      p = g.addPlayer(playerName, true);
-      if (!p) return error('Failed to join');
-    } else if (g.players.length < 4) {
-      p = g.addPlayer(playerName, false);
-      if (!p) return error('Room full');
-    } else {
-      const s = g.addSpectator(playerName);
-      gameId = g.id; playerId = s.id;
-      socket.join(g.id); track();
-      socket.emit('room_joined', { gameId: g.id, playerId: s.id, isAdmin: false, isSpectator: true });
-      io.to(g.id).emit('spectator_joined', { playerId: s.id, playerName: s.name });
-      io.emit('room_list', getPublicList());
-      updateAll();
-      return;
-    }
-    gameId = g.id; playerId = p.id;
-    socket.join(g.id); track();
-    socket.emit('room_joined', { gameId: g.id, playerId: p.id, isAdmin: p.isAdmin });
-    io.to(g.id).emit('player_joined', { playerId: p.id, playerName: p.name, isAdmin: p.isAdmin, playerCount: g.players.length });
+    if (!GLOBAL_TABLE) { GLOBAL_TABLE = new Game(); GLOBAL_TABLE.roomId = GLOBAL_TABLE.id; ROOMS[GLOBAL_TABLE.id] = GLOBAL_TABLE; }
+    if (!autoJoin(GLOBAL_TABLE, playerName)) return error('Failed to join');
     io.emit('room_list', getPublicList());
     updateAll();
   });
@@ -276,31 +291,7 @@ io.on('connection', (socket) => {
     if (!playerName) return error('Name required');
     let g = ROOMS[rid];
     if (!g) { g = new Game(rid); g.roomId = rid; ROOMS[rid] = g; }
-    if (g.state !== 'waiting' && !g.admin) {
-      // room already in progress needs an admin; first joiner becomes admin via addPlayer
-    }
-    // Auto-route: no admin -> admin; <4 players -> player; else observer
-    let p;
-    if (!g.admin) {
-      p = g.addPlayer(playerName, true);
-      if (!p) return error('Failed to join');
-    } else if (g.players.length < 4) {
-      p = g.addPlayer(playerName, false);
-      if (!p) return error('Room full');
-    } else {
-      const s = g.addSpectator(playerName);
-      gameId = g.id; playerId = s.id;
-      socket.join(g.id); track();
-      socket.emit('room_joined', { gameId: g.id, playerId: s.id, isAdmin: false, isSpectator: true });
-      io.to(g.id).emit('spectator_joined', { playerId: s.id, playerName: s.name });
-      io.emit('room_list', getPublicList());
-      updateAll();
-      return;
-    }
-    gameId = g.id; playerId = p.id;
-    socket.join(g.id); track();
-    socket.emit('room_joined', { gameId: g.id, playerId: p.id, isAdmin: p.isAdmin });
-    io.to(g.id).emit('player_joined', { playerId: p.id, playerName: p.name, isAdmin: p.isAdmin, playerCount: g.players.length });
+    if (!autoJoin(g, playerName)) return error('Room full');
     io.emit('room_list', getPublicList());
     updateAll();
   });
@@ -309,11 +300,7 @@ io.on('connection', (socket) => {
     if (!playerName) return error('Name required');
     const g = ROOMS[rid];
     if (!g) return error('Room not found');
-    const s = g.addSpectator(playerName);
-    gameId = g.id; playerId = s.id;
-    socket.join(g.id); track();
-    socket.emit('room_joined', { gameId: g.id, playerId: s.id, isAdmin: false, isSpectator: true });
-    io.to(g.id).emit('spectator_joined', { playerId: s.id, playerName: s.name });
+    attachSpectator(g, playerName);
     updateAll();
   });
 
@@ -375,21 +362,13 @@ io.on('connection', (socket) => {
   socket.on('play', ({ card }) => {
     const g = game(); if (!g) return error('Not in a game');
     if (!g.playCard(playerId, card)) return error('Invalid play');
-    clearTimeout(g._timeout);
-    if (g.state === 'hand_review') {
-      io.to(g.id).emit('hand_end', { handNumber: g.handNumber, scores: g.scores });
-    } else { timeoutStart(); }
-    updateAll();
+    finishTurn(g);
   });
 
   socket.on('play_trump', () => {
     const g = game(); if (!g) return error('Not in a game');
     if (!g.playTrumpCard(playerId)) return error('Cannot play trump now');
-    clearTimeout(g._timeout);
-    if (g.state === 'hand_review') {
-      io.to(g.id).emit('hand_end', { handNumber: g.handNumber, scores: g.scores });
-    } else { timeoutStart(); }
-    updateAll();
+    finishTurn(g);
   });
 
   socket.on('ask_trump', () => {
@@ -480,11 +459,7 @@ io.on('connection', (socket) => {
         }
       }
     }
-    clearTimeout(g._timeout);
-    if (g.state === 'hand_review') {
-      io.to(g.id).emit('hand_end', { handNumber: g.handNumber, scores: g.scores });
-    } else { timeoutStart(); }
-    updateAll();
+    finishTurn(g);
   });
 
   socket.on('disconnect', () => {
