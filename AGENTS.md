@@ -31,7 +31,7 @@ No lint, typecheck, or formatter scripts exist. `backend/tests/` is empty.
 
 Game ends when a team reaches/crosses 12 points (WINNING_SCORE); up to 6 hands per game (MAX_HANDS). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–170 (multiples of 10) plus Pass. HCP values: J=30, 9=20, A=15, 10=10, K=5, Q=5.
 
-Contract: bid < 100 → level 1 (4 tricks), bid ≥ 100 → level 2 (5 tricks). Scoring: the winning team earns 1 point normally, or 2 points when the winning team's bid is ≥ 100 (i.e. a level-2 contract). The declarer's team wins if their HCP total ≥ `bid*1.5+85`; otherwise the defending team wins. HCP↔bid table: 50→160, 60→175, 70→190, … 160→325, 170→340.
+Contract: bid < 100 → level 1 (4 tricks), bid ≥ 100 → level 2 (5 tricks). Scoring: the winning team earns 2 points when the winning bid is ≥ 100 (a level-2 contract), else 1 point, and earns 1 additional point for a slam (collecting all 340 HCP). The declarer's team wins if their HCP total ≥ `bid*1.5+85`; otherwise the defending team wins. HCP↔bid table: 50→160, 60→175, 70→190, … 160→325, 170→340.
 
 ## Login (single global table)
 

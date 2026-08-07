@@ -544,10 +544,16 @@ class Game {
     const bid = this.declarer.bid;
     // Points granted are 2 when the bid is 100 or more, else 1
     const pts = bid >= 100 ? 2 : 1;
+    // Winning team also earns +1 for a slam (collecting all 340 HCP)
+    let winnerTeam;
     if (declarerHCP >= bidRequirement(bid)) {
-      this.scores[declarerTeam] += pts;
+      winnerTeam = declarerTeam;
     } else {
-      this.scores[defendingTeam] += pts;
+      winnerTeam = defendingTeam;
+    }
+    this.scores[winnerTeam] += pts;
+    if (this.teamPoints[winnerTeam] >= 340) {
+      this.scores[winnerTeam] += 1;
     }
     for (const p of this.players) p.score = this.scores[p.team] || 0;
     if (this.scores['N-S'] >= WINNING_SCORE || this.scores['E-W'] >= WINNING_SCORE) {
