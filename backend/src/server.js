@@ -72,7 +72,7 @@ td{font-size:13px}
 <p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>. The first bidder is the player to the dealer's left. The dealer <strong>rotates clockwise</strong> to the next seat at the start of each new hand.</p>
 
 <h3>3. Bidding</h3>
-<p>Starting from the player left of the dealer, each player may <strong>Pass</strong> or bid a multiple of <strong>10 between 50 and 170</strong>. A bid must be higher than the current highest bid. Bidding ends when <strong>3 consecutive passes</strong> follow a bid. If all 4 pass without any bid, the hand is re-dealt with the same dealer.</p>
+<p>Starting from the player left of the dealer, each player may <strong>Pass</strong> or bid a multiple of <strong>10 between 50 and 170</strong>. The bid panel sits in the <strong>top-left corner</strong> over the scorecard — use the <strong>▲/▼</strong> buttons to raise or lower your bid by 10 (the value can't drop below the current highest bid + 10, and caps at 170), then press the value button to place it. A bid must be higher than the current highest bid. Bidding ends when <strong>3 consecutive passes</strong> follow a bid. If all 4 pass without any bid, the hand is re-dealt with the same dealer.</p>
 <p>The winning bidder becomes <strong>declarer</strong>.</p>
 
 <h3>4. Contract Level</h3>
@@ -85,7 +85,7 @@ td{font-size:13px}
 
 <h3>6. Play</h3>
 <p>Players play tricks clockwise. You must <strong>follow suit</strong> if possible. If you cannot follow suit, you may play any card (including trump). The highest card of the lead suit wins the trick, unless a trump is played — then the highest trump wins.</p>
-<p><strong>Trump visibility:</strong> Non-admin players cannot see the trump suit until the declarer uses <strong>Ask Trump</strong> (reveals the suit to the declarer) or <strong>Play Trump</strong> (reveals the suit+card to everyone). The trump card is always visible to the declarer and admin.</p>
+<p><strong>Trump visibility:</strong> The trump suit is hidden from all players and the admin until it is revealed. Any non-declarer (the declarer's partner or a defender) can use <strong>Ask Trump</strong> to reveal the suit, and the declarer can use <strong>Play Trump</strong> to reveal the suit and play the trump card. The <strong>Ask Trump</strong> and <strong>Play Trump</strong> buttons are hidden by default — they appear only when it is your turn and you do not hold the current trick's led suit in your hand. The trump card is always visible to the declarer (and admin) until played.</p>
 
 <h3>7. Scoring</h3>
 <p>After all tricks, the admin reviews and confirms the hand:</p>
@@ -109,7 +109,7 @@ td{font-size:13px}
 <ul>
 <li>Players have <strong>5 minutes</strong> to bid or play. If they time out, the admin can <strong>Take Over</strong> their turn.</li>
 <li>If a player disconnects mid-game, their hand and state are saved. The admin can <strong>promote a spectator</strong> to fill the seat, restoring their saved cards and turn.</li>
-<li>If the admin disconnects mid-game, the room is closed immediately.</li>
+<li>If the admin disconnects, the first observer (or player) is promoted to admin. If no players or observers remain, the room is closed and a fresh join starts a brand-new table.</li>
 </ul>
 
 <h2>Admin Controls</h2>

@@ -22,7 +22,7 @@ No lint, typecheck, or formatter scripts exist. `backend/tests/` is empty.
 - All state is in-memory, persisted to `backend/rooms.json` every 30s. Restart restores rooms but not active games.
 - Real-time via Socket.IO WebSockets; REST API at `/api/games` for room listing/creation.
 - First player to join a room becomes admin automatically.
-- Room lifecycle: rooms visible in public list in any state. Empty rooms deleted on last disconnect. Mid-game admin disconnect deletes room immediately; non-admin mid-game disconnect saves their hand/state in `vacatedHands` for spectator promotion. A vacant seat's turn pauses; the admin can take over that seat (bid/choose trump/play its saved hand via `admin_play` with a `position`) until a spectator is promoted to fill it.
+- Room lifecycle: rooms visible in public list in any state. A room closes when no players or observers remain (only the admin, or nobody). Non-admin mid-game disconnect saves their hand/state in `vacatedHands` for spectator promotion; admin mid-game disconnect promotes an observer/player via `promoteToAdmin`. A vacant seat's turn pauses; the admin can take over that seat (bid/choose trump/play its saved hand via `admin_play` with a `position`) until a spectator is promoted to fill it.
 - CORS: `origin: "*"` — wide open.
 
 ## Game state machine
@@ -63,8 +63,8 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## Trump visibility
 
-- Trump suit is hidden from all players and admin until either: the declarer uses "Ask Trump" (reveals suit to declarer), or the declarer uses "Play Trump" (reveals suit + card to everyone).
-- The trump suit and trump card is only visible to the declarer. `trumpRevealed` controls general visibility; the admin does not see the trump suit until it is revealed.
+- Trump suit is hidden from all players and admin until revealed via **Ask Trump** (any non-declarer player — the declarer's partner or a defender — may use it) or **Play Trump** (declarer only). `trumpRevealed` controls general visibility; the admin does not see the trump suit until it is revealed. The trump card is visible only to the declarer (and admin) until played.
+- The **Ask Trump** and **Play Trump** buttons are hidden by default. They appear only when it is your turn AND you do not hold the current trick's led suit in your hand (`canTrumpAction = isMyTurn && ledSuit && !iHoldLeadSuit` in `App.js`). Ask Trump additionally requires you not be the declarer; Play Trump additionally requires you be the declarer and have an unplayed trump card.
 
 ## WebSocket events (server → client)
 
@@ -76,7 +76,8 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## Key conventions
 
-- Card display format: `rank + suit` (e.g. `J♠`). Red suits (♥♦) render with red color.
+- Card display format: `rank + suit` (e.g. `J♠`). Red suits (♥♦) render with red color. Cards render with a larger rank/suit (`.card-face` 34px on desktop, scaled down responsively).
+- Bidding UI is a fixed overlay in the top-left (`bidding-top`) with Pass and a value stepper: ▲/▼ adjust the bid in increments of 10 (cap 170), floored at `max(50, highestBid + 10)` so the bid always exceeds the current high bid; the value button submits.
 - `getGameState(playerId)` hides non-admin player names as `[Hidden]` and only shows own hand + dummy's face-up hand. The dummy's hand is rendered as a single dummy-card image showing the card count, not individual cards.
 - Admin (host-only, not a seated player) sees **no** players' cards normally — only card counts. The admin sees a player's hand only when that seat is vacated (`vacatedHands`) or that player has timed out (`timedOutHand`). Admin still sees the trump suit and all played trick cards.
 - Table view rotates so each player sees themselves at South (bottom).
