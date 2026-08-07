@@ -113,9 +113,10 @@ input, button { font-family: inherit; }
 .my-area { display: flex; align-items: center; justify-content: center; padding: 4px 0; }
 
 /* ---- Cards ---- */
-.card-face { display: inline-flex; align-items: center; justify-content: center; width: 66px; height: 94px; background: #fff; color: #222; border-radius: 8px; font-weight: 700; font-size: 34px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+.card-face { display: inline-flex; align-items: center; justify-content: center; width: 66px; height: 94px; background: #fff; color: #222; border: 1px solid #333; border-radius: 8px; font-weight: 700; font-size: 34px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
 .card-face .suit-mark { font-size: 40px; }
-.card-face.red { color: #c0392b; }
+.card-face.red { color: #c0392b; background: repeating-linear-gradient(45deg, #fff 0 7px, #6aa0e6 7px 8px); }
+.card-face.black { color: #222; background: repeating-linear-gradient(-45deg, #fff 0 7px, #6aa86a 7px 8px); }
 .card-face.small { width: 48px; height: 68px; font-size: 22px; }
 
 .my-hand { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
