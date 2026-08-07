@@ -189,6 +189,12 @@ function promoteNewAdmin(g) {
   }
 }
 
+function closeRoom(g) {
+  delete ROOMS[g.id];
+  if (GLOBAL_TABLE === g) GLOBAL_TABLE = null;
+  io.to(g.id).emit('room_closed', { message: 'Game room closed' });
+}
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   socket.emit('room_list', getPublicList());
@@ -491,37 +497,27 @@ io.on('connection', (socket) => {
       const pName = p?.name || 'Unknown';
       const wasAdmin = p?.isAdmin || false;
       g.removePlayer(playerId);
-      if (wasAdmin && g.state === 'waiting') {
-        // Before game starts: promote the next player, or close the room if none are left
-        if (g.players.length > 0) {
+      if (wasAdmin) {
+        // Try to promote an observer or player; if nobody is left, close the room
+        if (g.players.length === 0 && g.spectators.length === 0) {
+          closeRoom(g);
+        } else {
           promoteNewAdmin(g);
           io.to(g.id).emit('admin_changed', {});
-        } else {
-          delete ROOMS[g.id];
-          if (GLOBAL_TABLE === g) GLOBAL_TABLE = null;
-          io.to(g.id).emit('room_closed', { message: 'Admin disconnected — room closed' });
         }
-      } else if (wasAdmin) {
-        promoteNewAdmin(g);
-        io.to(g.id).emit('admin_changed', {});
-      }
-      updateAll();
-      if (wasAdmin) {
-        // handled above
       } else if (wasSpectator) {
         io.to(g.id).emit('spectator_left', { playerId, playerName: pName });
-        if (g.players.length === 0 && !g.admin) {
-          delete ROOMS[g.id];
+        if (g.players.length === 0 && !g.admin && g.spectators.length === 0) {
+          closeRoom(g);
         }
       } else {
         io.to(g.id).emit('player_left', { playerId, playerName: pName, playerCount: g.players.length });
-        if (g.players.length === 0) {
-          delete ROOMS[g.id];
-        } else if (g.state !== 'waiting') {
-          io.to(g.id).emit('error', { message: `${pName} disconnected` });
-          setTimeout(() => { if (ROOMS[g.id] && ROOMS[g.id].players.length === 0) delete ROOMS[g.id]; }, 5000);
+        // If no players and no admin remain, the game cannot continue — close it
+        if (g.players.length === 0 && !g.admin && g.spectators.length === 0) {
+          closeRoom(g);
         }
       }
+      if (ROOMS[g.id]) updateAll();
     }
     io.emit('room_list', getPublicList());
     untrack();
