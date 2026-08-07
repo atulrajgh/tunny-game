@@ -1,13 +1,22 @@
-1. Simplify the login process
-   there will be only one table to play on
-   the first player that joins becomes the admin
-   the next four to join will become players
-   everyone else becomes an observer
-   if the admin drops out the first observer becomes the admin
-   if no observers are present one of the players
-2. an observer can be promoted to a player if there is a open spot before being assigned a position
-3. HCF points to bid relationship 50=160 160=340 increments of 15
-4. Bidding buttons change
-   only one button the label increments in value when a player clicks on it
-   player name and HCF are displayed on the side of the button
-   
+Visibility Rules
+	Set the "Ask Trump" button to hidden by default.
+	Set the "Play Trump" button to hidden by default.
+	Show these buttons only when it is your turn.
+	Show these buttons if you do not hold the current trick suit in your hand.
+
+Card Deck Adjustments
+	Increase the display size of the card suit symbol.
+	Increase the display size of the card value or rank.
+
+Bidding Layout
+	Layout Adjustments
+		Move the bidding button display area to the top left corner of the screen over the scorecard.
+	Button Configurations
+		Add new buttons to the interface.
+		one button to increase the bid value in increments of 10.
+			button image is up arrow key.
+		second button to decrease the bid value in increase of 10.
+			button image is the down arrow key.
+			value cannot go below current highest bid + 10.
+		Ensure the new value is higher than the currently set bid.
+		

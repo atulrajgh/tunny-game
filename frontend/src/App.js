@@ -115,7 +115,6 @@ function App() {
 
   const placeMyBid = () => {
     sendOnce('bid', { bid: incBid });
-    setIncBid(prev => Math.min(prev + 10, 170));
   };
 
   const joinGame = () => {
@@ -352,9 +351,10 @@ function App() {
   const timedOutTurn = isAdmin && timedOutHand && curPlayer && curPlayer.id === timedOutHand.playerId;
   const timedOutDeclarer = isAdmin && timedOutHand && gameState.declarer && gameState.declarer.id === timedOutHand.playerId;
 
-  // Trump action rules: available whenever the current trick has started
-  const canAskTrump = (gameState.currentTrick?.length || 0) > 0;
-  const canPlayTrump = (gameState.currentTrick?.length || 0) > 0;
+  // Trump action rules: hidden by default — only on your turn when you can't follow the led suit
+  const ledSuit = gameState.currentTrick?.[0]?.card?.suit || null;
+  const iHoldLeadSuit = !!ledSuit && (me?.hand || []).some(c => c.suit === ledSuit);
+  const canTrumpAction = isMyTurn && !!ledSuit && !iHoldLeadSuit;
 
   // Build table positions relative to viewer (admin has no position — fixed N/E/S/W)
   const ORDER = ['N', 'E', 'S', 'W'];
@@ -689,8 +689,12 @@ function App() {
         <div className="bid-buttons">
           <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
           <div className="bid-inc-wrap">
-            <button onClick={placeMyBid} className="bid-inc">{incBid}</button>
             <span className="bid-hcp">needs {handHCPRequirement(incBid)} HCP</span>
+            <div className="bid-stepper">
+              <button onClick={() => setIncBid(v => Math.min(v + 10, 170))} className="bid-arrow up" aria-label="Increase bid">▲</button>
+              <button onClick={placeMyBid} className="bid-inc">{incBid}</button>
+              <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
+            </div>
           </div>
         </div>
       )}
@@ -700,14 +704,22 @@ function App() {
           <div className="bid-buttons">
             {vacatedPlayer && (
               <div className="bid-inc-wrap">
-                <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.pos, card: incBid })} className="bid-inc">{incBid}</button>
                 <span className="bid-hcp">needs {handHCPRequirement(incBid)} HCP</span>
+                <div className="bid-stepper">
+                  <button onClick={() => setIncBid(v => Math.min(v + 10, 170))} className="bid-arrow up" aria-label="Increase bid">▲</button>
+                  <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.pos, card: incBid })} className="bid-inc">{incBid}</button>
+                  <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
+                </div>
               </div>
             )}
             {timedOutTurn && (
               <div className="bid-inc-wrap">
-                <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: incBid }); }} className="bid-inc">{incBid}</button>
                 <span className="bid-hcp">needs {handHCPRequirement(incBid)} HCP</span>
+                <div className="bid-stepper">
+                  <button onClick={() => setIncBid(v => Math.min(v + 10, 170))} className="bid-arrow up" aria-label="Increase bid">▲</button>
+                  <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: incBid }); }} className="bid-inc">{incBid}</button>
+                  <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
+                </div>
               </div>
             )}
             <button onClick={() => sendOnce('admin_play', { position: (vacatedPlayer || {}).pos, targetId: timedOutHand?.playerId, card: 'pass' })} className="bid-pass">Pass</button>
@@ -816,10 +828,10 @@ function App() {
       <div className="action-bar">
         {(isPlaying || isBidding || isTrump) && !isSpectator && (
           <>
-            {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && canAskTrump && (
+            {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && canTrumpAction && (
               <button className="action-btn" onClick={() => sendOnce('ask_trump')}>Ask Trump</button>
             )}
-            {isPlaying && isDeclarer && isMyTurn && !isAdmin && gameState.trumpCard && canPlayTrump && (
+            {isPlaying && isDeclarer && !isAdmin && gameState.trumpCard && canTrumpAction && (
               <button className="action-btn" onClick={() => sendOnce('play_trump')}>Play Trump</button>
             )}
           </>

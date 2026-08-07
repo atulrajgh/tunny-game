@@ -107,15 +107,16 @@ input, button { font-family: inherit; }
 .overlay.active { display: block; }
 .overlay h3 { margin-bottom: 12px; }
 /* MUST come after .overlay — same specificity, later wins */
-.bidding-top { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 100; width: 100%; max-width: 560px; margin: 0 auto; box-sizing: border-box; }
+.bidding-top { position: fixed; top: 10px; left: 10px; transform: none; z-index: 100; width: 320px; max-width: calc(100vw - 20px); margin: 0 auto; box-sizing: border-box; }
 
 /* ---- My hand ---- */
 .my-area { display: flex; align-items: center; justify-content: center; padding: 4px 0; }
 
 /* ---- Cards ---- */
-.card-face { display: inline-flex; align-items: center; justify-content: center; width: 60px; height: 86px; background: #fff; color: #222; border-radius: 8px; font-weight: 700; font-size: 26px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+.card-face { display: inline-flex; align-items: center; justify-content: center; width: 66px; height: 94px; background: #fff; color: #222; border-radius: 8px; font-weight: 700; font-size: 34px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+.card-face .suit-mark { font-size: 40px; }
 .card-face.red { color: #c0392b; }
-.card-face.small { width: 44px; height: 62px; font-size: 18px; }
+.card-face.small { width: 48px; height: 68px; font-size: 22px; }
 
 .my-hand { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
 .hand-card { background: none; border: none; cursor: pointer; padding: 2px; }
@@ -127,7 +128,10 @@ input, button { font-family: inherit; }
 .bid-buttons { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 12px 0; }
 .bid-pass { padding: 8px 16px; border: none; border-radius: 6px; background: #e74c3c; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; }
 .bid-inc-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.bid-inc { padding: 10px 22px; border: 2px solid #3498db; border-radius: 6px; background: #1b2a1b; color: #3498db; font-weight: 700; cursor: pointer; font-size: 22px; min-width: 72px; }
+.bid-inc { padding: 10px 22px; border: 2px solid #3498db; border-radius: 6px; background: #1b2a1b; color: #3498db; font-weight: 700; cursor: pointer; font-size: 22px; min-width: 72px; touch-action: manipulation; }
+.bid-stepper { display: flex; align-items: center; gap: 6px; }
+.bid-arrow { width: 40px; height: 40px; border: none; border-radius: 6px; background: #3498db; color: #fff; font-size: 18px; cursor: pointer; font-weight: 700; touch-action: manipulation; }
+.bid-arrow:hover { opacity: 0.85; }
 .bid-hcp { color: #a0d0a0; font-size: 12px; white-space: nowrap; }
 .bid-inc:hover, .bid-pass:hover { opacity: 0.85; }
 .bid-info { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; font-size: 13px; color: #c0d8c0; margin-top: 6px; }
@@ -135,7 +139,7 @@ input, button { font-family: inherit; }
 
 .trump-cards { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .card-btn { background: none; border: none; cursor: pointer; padding: 4px; }
-.card-btn .card-face { width: 64px; height: 88px; font-size: 26px; }
+.card-btn .card-face { width: 70px; height: 96px; font-size: 34px; }
 .card-btn .card-face:hover { border: 2px solid #f0c040; }
 
 /* ---- Action bar ---- */
@@ -194,17 +198,17 @@ input, button { font-family: inherit; }
 /* ---- Responsive ---- */
 @media (max-width: 700px) {
   .game-table { grid-template-columns: 70px 1fr 70px; }
-  .card-face { width: 44px; height: 62px; font-size: 20px; }
+  .card-face { width: 48px; height: 68px; font-size: 26px; }
   .card-back { width: 22px; height: 32px; }
   .card-back.mini { width: 14px; height: 20px; }
-  .card-face.small { width: 34px; height: 48px; font-size: 14px; }
-  .card-btn .card-face { width: 52px; height: 72px; font-size: 22px; }
+  .card-face.small { width: 38px; height: 54px; font-size: 18px; }
+  .card-btn .card-face { width: 56px; height: 78px; font-size: 28px; }
   .table-felt { min-height: 150px; }
   .title { font-size: 32px; }
 }
 @media (max-width: 500px) {
   .game-table { grid-template-columns: 50px 1fr 50px; gap: 4px; }
-  .card-face { width: 32px; height: 46px; font-size: 13px; }
+  .card-face { width: 36px; height: 52px; font-size: 18px; }
   .card-back { width: 16px; height: 24px; }
   .seat-info { font-size: 11px; }
   .login-box { padding: 20px; }
