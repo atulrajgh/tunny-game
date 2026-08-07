@@ -7,11 +7,7 @@ const SOCKET_URL = process.env.REACT_APP_SOCKET_URL;
 const POSITION_NAMES = { N: 'North', S: 'South', E: 'East', W: 'West' };
 const PARTNER = { N: 'S', S: 'N', E: 'W', W: 'E' };
 const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E' };
-const HCP_VALUE = { J: 30, 9: 20, A: 15, 10: 10, K: 5, Q: 5 };
 
-function handHCP(hand) {
-  return (hand || []).reduce((sum, c) => sum + (HCP_VALUE[c.rank] || 0), 0);
-}
 function handHCPRequirement(bid) {
   return Math.round(bid * 1.5 + 85);
 }
@@ -110,7 +106,12 @@ function App() {
     socket.on('admin_changed', () => { /* state update promotes the new admin */ });
   }, [socket]);
 
-  useEffect(() => { if (gameState?.state === 'bidding') setIncBid(50); }, [gameState?.state]);
+  useEffect(() => {
+    if (gameState?.state === 'bidding') {
+      const hb = gameState.highestBid || 0;
+      setIncBid(hb === 0 ? 50 : Math.min(hb + 10, 170));
+    }
+  }, [gameState?.state, gameState?.highestBid]);
 
   const placeMyBid = () => {
     sendOnce('bid', { bid: incBid });
@@ -682,7 +683,6 @@ function App() {
       <h3>Bidding</h3>
       <div className="bid-info">
         <span>Bidder: {curPlayer?.name}</span>
-        <span>Your HCP: {handHCP(me?.hand)}</span>
         <span>Current high bid: {highestBid || '—'}</span>
       </div>
       {isMyTurn && (
