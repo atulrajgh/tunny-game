@@ -491,10 +491,23 @@ io.on('connection', (socket) => {
       const pName = p?.name || 'Unknown';
       const wasAdmin = p?.isAdmin || false;
       g.removePlayer(playerId);
-      if (wasAdmin) promoteNewAdmin(g);
+      if (wasAdmin && g.state === 'waiting') {
+        // Before game starts: promote the next player, or close the room if none are left
+        if (g.players.length > 0) {
+          promoteNewAdmin(g);
+          io.to(g.id).emit('admin_changed', {});
+        } else {
+          delete ROOMS[g.id];
+          if (GLOBAL_TABLE === g) GLOBAL_TABLE = null;
+          io.to(g.id).emit('room_closed', { message: 'Admin disconnected — room closed' });
+        }
+      } else if (wasAdmin) {
+        promoteNewAdmin(g);
+        io.to(g.id).emit('admin_changed', {});
+      }
       updateAll();
       if (wasAdmin) {
-        io.to(g.id).emit('admin_changed', {});
+        // handled above
       } else if (wasSpectator) {
         io.to(g.id).emit('spectator_left', { playerId, playerName: pName });
         if (g.players.length === 0 && !g.admin) {
