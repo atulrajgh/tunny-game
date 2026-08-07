@@ -472,25 +472,17 @@ io.on('connection', (socket) => {
       const pName = p?.name || 'Unknown';
       const wasAdmin = p?.isAdmin || false;
       g.removePlayer(playerId);
-      if (wasAdmin) {
-        // Try to promote an observer or player; if nobody is left, close the room
-        if (g.players.length === 0 && g.spectators.length === 0) {
-          closeRoom(g);
-        } else {
-          promoteNewAdmin(g);
-          io.to(g.id).emit('admin_changed', {});
-        }
+      // If no players or observers remain, close the room (even if admin is absent)
+      if (g.players.length === 0 && g.spectators.length === 0) {
+        closeRoom(g);
+      } else if (wasAdmin) {
+        // Try to promote an observer or player to admin
+        promoteNewAdmin(g);
+        io.to(g.id).emit('admin_changed', {});
       } else if (wasSpectator) {
         io.to(g.id).emit('spectator_left', { playerId, playerName: pName });
-        if (g.players.length === 0 && !g.admin && g.spectators.length === 0) {
-          closeRoom(g);
-        }
       } else {
         io.to(g.id).emit('player_left', { playerId, playerName: pName, playerCount: g.players.length });
-        // If no players and no admin remain, the game cannot continue — close it
-        if (g.players.length === 0 && !g.admin && g.spectators.length === 0) {
-          closeRoom(g);
-        }
       }
       if (ROOMS[g.id]) updateAll();
     }
