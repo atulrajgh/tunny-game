@@ -126,8 +126,10 @@ input, button { font-family: inherit; }
 
 .bid-buttons { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 12px 0; }
 .bid-pass { padding: 8px 16px; border: none; border-radius: 6px; background: #e74c3c; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; }
-.bid-num { padding: 8px 14px; border: none; border-radius: 6px; background: #3498db; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; }
-.bid-num:hover, .bid-pass:hover { opacity: 0.85; }
+.bid-inc { padding: 10px 16px; border: 2px solid #3498db; border-radius: 6px; background: #1b2a1b; color: #3498db; font-weight: 700; cursor: pointer; font-size: 18px; min-width: 64px; }
+.bid-confirm { padding: 8px 16px; border: none; border-radius: 6px; background: #2ecc71; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; }
+.bid-inc:hover, .bid-confirm:hover, .bid-pass:hover { opacity: 0.85; }
+.hcp-hint { color: #a0d0a0; font-size: 12px; }
 .bid-summary { margin-top: 12px; font-size: 13px; }
 
 .trump-cards { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }

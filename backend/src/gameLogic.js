@@ -9,7 +9,7 @@ const MAX_HANDS = 6;
 const WINNING_SCORE = 12;
 
 function bidRequirement(bid) {
-  return bid + 120;
+  return Math.round(bid * 1.5 + 85);
 }
 
 class Card {
@@ -143,6 +143,38 @@ class Game {
       return true;
     }
     return this.removeSpectator(playerId);
+  }
+
+  promoteToAdmin() {
+    let candidate = null;
+    if (this.spectators.length) {
+      candidate = this.spectators.shift();
+    } else if (this.players.length) {
+      const player = this.players[0];
+      if (this.state !== 'waiting' && this.state !== 'cut' && player.position) {
+        this.vacatedHands[player.position] = {
+          id: null, playerName: player.name, position: player.position,
+          hand: [...player.hand], team: player.team, bid: player.bid,
+          playedCard: player.playedCard,
+          wasCurrentPlayer: !!this.currentPlayer && this.currentPlayer.id === player.id,
+          wasDeclarer: !!this.declarer && this.declarer.id === player.id,
+          wasDummy: !!this.dummy && this.dummy.id === player.id,
+        };
+        if (this.vacatedHands[player.position].wasCurrentPlayer &&
+            (this.state === 'playing' || this.state === 'bidding' || this.state === 'trump_selection')) {
+          this.currentPlayer = this.vacatedPseudo(player.position);
+        }
+      }
+      for (const [pos, id] of Object.entries(this.positions)) if (id === player.id) delete this.positions[pos];
+      this.players.splice(0, 1);
+      candidate = player;
+    }
+    if (!candidate) return null;
+    candidate.isAdmin = true;
+    this.admin = candidate;
+    this.adminId = candidate.id;
+    this.lastActivity = Date.now();
+    return candidate;
   }
 
   getPlayer(playerId) {
@@ -311,7 +343,7 @@ class Game {
     if (bid === 'pass') {
       seat.bid = 'pass';
       this.passCount++;
-    } else if (typeof bid === 'number' && bid >= 50 && bid <= 160 && bid > (this.highestBid || 0)) {
+    } else if (typeof bid === 'number' && bid >= 50 && bid <= 170 && bid > (this.highestBid || 0)) {
       seat.bid = bid;
       this.lastBidder = seat;
       this.highestBid = bid;

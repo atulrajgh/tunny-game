@@ -7,6 +7,14 @@ const SOCKET_URL = process.env.REACT_APP_SOCKET_URL;
 const POSITION_NAMES = { N: 'North', S: 'South', E: 'East', W: 'West' };
 const PARTNER = { N: 'S', S: 'N', E: 'W', W: 'E' };
 const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E' };
+const HCP_VALUE = { J: 30, 9: 20, A: 15, 10: 10, K: 5, Q: 5 };
+
+function handHCP(hand) {
+  return (hand || []).reduce((sum, c) => sum + (HCP_VALUE[c.rank] || 0), 0);
+}
+function handHCPRequirement(bid) {
+  return Math.round(bid * 1.5 + 85);
+}
 
 function App() {
   const [socket, setSocket] = useState(null);
@@ -21,6 +29,7 @@ function App() {
   const [error, setError] = useState('');
   const [cutCard, setCutCard] = useState(null);
   const [timedOut, setTimedOut] = useState(null);
+  const [incBid, setIncBid] = useState(50);
   const actionLockRef = useRef(false);
 
   const sendOnce = useCallback((type, payload) => {
@@ -98,29 +107,18 @@ function App() {
       showError(`${data.playerName} promoted to player`);
     });
     socket.on('dealer_rotated', () => {});
+    socket.on('admin_changed', () => { /* state update promotes the new admin */ });
   }, [socket]);
 
-  const createRoom = () => {
+  useEffect(() => { if (gameState?.state === 'bidding') setIncBid(50); }, [gameState?.state]);
+
+  const joinGame = () => {
     if (!name) return showError('Enter your name');
     localStorage.setItem('tunny_name', name);
     socket.emit('create_room', { playerName: name });
   };
 
-  const joinRoom = (id) => {
-    if (!name) return showError('Enter your name');
-    localStorage.setItem('tunny_name', name);
-    setGameId(id);
-    socket.emit('join_room', { gameId: id, playerName: name });
-  };
-
-  const observeRoom = (id) => {
-    if (!name) return showError('Enter your name');
-    localStorage.setItem('tunny_name', name);
-    setGameId(id);
-    socket.emit('join_as_spectator', { gameId: id, playerName: name + ' (obs)' });
-  };
-
-  // --- Login / Gallery ---
+  // --- Login ---
   if (screen === 'login') {
     return (
       <div className="app login-screen">
@@ -129,20 +127,8 @@ function App() {
         {error && <div className="toast error">{error}</div>}
         <div className="login-box">
           <input placeholder="Your Name" value={name} onChange={e => setName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && createRoom()} />
-          <button onClick={createRoom}>Create Room</button>
-          <div className="room-list">
-            <h3>Active Rooms</h3>
-            {Object.keys(roomList).length === 0 && <p className="muted">No rooms yet</p>}
-            {Object.entries(roomList).map(([id, r]) => (
-              <div key={id} className="room-entry">
-                <span className="room-id">{id.slice(0, 8)}</span>
-                <span>{r.playerCount}/4 players</span>
-                <button onClick={() => joinRoom(id)}>Join</button>
-                <button className="observe-btn" onClick={() => observeRoom(id)}>Observe</button>
-              </div>
-            ))}
-          </div>
+            onKeyDown={e => e.key === 'Enter' && joinGame()} />
+          <button onClick={joinGame}>Join</button>
         </div>
       </div>
     );
@@ -353,6 +339,7 @@ function App() {
   const declarerPos = gameState.declarer?.position;
   const isDefender = myPos && declarerPos && PARTNER[myPos] !== declarerPos && myPos !== declarerPos;
   const vacatedTurnPos = curPlayer && curPlayer.id === null ? curPlayer.position : null;
+  const vacatedPlayer = vacatedTurnPos ? vacatedAt(vacatedTurnPos) : null;
   const declarerVacated = gameState.declarer ? vacatedAt(gameState.declarer.position) : null;
   const timedOutHand = gameState.timedOutHand;
   const timedOutTurn = isAdmin && timedOutHand && curPlayer && curPlayer.id === timedOutHand.playerId;
@@ -683,46 +670,43 @@ function App() {
         )}
       </div>
 
-      {/* Bidding overlay — top of screen */}
-      {isBidding && (
-        <div className={`overlay bidding-top${isMyTurn || (isAdmin && (vacatedTurnPos || timedOutTurn)) ? ' active' : ''}`}>
-          <h3>Bidding</h3>
-          <p>Current bidder: {curPlayer?.name}</p>
-          {isMyTurn && (
-            <div className="bid-buttons">
-              <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
-              {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
-                <button key={b} onClick={() => sendOnce('bid', { bid: b })} className="bid-num">{b}</button>
-              ))}
-            </div>
-          )}
-          {isAdmin && vacatedTurnPos && (
-            <>
-              <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
-              <div className="bid-buttons">
-                <button onClick={() => sendOnce('admin_play', { position: vacatedTurnPos, card: 'pass' })} className="bid-pass">Pass</button>
-                {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
-                  <button key={b} onClick={() => sendOnce('admin_play', { position: vacatedTurnPos, card: b })} className="bid-num">{b}</button>
-                ))}
-              </div>
-            </>
-          )}
-          {isAdmin && timedOutTurn && (
-            <>
-              <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
-              <div className="bid-buttons">
-                <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: 'pass' }); }} className="bid-pass">Pass</button>
-                {[50,60,70,80,90,100,110,120,130,140,150,160].map(b => (
-                  <button key={b} onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: b }); }} className="bid-num">{b}</button>
-                ))}
-              </div>
-            </>
-          )}
-          <div className="bid-summary">
-            {players.map(p => <div key={p.id || p.position}>{p.name}: {p.bid || '—'}</div>)}
-          </div>
+{/* Bidding overlay — top of screen */}
+  {isBidding && (
+    <div className={`overlay bidding-top${isMyTurn || (isAdmin && (vacatedTurnPos || timedOutTurn)) ? ' active' : ''}`}>
+      <h3>Bidding</h3>
+      <p>Current bidder: {curPlayer?.name} <span className="hcp-hint">(HCP {handHCP(me?.hand)})</span></p>
+      {isMyTurn && (
+        <div className="bid-buttons">
+          <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
+          <button onClick={() => { setIncBid(Math.min(incBid + 10, 170)); }} className="bid-inc">{incBid}</button>
+          <button onClick={() => sendOnce('bid', { bid: incBid })} className="bid-confirm">Bid {incBid}</button>
         </div>
       )}
+      {isAdmin && (vacatedPlayer || timedOutTurn) && (
+        <>
+          <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
+          <div className="bid-buttons">
+            <button onClick={() => sendOnce('admin_play', { position: (vacatedPlayer || {}).pos, targetId: timedOutHand?.playerId, card: 'pass' })} className="bid-pass">Pass</button>
+            {vacatedPlayer && (
+              <>
+                <button onClick={() => setIncBid(Math.min(incBid + 10, 170))} className="bid-inc">{incBid}</button>
+                <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.pos, card: incBid })} className="bid-confirm">Bid {incBid}</button>
+              </>
+            )}
+            {timedOutTurn && (
+              <>
+                <button onClick={() => setIncBid(Math.min(incBid + 10, 170))} className="bid-inc">{incBid}</button>
+                <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: incBid }); }} className="bid-confirm">Bid {incBid}</button>
+              </>
+            )}
+          </div>
+        </>
+      )}
+      <div className="bid-summary">
+        {players.map(p => <div key={p.id || p.position}>{p.name}: {p.bid || '—'}</div>)}
+      </div>
+    </div>
+  )}
 
       {/* Opponents + partner */}
       <div className="opponents-row">

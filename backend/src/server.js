@@ -17,6 +17,7 @@ const TIMEOUT_MS = 300000;
 const SAVE_INTERVAL = 30000;
 const ROOMS = {};
 const PLAYER_SOCKETS = {}; // playerId -> Set<socketId>
+let GLOBAL_TABLE = null;
 
 app.use(express.json());
 
@@ -71,7 +72,7 @@ td{font-size:13px}
 <p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>. The first bidder is the player to the dealer's left. The dealer <strong>rotates clockwise</strong> to the next seat at the start of each new hand.</p>
 
 <h3>3. Bidding</h3>
-<p>Starting from the player left of the dealer, each player may <strong>Pass</strong> or bid a multiple of <strong>10 between 50 and 160</strong>. A bid must be higher than the current highest bid. Bidding ends when <strong>3 consecutive passes</strong> follow a bid. If all 4 pass without any bid, the hand is re-dealt with the same dealer.</p>
+<p>Starting from the player left of the dealer, each player may <strong>Pass</strong> or bid a multiple of <strong>10 between 50 and 170</strong>. A bid must be higher than the current highest bid. Bidding ends when <strong>3 consecutive passes</strong> follow a bid. If all 4 pass without any bid, the hand is re-dealt with the same dealer.</p>
 <p>The winning bidder becomes <strong>declarer</strong>.</p>
 
 <h3>4. Contract Level</h3>
@@ -89,17 +90,17 @@ td{font-size:13px}
 <h3>7. Scoring</h3>
 <p>After all tricks, the admin reviews and confirms the hand:</p>
 <ul>
-<li><strong>Declarer's team</strong> earns <strong>1 point</strong> if their total HCP ≥ bid + 120</li>
+<li><strong>Declarer's team</strong> earns <strong>1 point</strong> if their total HCP ≥ bid × 1.5 + 85</li>
 <li><strong>Bonus point</strong> (slam) if their HCP ≥ 340</li>
 <li><strong>Defenders</strong> earn <strong>1 point</strong> if declarer's team fails to meet the bid</li>
 <li><strong>Bonus point</strong> for defenders if they collect all 340 HCP</li>
 </ul>
 <p><strong>Bid vs required HCP</strong> (your team must collect at least this many HCP to make the contract):</p>
 <table>
-<tr><th>Bid</th><td>50</td><td>60</td><td>70</td><td>80</td><td>90</td><td>100</td><td>110</td><td>120</td><td>130</td><td>140</td><td>150</td><td>160</td></tr>
-<tr><th>HCP needed</th><td>170</td><td>180</td><td>190</td><td>200</td><td>210</td><td>220</td><td>230</td><td>240</td><td>250</td><td>260</td><td>270</td><td>280</td></tr>
+<tr><th>Bid</th><td>50</td><td>60</td><td>70</td><td>80</td><td>90</td><td>100</td><td>110</td><td>120</td><td>130</td><td>140</td><td>150</td><td>160</td><td>170</td></tr>
+<tr><th>HCP needed</th><td>160</td><td>175</td><td>190</td><td>205</td><td>220</td><td>235</td><td>250</td><td>265</td><td>280</td><td>295</td><td>310</td><td>325</td><td>340</td></tr>
 </table>
-<p>Example: bidding <strong>100</strong> requires your team to win <strong>220 HCP</strong>; a <strong>160</strong> bid needs all <strong>280 HCP</strong>.</p>
+<p>Example: bidding <strong>100</strong> requires your team to win <strong>235 HCP</strong>; a <strong>170</strong> bid needs all <strong>340 HCP</strong>.</p>
 
 <h2>Winning</h2>
 <p>The first team to reach or cross <strong>12 points</strong> wins the match.</p>
@@ -178,6 +179,16 @@ if (hasFrontendBuild) {
   });
 }
 
+function promoteNewAdmin(g) {
+  const a = g.promoteToAdmin();
+  if (a) {
+    emitToPlayer(a.id, 'state', g.getGameState(a.id));
+    // Broadcast to all remaining that a new admin took over
+    for (const p of g.players) emitToPlayer(p.id, 'state', g.getGameState(p.id));
+    for (const s of g.spectators) emitToPlayer(s.id, 'state', g.getGameState(s.id));
+  }
+}
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   socket.emit('room_list', getPublicList());
@@ -228,10 +239,11 @@ io.on('connection', (socket) => {
 
   socket.on('create_room', ({ playerName }) => {
     if (!playerName) return error('Name required');
-    const g = new Game();
+    let g = GLOBAL_TABLE;
+    if (!g) { g = new Game(); g.roomId = g.id; GLOBAL_TABLE = g; ROOMS[g.id] = g; }
+    if (g.admin) return error('A host is already in the room');
     const p = g.addPlayer(playerName, true);
-    g.roomId = g.id;
-    ROOMS[g.id] = g;
+    if (!p) return error('Failed to join');
     gameId = g.id; playerId = p.id;
     socket.join(g.id); track();
     socket.emit('room_joined', { gameId: g.id, playerId: p.id, isAdmin: true });
@@ -243,11 +255,27 @@ io.on('connection', (socket) => {
     if (!playerName) return error('Name required');
     let g = ROOMS[rid];
     if (!g) { g = new Game(rid); g.roomId = rid; ROOMS[rid] = g; }
-    if (g.state !== 'waiting') return error('Game already started');
-    if (g.players.length >= 4) return error('Room full');
-    const hasAdmin = !!g.admin;
-    const p = hasAdmin ? g.addPlayer(playerName, false) : g.addPlayer(playerName, true);
-    if (!p) return error(hasAdmin ? 'Room full' : 'Failed to join');
+    if (g.state !== 'waiting' && !g.admin) {
+      // room already in progress needs an admin; first joiner becomes admin via addPlayer
+    }
+    // Auto-route: no admin -> admin; <4 players -> player; else observer
+    let p;
+    if (!g.admin) {
+      p = g.addPlayer(playerName, true);
+      if (!p) return error('Failed to join');
+    } else if (g.players.length < 4) {
+      p = g.addPlayer(playerName, false);
+      if (!p) return error('Room full');
+    } else {
+      const s = g.addSpectator(playerName);
+      gameId = g.id; playerId = s.id;
+      socket.join(g.id); track();
+      socket.emit('room_joined', { gameId: g.id, playerId: s.id, isAdmin: false, isSpectator: true });
+      io.to(g.id).emit('spectator_joined', { playerId: s.id, playerName: s.name });
+      io.emit('room_list', getPublicList());
+      updateAll();
+      return;
+    }
     gameId = g.id; playerId = p.id;
     socket.join(g.id); track();
     socket.emit('room_joined', { gameId: g.id, playerId: p.id, isAdmin: p.isAdmin });
@@ -448,10 +476,10 @@ io.on('connection', (socket) => {
       const pName = p?.name || 'Unknown';
       const wasAdmin = p?.isAdmin || false;
       g.removePlayer(playerId);
+      if (wasAdmin) promoteNewAdmin(g);
       updateAll();
       if (wasAdmin) {
-        io.to(g.id).emit('room_closed', { message: 'Admin disconnected — room closed' });
-        delete ROOMS[g.id];
+        io.to(g.id).emit('admin_changed', {});
       } else if (wasSpectator) {
         io.to(g.id).emit('spectator_left', { playerId, playerName: pName });
         if (g.players.length === 0 && !g.admin) {

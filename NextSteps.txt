@@ -1,0 +1,13 @@
+1. Simplify the login process
+   there will be only one table to play on
+   the first player that joins becomes the admin
+   the next four to join will become players
+   everyone else becomes an observer
+   if the admin drops out the first observer becomes the admin
+   if no observers are present one of the players
+2. an observer can be promoted to a player if there is a open spot before being assigned a position
+3. HCF points to bid relationship 50=160 160=340 increments of 15
+4. Bidding buttons change
+   only one button the label increments in value when a player clicks on it
+   player name and HCF are displayed on the side of the button
+   
