@@ -241,12 +241,27 @@ io.on('connection', (socket) => {
     if (!playerName) return error('Name required');
     let g = GLOBAL_TABLE;
     if (!g) { g = new Game(); g.roomId = g.id; GLOBAL_TABLE = g; ROOMS[g.id] = g; }
-    if (g.admin) return error('A host is already in the room');
-    const p = g.addPlayer(playerName, true);
-    if (!p) return error('Failed to join');
+    let p;
+    if (!g.admin) {
+      p = g.addPlayer(playerName, true);
+      if (!p) return error('Failed to join');
+    } else if (g.players.length < 4) {
+      p = g.addPlayer(playerName, false);
+      if (!p) return error('Room full');
+    } else {
+      const s = g.addSpectator(playerName);
+      gameId = g.id; playerId = s.id;
+      socket.join(g.id); track();
+      socket.emit('room_joined', { gameId: g.id, playerId: s.id, isAdmin: false, isSpectator: true });
+      io.to(g.id).emit('spectator_joined', { playerId: s.id, playerName: s.name });
+      io.emit('room_list', getPublicList());
+      updateAll();
+      return;
+    }
     gameId = g.id; playerId = p.id;
     socket.join(g.id); track();
-    socket.emit('room_joined', { gameId: g.id, playerId: p.id, isAdmin: true });
+    socket.emit('room_joined', { gameId: g.id, playerId: p.id, isAdmin: p.isAdmin });
+    io.to(g.id).emit('player_joined', { playerId: p.id, playerName: p.name, isAdmin: p.isAdmin, playerCount: g.players.length });
     io.emit('room_list', getPublicList());
     updateAll();
   });
