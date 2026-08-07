@@ -8,7 +8,7 @@ Real-time multiplayer card game: Node.js/Express/Socket.IO backend + React front
 - HCP values: J=30, 9=20, A=15, 10=10, K=5, Q=5 (hand total 340).
 - Bidding 50–170 (multiples of 10) plus Pass. Highest bidder is declarer, chooses a trump suit (hidden).
 - Contract: bid < 100 → level 1 (4 tricks), bid ≥ 100 → level 2 (5 tricks).
-- Scoring: declarer's team earns 1 point if their HCP total ≥ `bid*1.5+85` (2 if ≥ 340, slam); otherwise defenders earn 1 point (2 if they take all 340).
+- Scoring: the winning team earns 1 point, or 2 points when the winning team's bid is ≥ 100 (level-2 contract). The declarer's team wins if their HCP total ≥ `bid*1.5+85`; otherwise the defending team wins.
 - Teams: N+S vs E+W. Admin (host, does not play) assigns positions and coordinates.
 - Single global table: first to join is admin, next four become players, everyone else an observer.
 

@@ -541,16 +541,13 @@ class Game {
     const declarerTricks = this.teamTricks[declarerTeam];
     const defendingTeam = declarerTeam === 'N-S' ? 'E-W' : 'N-S';
     const declarerHCP = this.teamPoints[declarerTeam];
-    if (declarerHCP >= bidRequirement(this.declarer.bid)) {
-      this.scores[declarerTeam] += 1;
-      if (declarerHCP >= 340) {
-        this.scores[declarerTeam] += 1;
-      }
+    const bid = this.declarer.bid;
+    // Points granted are 2 when the bid is 100 or more, else 1
+    const pts = bid >= 100 ? 2 : 1;
+    if (declarerHCP >= bidRequirement(bid)) {
+      this.scores[declarerTeam] += pts;
     } else {
-      this.scores[defendingTeam] += 1;
-      if (this.teamPoints[defendingTeam] >= 340) {
-        this.scores[defendingTeam] += 1;
-      }
+      this.scores[defendingTeam] += pts;
     }
     for (const p of this.players) p.score = this.scores[p.team] || 0;
     if (this.scores['N-S'] >= WINNING_SCORE || this.scores['E-W'] >= WINNING_SCORE) {
