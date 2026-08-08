@@ -376,7 +376,7 @@ function App() {
   function renderCard(c, small) {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
-    return <span className={`card-face${small ? ' small' : ''} ${isRed ? 'red' : 'black'}`}>{c.rank}{c.suit}</span>;
+    return <span className={`card-face${small ? ' small' : ''}${isRed ? ' red' : ''}`}>{c.rank}{c.suit}</span>;
   }
 
   function miniCard(c) {
