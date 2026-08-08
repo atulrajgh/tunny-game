@@ -476,9 +476,10 @@ class Game {
   endTrick() {
     let winner = this.currentTrick[0];
     let winningCard = winner.card;
+    const trumpActive = this.trumpRevealed && !!this.trumpSuit;
     for (const entry of this.currentTrick) {
       const card = entry.card;
-      if (card.suit === this.trumpSuit && winningCard.suit !== this.trumpSuit) {
+      if (trumpActive && card.suit === this.trumpSuit && winningCard.suit !== this.trumpSuit) {
         winner = entry; winningCard = card;
       } else if (card.suit === winningCard.suit && RANK_ORDER[card.rank] > RANK_ORDER[winningCard.rank]) {
         winner = entry; winningCard = card;

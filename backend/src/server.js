@@ -86,7 +86,7 @@ td{font-size:13px}
 
 <h3>6. Play</h3>
 <p>Players play tricks clockwise. You must <strong>follow suit</strong> if possible. If you cannot follow suit, you may play any card (including trump). The highest card of the lead suit wins the trick, unless a trump is played — then the highest trump wins.</p>
-<p><strong>Trump visibility:</strong> The trump suit is hidden from all players and the admin until it is revealed. Any non-declarer (the declarer's partner or a defender) can use <strong>Ask Trump</strong> to reveal the suit, and the declarer can use <strong>Play Trump</strong> to reveal the suit and play the trump card. The <strong>Ask Trump</strong> and <strong>Play Trump</strong> buttons are hidden by default — they appear only when it is your turn and you do not hold the current trick's led suit in your hand. The trump card is always visible to the declarer (and admin) until played.</p>
+<p><strong>Trump visibility:</strong> The trump suit is hidden from all players and the admin until it is revealed. Any non-declarer (the declarer's partner or a defender) can use <strong>Ask Trump</strong> to reveal the suit, and the declarer can use <strong>Play Trump</strong> to reveal the suit and play the trump card. The <strong>Ask Trump</strong> and <strong>Play Trump</strong> buttons are hidden by default — they appear only when it is your turn and you do not hold the current trick's led suit in your hand. The trump card is always visible to the declarer (and admin) until played. Until the trump is revealed, cards of the trump suit are counted as regular cards — they cannot beat the led suit; once revealed, the highest trump card in a trick wins.</p>
 
 <h3>7. Scoring</h3>
 <p>After all tricks, the admin reviews and confirms the hand:</p>
