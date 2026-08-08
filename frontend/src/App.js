@@ -274,6 +274,7 @@ function App() {
       return {
         cards: cardAt,
         winner: t.winnerTeam,
+        winnerPosition: t.winnerPosition,
         nsTotal: t.winnerTeam === 'N-S' ? nsRunning : null,
         ewTotal: t.winnerTeam === 'E-W' ? ewRunning : null
       };
@@ -298,11 +299,14 @@ function App() {
           {rows.map((r, i) => (
             <div key={i} className={`ac-trick-table-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
               <span className="ac-tt-trick">{i + 1}</span>
-              {posOrder.map(pos => (
-                <span key={pos} className="ac-tt-card">
-                  {r.cards[pos] ? <span className={`mini-card ${r.cards[pos].suit === '♥' || r.cards[pos].suit === '♦' ? 'red' : ''}`}>{r.cards[pos].rank}{r.cards[pos].suit}</span> : <span className="ac-empty" style={{ padding: 0 }}>—</span>}
-                </span>
-              ))}
+              {posOrder.map(pos => {
+                const isWinner = r.winnerPosition === pos;
+                return (
+                  <span key={pos} className="ac-tt-card">
+                    {r.cards[pos] ? <span className={`mini-card${isWinner ? ' trick-winner' : ''} ${r.cards[pos].suit === '♥' || r.cards[pos].suit === '♦' ? 'red' : ''}`}>{r.cards[pos].rank}{r.cards[pos].suit}</span> : <span className="ac-empty" style={{ padding: 0 }}>—</span>}
+                  </span>
+                );
+              })}
               <span className="ac-tt-win">{r.winner || '—'}</span>
               <span className="ac-tt-pts">{r.nsTotal != null ? `+${r.nsTotal}` : '·'}</span>
               <span className="ac-tt-pts">{r.ewTotal != null ? `+${r.ewTotal}` : '·'}</span>
@@ -457,7 +461,7 @@ function App() {
                     </button>
                   ))}
                   {p.id !== playerId && (
-                    <button className="ac-btn red" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
+                    <button className="ac-btn red pos" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
                   )}
                 </div>
               </div>
@@ -573,9 +577,12 @@ function App() {
             <div className="ac-trick-table">
               <div className="ac-trick-table-header">
                 <span className="ac-tt-trick">Trick</span>
-                {trickOrder.map(pos => (
-                  <span key={pos} className="ac-tt-card">{POSITION_NAMES[pos]}</span>
-                ))}
+                {trickOrder.map(pos => {
+                  const pn = players.find(x => x.position === pos);
+                  return (
+                    <span key={pos} className="ac-tt-card">{pn?.name || POSITION_NAMES[pos]}</span>
+                  );
+                })}
                 <span className="ac-tt-win">Winner</span>
                 <span className="ac-tt-pts">N-S</span>
                 <span className="ac-tt-pts">E-W</span>
