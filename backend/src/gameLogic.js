@@ -94,7 +94,11 @@ class Game {
   }
 
   addPlayer(name, isAdmin = false) {
-    const player = new Player(uuidv4(), name);
+    const clean = String(name || '').trim().slice(0, 20);
+    if (!clean) return null;
+    if (this.getViewerName(clean)) return null;
+    if (this.countViewers() >= 25) return null;
+    const player = new Player(uuidv4(), clean);
     player.isAdmin = isAdmin;
     if (isAdmin) {
       if (this.admin) return null;
@@ -182,8 +186,25 @@ class Game {
     return this.players.find(p => p.id === playerId);
   }
 
+  getViewerName(name) {
+    const n = String(name || '').trim().toLowerCase();
+    if (!n) return null;
+    if (this.admin && this.admin.name.toLowerCase() === n) return true;
+    if (this.players.some(p => p.name.toLowerCase() === n)) return true;
+    if (this.spectators.some(s => s.name.toLowerCase() === n)) return true;
+    return false;
+  }
+
+  countViewers() {
+    return (this.admin ? 1 : 0) + this.players.length + this.spectators.length;
+  }
+
   addSpectator(name) {
-    const s = new Player(uuidv4(), name);
+    const clean = String(name || '').trim().slice(0, 20);
+    if (!clean) return null;
+    if (this.getViewerName(clean)) return null;
+    if (this.countViewers() >= 25) return null;
+    const s = new Player(uuidv4(), clean);
     this.spectators.push(s);
     this.lastActivity = Date.now();
     return s;
@@ -598,6 +619,24 @@ class Game {
     return this.removePlayer(targetId);
   }
 
+  demoteToSpectator(adminId, targetId) {
+    const admin = this.getPlayer(adminId);
+    if (!admin || !admin.isAdmin || adminId === targetId) return null;
+    const p = this.getPlayer(targetId);
+    if (!p) return null;
+    this.removePlayer(targetId);
+    p.position = null;
+    p.hand = [];
+    p.bid = null;
+    p.playedCard = null;
+    p.cutCard = null;
+    p.team = null;
+    p.isAdmin = false;
+    this.spectators.push(p);
+    this.lastActivity = Date.now();
+    return p;
+  }
+
   rotateDealer(adminId) {
     const admin = this.getPlayer(adminId);
     if (!admin || !admin.isAdmin || !this.dealer) return false;
@@ -622,6 +661,17 @@ class Game {
       const si = SUITS.indexOf(a.suit) - SUITS.indexOf(b.suit);
       return si !== 0 ? si : RANK_ORDER[b.rank] - RANK_ORDER[a.rank];
     });
+  }
+
+  checkMemo(key, hand) {
+    const sig = hand.map(c => c.suit + c.rank).join(',');
+    if (this._memo && this._memo[key] && this._memo[key].sig === sig) {
+      return this._memo[key].sorted;
+    }
+    if (!this._memo) this._memo = {};
+    const sorted = this.sortHand(hand);
+    this._memo[key] = { sig, sorted };
+    return sorted;
   }
 
   getGameState(playerId) {
@@ -654,7 +704,7 @@ class Game {
 if (viewer) {
         state.me = {
           id: viewer.id, name: viewer.name, position: viewer.position,
-          hand: seesAll ? [] : this.sortHand(viewer.hand).map(c => ({ suit: c.suit, rank: c.rank })),
+          hand: seesAll ? [] : this.checkMemo('me:' + viewer.id, viewer.hand).map(c => ({ suit: c.suit, rank: c.rank })),
           isAdmin: viewer.isAdmin, isSpectator: !!isSpectator, team: viewer.team,
           bid: viewer.bid, score: viewer.score,
           cutCard: viewer.cutCard ? { suit: viewer.cutCard.suit, rank: viewer.cutCard.rank } : null
@@ -662,7 +712,7 @@ if (viewer) {
         const showHand = (p) => seesAll || p.id === viewer.id ||
           (!viewer.isAdmin && this.state === 'playing' && this.dummy && p.id === this.dummy.id);
         state.players = this.players.map(p => {
-          const hand = showHand(p) ? this.sortHand(p.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined;
+          const hand = showHand(p) ? this.checkMemo('p:' + p.id, p.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined;
           return { id: p.id, name: p.name, position: p.position, team: p.team,
             isAdmin: p.isAdmin, bid: p.bid, score: p.score,
             hand, cardCount: hand ? undefined : p.hand.length };
@@ -671,7 +721,7 @@ if (viewer) {
           state.players.push({
             id: null, name: v.playerName || pos, position: pos, team: v.team,
             isAdmin: false, bid: v.bid, score: 0, vacated: true,
-            hand: seesAll ? this.sortHand(v.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined,
+            hand: seesAll ? this.checkMemo('v:' + pos, v.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined,
             cardCount: seesAll ? undefined : v.hand.length
           });
         }
@@ -681,14 +731,14 @@ if (viewer) {
           playerName: v.playerName || pos,
           team: v.team,
           wasCurrentPlayer: !!v.wasCurrentPlayer,
-          hand: this.sortHand(v.hand).map(c => ({ suit: c.suit, rank: c.rank }))
+          hand: this.checkMemo('v:' + pos + ':a', v.hand).map(c => ({ suit: c.suit, rank: c.rank }))
         }));
         const tpid = this._timedOutPlayerId;
         const tp = tpid && this.currentPlayer && this.currentPlayer.id === tpid && this.getPlayer(tpid);
         if (tp && tp.position) {
           state.timedOutHand = {
             playerId: tp.id, playerName: tp.name, position: tp.position, team: tp.team,
-            hand: this.sortHand(tp.hand).map(c => ({ suit: c.suit, rank: c.rank }))
+            hand: this.checkMemo('t:' + tp.id, tp.hand).map(c => ({ suit: c.suit, rank: c.rank }))
           };
         }
       }

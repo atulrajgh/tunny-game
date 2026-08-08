@@ -14,6 +14,7 @@ const io = socketIo(server, { cors: { origin: "*", methods: ["GET", "POST"] } })
 const PORT = process.env.PORT || 3001;
 const ROOMS_FILE = path.join(__dirname, '..', 'rooms.json');
 const TIMEOUT_MS = 300000;
+const ADMIN_TIMEOUT_MS = 600000;
 const SAVE_INTERVAL = 30000;
 const ROOMS = {};
 const PLAYER_SOCKETS = {}; // playerId -> Set<socketId>
@@ -141,7 +142,9 @@ function loadRooms() {
   try {
     if (fs.existsSync(ROOMS_FILE)) {
       for (const [id, json] of Object.entries(JSON.parse(fs.readFileSync(ROOMS_FILE, 'utf8')))) {
-        ROOMS[id] = Game.fromJSON(json);
+        const g = Game.fromJSON(json);
+        if (!g.players.length) continue;
+        ROOMS[id] = g;
       }
     }
   } catch (e) { /* ignore */ }
@@ -257,8 +260,9 @@ io.on('connection', (socket) => {
     if (!g) return;
     clearTimeout(g._timeout);
     if (g.state !== 'playing' && g.state !== 'bidding') return;
+    const cp = g.currentPlayer;
+    const isAdminTurn = !cp || cp.id === null || (g.admin && cp.id === g.admin.id);
     g._timeout = setTimeout(() => {
-      const cp = g.currentPlayer;
       const isAdminGame = !!g.admin;
       g._timedOutPlayerId = cp ? cp.id : null;
       if (isAdminGame && g.admin) {
@@ -267,7 +271,7 @@ io.on('connection', (socket) => {
           playerName: cp ? cp.name : 'Unknown (vacant seat)'
         });
       }
-    }, TIMEOUT_MS);
+    }, isAdminTurn ? ADMIN_TIMEOUT_MS : TIMEOUT_MS);
   }
 
   function autoJoin(g, playerName) {
@@ -279,10 +283,21 @@ io.on('connection', (socket) => {
     return attachSpectator(g, playerName);
   }
 
+  function joinError(g, playerName) {
+    const name = String(playerName || '').trim();
+    if (!name) return 'Name required';
+    if (name.length > 20) return 'Name must be 20 characters or less';
+    if (g.getViewerName(name)) return 'That name is already taken';
+    if (g.countViewers() >= 25) return 'Room is full (max 25 people)';
+    return null;
+  }
+
   socket.on('create_room', ({ playerName }) => {
     if (!playerName) return error('Name required');
     if (!GLOBAL_TABLE) { GLOBAL_TABLE = new Game(); GLOBAL_TABLE.roomId = GLOBAL_TABLE.id; ROOMS[GLOBAL_TABLE.id] = GLOBAL_TABLE; }
-    if (!autoJoin(GLOBAL_TABLE, playerName)) return error('Failed to join');
+    const err = joinError(GLOBAL_TABLE, playerName);
+    if (err) return error(err);
+    autoJoin(GLOBAL_TABLE, playerName);
     io.emit('room_list', getPublicList());
     updateAll();
   });
@@ -291,7 +306,9 @@ io.on('connection', (socket) => {
     if (!playerName) return error('Name required');
     let g = ROOMS[rid];
     if (!g) { g = new Game(rid); g.roomId = rid; ROOMS[rid] = g; }
-    if (!autoJoin(g, playerName)) return error('Room full');
+    const err = joinError(g, playerName);
+    if (err) return error(err);
+    autoJoin(g, playerName);
     io.emit('room_list', getPublicList());
     updateAll();
   });
@@ -300,6 +317,8 @@ io.on('connection', (socket) => {
     if (!playerName) return error('Name required');
     const g = ROOMS[rid];
     if (!g) return error('Room not found');
+    const err = joinError(g, playerName);
+    if (err) return error(err);
     attachSpectator(g, playerName);
     updateAll();
   });
@@ -394,14 +413,15 @@ io.on('connection', (socket) => {
 
   socket.on('kick_player', ({ targetId }) => {
     const g = game(); if (!g) return;
-    if (!g.kickPlayer(playerId, targetId)) return error('Cannot kick');
+    const uid = me(); if (!uid || !uid.isAdmin) return error('Admin only');
+    const p = g.demoteToSpectator(uid.id, targetId);
+    if (!p) return error('Cannot move player to spectator');
     const sockets = PLAYER_SOCKETS[targetId];
     if (sockets) for (const sid of [...sockets]) {
       const s = io.sockets.sockets.get(sid);
-      if (s) { s.emit('kicked', {}); s.leave(g.id); }
+      if (s) s.emit('demoted_to_spectator', {});
     }
-    delete PLAYER_SOCKETS[targetId];
-    io.to(g.id).emit('player_left', { playerId: targetId, playerCount: g.players.length });
+    io.to(g.id).emit('player_demoted', { playerId: targetId, playerName: p.name, playerCount: g.players.length });
     io.emit('room_list', getPublicList());
     updateAll();
   });

@@ -55,7 +55,7 @@ On mobile (< 768px) the 3-column grid stacks to single column; button sizes incr
 
 ## Player timeout
 
-Timeout is 300 seconds (5 minutes) for bidding and playing states. When a player times out, a banner appears allowing the admin to take over their turn via `admin_play`. The timed-out player's hand is exposed to the admin (as `state.timedOutHand`) while it is their turn, so the admin can click their cards, bid for them, or choose trump for a timed-out declarer. `g._timedOutPlayerId` is cleared when that player resumes (bids/plays) or when a new hand starts.
+Timeout is 300 seconds (5 minutes) for a player's turn and 600 seconds (10 minutes) when the admin must act (vacated seat or the admin's own turn) in bidding and playing states. When a player times out, a banner appears allowing the admin to take over their turn via `admin_play`. The timed-out player's hand is exposed to the admin (as `state.timedOutHand`) while it is their turn, so the admin can click their cards, bid for them, or choose trump for a timed-out declarer. `g._timedOutPlayerId` is cleared when that player resumes (bids/plays) or when a new hand starts.
 
 ## Mid-game disconnect / Admin take-over / Spectator promotion
 
@@ -68,7 +68,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## WebSocket events (server → client)
 
-`state`, `room_list`, `room_joined`, `player_joined`, `player_left`, `spectator_joined`, `spectator_left`, `spectator_promoted`, `cut_start`, `game_started`, `trump_selection`, `game_playing`, `trump_revealed`, `hand_end`, `next_hand`, `game_over`, `game_reset`, `dealer_rotated`, `player_timed_out`, `room_closed`, `kicked`, `error`
+`state`, `room_list`, `room_joined`, `player_joined`, `player_left`, `player_demoted`, `spectator_joined`, `spectator_left`, `spectator_promoted`, `demoted_to_spectator`, `cut_start`, `game_started`, `trump_selection`, `game_playing`, `trump_revealed`, `hand_end`, `next_hand`, `game_over`, `game_reset`, `dealer_rotated`, `player_timed_out`, `room_closed`, `kicked`, `error`
 
 ## WebSocket events (client → server)
 

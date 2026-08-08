@@ -45,6 +45,12 @@ function App() {
     s.on('room_list', (list) => setRoomList(list));
     s.on('error', (e) => { showError(e.message); unlockAction(); });
     s.on('kicked', () => { setScreen('login'); setGameState(null); showError('You were kicked'); });
+    s.on('demoted_to_spectator', (d) => {
+      setIsSpectator(true);
+      setIsAdmin(false);
+      setScreen('game');
+      if (d && d.message) showError(d.message); else showError('You are now a spectator');
+    });
     return () => s.disconnect();
   }, [showError]);
 
@@ -96,6 +102,10 @@ function App() {
     });
     socket.on('player_left', (data) => {
       showError(`${data.playerName} dropped out`);
+    });
+    socket.on('player_demoted', (data) => {
+      if (data.playerId === playerId) return;
+      showError(`${data.playerName} was moved to spectator`);
     });
     socket.on('spectator_joined', () => {});
     socket.on('spectator_left', () => {});
@@ -400,7 +410,7 @@ function App() {
         {v.hand.map((c, i) => (
           <button key={i} className="vacated-card-btn" disabled={!clickable}
             onClick={() => clickable && (setTimedOut(null), sendOnce('admin_play', { position: pos, card: { suit: c.suit, rank: c.rank } }))}>
-            {miniCard(c)}
+            {renderCard(c)}
           </button>
         ))}
       </div>
@@ -417,7 +427,7 @@ function App() {
         {timedOutHand.hand.map((c, i) => (
           <button key={i} className="vacated-card-btn" disabled={!clickable}
             onClick={() => clickable && (setTimedOut(null), sendOnce('admin_play', { targetId: timedOutHand.playerId, card: { suit: c.suit, rank: c.rank } }))}>
-            {miniCard(c)}
+            {renderCard(c)}
           </button>
         ))}
       </div>
@@ -797,6 +807,9 @@ function App() {
         )}
       </div>
 
+      {/* Turn indicator */}
+      {isMyTurn && isPlaying && !isSpectator && <div className="turn-indicator">Your turn!</div>}
+
       {/* My hand */}
       <div className="my-area">
         {timedOutHand ? renderTimedOut() : (
@@ -837,9 +850,6 @@ function App() {
           </>
         )}
       </div>
-
-      {/* Turn indicator */}
-      {isMyTurn && isPlaying && !isSpectator && <div className="turn-indicator">Your turn!</div>}
 
       {/* Admin Panel (collapsible) */}
       {adminPanel}
