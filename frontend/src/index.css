@@ -107,7 +107,7 @@ input, button { font-family: inherit; }
 .overlay.active { display: block; }
 .overlay h3 { margin-bottom: 12px; }
 /* MUST come after .overlay — same specificity, later wins */
-.bidding-top { position: fixed; top: 10px; left: 10px; transform: none; z-index: 100; width: 320px; max-width: calc(100vw - 20px); margin: 0 auto; box-sizing: border-box; }
+.bidding-top { position: fixed; top: 10px; left: 10px; transform: none; z-index: 100; width: 240px; max-width: calc(100vw - 20px); margin: 0 auto; box-sizing: border-box; padding: 12px 14px; }
 
 /* ---- My hand ---- */
 .my-area { display: flex; align-items: center; justify-content: center; padding: 4px 0; }
@@ -125,12 +125,12 @@ input, button { font-family: inherit; }
 .hand-card:not(:disabled) .card-face:hover { transform: translateY(-6px); }
 .hand-card.trump .card-face { border: 2px solid #f0c040; box-shadow: 0 0 8px rgba(240,192,64,0.5); }
 
-.bid-buttons { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 12px 0; }
-.bid-pass { padding: 8px 16px; border: none; border-radius: 6px; background: #e74c3c; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; }
+.bid-buttons { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.bid-pass { width: 100%; padding: 8px 16px; border: none; border-radius: 6px; background: #e74c3c; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; }
 .bid-inc-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.bid-inc { padding: 10px 22px; border: 2px solid #3498db; border-radius: 6px; background: #1b2a1b; color: #3498db; font-weight: 700; cursor: pointer; font-size: 22px; min-width: 72px; touch-action: manipulation; }
+.bid-inc { padding: 10px 16px; border: 2px solid #3498db; border-radius: 6px; background: #1b2a1b; color: #3498db; font-weight: 700; cursor: pointer; font-size: 20px; min-width: 64px; touch-action: manipulation; }
 .bid-stepper { display: flex; align-items: center; gap: 6px; }
-.bid-arrow { width: 40px; height: 40px; border: none; border-radius: 6px; background: #3498db; color: #fff; font-size: 18px; cursor: pointer; font-weight: 700; touch-action: manipulation; }
+.bid-arrow { width: 32px; height: 36px; border: none; border-radius: 6px; background: #3498db; color: #fff; font-size: 15px; cursor: pointer; font-weight: 700; touch-action: manipulation; }
 .bid-arrow:hover { opacity: 0.85; }
 .bid-hcp { color: #a0d0a0; font-size: 12px; white-space: nowrap; }
 .bid-inc:hover, .bid-pass:hover { opacity: 0.85; }
