@@ -91,7 +91,6 @@ td{font-size:13px}
 <h3>7. Scoring</h3>
 <p>After all tricks, the admin reviews and confirms the hand:</p>
 <ul>
-<li><strong>Declarer's team</strong> wins if their total HCP ≥ bid × 1.5 + 85</li>
 <li><strong>Defenders</strong> win if declarer's team fails to meet the bid</li>
 <li>The winning team earns <strong>2 points</strong> when the winning bid is <strong>≥ 100</strong> (a level-2 contract), else <strong>1 point</strong></li>
 <li>Winning team earns <strong>1 additional point</strong> for a <strong>slam</strong> (collecting all 340 HCP)</li>
