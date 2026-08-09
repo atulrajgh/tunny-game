@@ -442,8 +442,12 @@ class Game {
     if (this.state !== 'playing') return false;
     const idx = hand.findIndex(c => c.equals(card));
     if (idx === -1) return false;
-    if (!this.trumpRevealed && this.trumpCard && card.equals(this.trumpCard)) return false;
+    if (!this.trumpRevealed && this.trumpCard && this.trumpCard.suit === card.suit && this.trumpCard.rank === card.rank && this.currentTrick.length > 0) return false;
     const played = hand.splice(idx, 1)[0];
+    if (this.trumpCard && played.equals(this.trumpCard)) {
+      this.trumpRevealed = true;
+      this.trumpCardPlayed = true;
+    }
     if (this.currentTrick.length === 0) {
       this.leadSuit = played.suit;
     } else if (played.suit !== this.leadSuit) {
