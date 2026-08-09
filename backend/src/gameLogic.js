@@ -442,6 +442,7 @@ class Game {
     if (this.state !== 'playing') return false;
     const idx = hand.findIndex(c => c.equals(card));
     if (idx === -1) return false;
+    if (!this.trumpRevealed && this.trumpCard && card.equals(this.trumpCard)) return false;
     const played = hand.splice(idx, 1)[0];
     if (this.currentTrick.length === 0) {
       this.leadSuit = played.suit;
@@ -533,6 +534,7 @@ class Game {
     const player = this.getPlayer(playerId);
     if (!player || !this.trumpCard) return false;
     if (this.trumpCardPlayed) return false;
+    if (!this.trumpRevealed) return false;
     if (this.currentTrick.length === 0) return false;
     const idx = player.hand.findIndex(c => c.equals(this.trumpCard));
     if (idx === -1) return false;

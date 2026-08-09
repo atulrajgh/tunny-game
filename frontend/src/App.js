@@ -563,7 +563,7 @@ function App() {
               )}
               {!timedOut && (
                 <button className="ac-btn green" onClick={() => sendOnce('confirm_hand')}>
-                  {gameState.handNumber >= 6 ? 'End Game' : 'Confirm Hand'}
+                  {gameState.handNumber >= 6 ? 'End Game' : 'Confirm & Next Hand'}
                 </button>
               )}
           </div>
@@ -665,7 +665,7 @@ function App() {
           <a href="/instructions" target="_blank" className="help-link">How to Play</a>
         </div>
         <div className="state-info">
-          <div className="round-info">Hand {gameState.handNumber}/6 · Trick {gameState.trickNumber + 1}/6</div>
+          <div className="round-info">Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
           <div className="current-action">
             {gameState.state === 'waiting' && `Waiting — assign positions and start the game`}
             {gameState.state === 'cut' && `Waiting for ${players.find(p => p.isAdmin)?.name || 'admin'} to cut the deck`}
@@ -845,7 +845,7 @@ function App() {
             {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && canTrumpAction && (
               <button className="action-btn" onClick={() => sendOnce('ask_trump')}>Ask Trump</button>
             )}
-            {isPlaying && isDeclarer && !isAdmin && gameState.trumpCard && canTrumpAction && (
+            {isPlaying && isDeclarer && !isAdmin && gameState.trumpRevealed && gameState.trumpCard && canTrumpAction && (
               <button className="action-btn" onClick={() => sendOnce('play_trump')}>Play Trump</button>
             )}
           </>

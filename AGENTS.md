@@ -63,9 +63,10 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## Trump visibility
 
-- Trump suit is hidden from all players and admin until revealed via **Ask Trump** (any non-declarer player — the declarer's partner or a defender — may use it) or **Play Trump** (declarer only). `trumpRevealed` controls general visibility; the admin does not see the trump suit until it is revealed. The trump card is visible only to the declarer (and admin) until played.
+- Trump suit is hidden from all players and admin until revealed via **Ask Trump** (any non-declarer player — the declarer's partner or a defender — may use it). `trumpRevealed` controls general visibility; the admin does not see the trump suit until it is revealed. The trump card is visible only to the declarer (and admin) until played.
 - Until the trump is revealed, cards of the trump suit count as regular cards for trick resolution in `endTrick` (`trumpActive = trumpRevealed && trumpSuit` in `gameLogic.js`) — only the led suit can win. Once revealed, the highest trump card in a trick wins.
-- The **Ask Trump** and **Play Trump** buttons are hidden by default. They appear only when it is your turn AND you do not hold the current trick's led suit in your hand (`canTrumpAction = isMyTurn && ledSuit && !iHoldLeadSuit` in `App.js`). Ask Trump additionally requires you not be the declarer; Play Trump additionally requires you be the declarer and have an unplayed trump card.
+- The declarer cannot play the trump card until the trump is revealed (`if (!this.trumpRevealed && this.trumpCard && card.equals(this.trumpCard)) return false` in `_playCard` and in `playTrumpCard` in `gameLogic.js`).
+- The **Ask Trump** and **Play Trump** buttons are hidden by default. They appear only when it is your turn AND you do not hold the current trick's led suit in your hand (`canTrumpAction = isMyTurn && ledSuit && !iHoldLeadSuit` in `App.js`). Ask Trump additionally requires you not be the declarer; Play Trump additionally requires you be the declarer, have an unplayed trump card, and the trump already revealed (`gameState.trumpRevealed`).
 
 ## WebSocket events (server → client)
 
