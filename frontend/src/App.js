@@ -845,7 +845,7 @@ function App() {
             {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && canTrumpAction && (
               <button className="action-btn" onClick={() => sendOnce('ask_trump')}>Ask Trump</button>
             )}
-            {isPlaying && isDeclarer && !isAdmin && gameState.trumpRevealed && gameState.trumpCard && canTrumpAction && (
+            {isPlaying && isDeclarer && !isAdmin && !gameState.trumpRevealed && gameState.trumpCard && canTrumpAction && (
               <button className="action-btn" onClick={() => sendOnce('play_trump')}>Play Trump</button>
             )}
           </>

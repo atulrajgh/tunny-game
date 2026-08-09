@@ -534,7 +534,6 @@ class Game {
     const player = this.getPlayer(playerId);
     if (!player || !this.trumpCard) return false;
     if (this.trumpCardPlayed) return false;
-    if (!this.trumpRevealed) return false;
     if (this.currentTrick.length === 0) return false;
     const idx = player.hand.findIndex(c => c.equals(this.trumpCard));
     if (idx === -1) return false;
