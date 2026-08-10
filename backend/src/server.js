@@ -86,7 +86,7 @@ td{font-size:13px}
 
 <h3>6. Play</h3>
 <p>Players play tricks clockwise. You must <strong>follow suit</strong> if possible. If you cannot follow suit, you may play any card (including trump). The highest card of the lead suit wins the trick, unless a trump is played — then the highest trump wins.</p>
-<p><strong>Trump visibility:</strong> The trump suit is hidden from all players and the admin until it is revealed. Any non-declarer (the declarer's partner or a defender) can use <strong>Ask Trump</strong> to reveal the suit, and the declarer can use <strong>Play Trump</strong> to reveal the suit and play the trump card. The <strong>Ask Trump</strong> and <strong>Play Trump</strong> buttons are hidden by default — they appear only when it is your turn and you do not hold the current trick's led suit in your hand. The trump card is always visible to the declarer (and admin) until played. Until the trump is revealed, cards of the trump suit are counted as regular cards — they cannot beat the led suit; once revealed, the highest trump card in a trick wins.</p>
+<p><strong>Trump visibility:</strong> The trump suit is hidden from all players and the admin until it is revealed. Any non-declarer (the declarer's partner or a defender) can use <strong>Ask Trump</strong> to reveal the suit, and the declarer can use <strong>Play Trump</strong> to play the reserved trump card and reveal the suit. The trump card sits outside the declarer's hand until it is played — the <strong>Play Trump</strong> button is the only way to play it (and it rejoins the hand once the trump is revealed via Ask Trump). The <strong>Ask Trump</strong> and <strong>Play Trump</strong> buttons are hidden by default — they appear only when it is your turn and you do not hold the current trick's led suit in your hand; on the final trick of a hand, <strong>Play Trump</strong> is always available to the declarer. The trump card is always visible to the declarer (and admin) until played. Until the trump is revealed, cards of the trump suit are counted as regular cards — they cannot beat the led suit; once revealed, the highest trump card in a trick wins.</p>
 
 <h3>7. Scoring</h3>
 <p>After all tricks, the admin reviews and confirms the hand:</p>
@@ -448,13 +448,17 @@ io.on('connection', (socket) => {
     updateAll();
   });
 
-  socket.on('admin_play', ({ targetId, card, position }) => {
+  socket.on('admin_play', ({ targetId, card, position, trump }) => {
     const g = game(); if (!g) return;
     const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
     if (position) {
       if (g.state === 'playing') {
-        if (!card) return error('Pick a card to play');
-        if (!g.playVacatedCard(position, card)) return error('Invalid play');
+        if (trump) {
+          if (!g.playVacatedTrump(position)) return error('Cannot play trump now');
+        } else {
+          if (!card) return error('Pick a card to play');
+          if (!g.playVacatedCard(position, card)) return error('Invalid play');
+        }
       } else if (g.state === 'bidding') {
         if (card === undefined) return error('Pick a bid');
         if (!g.placeVacatedBid(position, card)) return error('Invalid bid');
@@ -468,7 +472,9 @@ io.on('connection', (socket) => {
       const target = g.getPlayer(targetId);
       if (!target) return error('Player no longer in game');
       g.currentPlayer = target;
-      if (card !== undefined && card !== null) {
+      if (trump) {
+        if (g.state !== 'playing' || !g.playTrumpCard(targetId)) return error('Cannot play trump now');
+      } else if (card !== undefined && card !== null) {
         if (g.state === 'playing') {
           if (!g.playCard(targetId, card)) return error('Invalid play');
         } else if (g.state === 'bidding') {

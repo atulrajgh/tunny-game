@@ -411,7 +411,7 @@ class Game {
     const idx = hand.findIndex(c => c.rank === card.rank && c.suit === card.suit);
     if (idx === -1) return false;
     this.trumpSuit = card.suit;
-    this.trumpCard = hand[idx];
+    this.trumpCard = hand.splice(idx, 1)[0];
     this.trumpCardIndex = idx;
     this.dealCards(2);
     this.state = 'playing';
@@ -442,12 +442,7 @@ class Game {
     if (this.state !== 'playing') return false;
     const idx = hand.findIndex(c => c.equals(card));
     if (idx === -1) return false;
-    if (!this.trumpRevealed && this.trumpCard && this.trumpCard.suit === card.suit && this.trumpCard.rank === card.rank && this.currentTrick.length > 0) return false;
     const played = hand.splice(idx, 1)[0];
-    if (this.trumpCard && played.equals(this.trumpCard)) {
-      this.trumpRevealed = true;
-      this.trumpCardPlayed = true;
-    }
     if (this.currentTrick.length === 0) {
       this.leadSuit = played.suit;
     } else if (played.suit !== this.leadSuit) {
@@ -476,6 +471,34 @@ class Game {
     const saved = this.vacatedHands[position];
     if (!saved || this.currentPlayer?.position !== position) return false;
     return this._playCard(saved.hand, position, card, this.vacatedPseudo(position));
+  }
+
+  playVacatedTrump(position) {
+    const saved = this.vacatedHands[position];
+    if (!saved || this.currentPlayer?.position !== position) return false;
+    if (this.state !== 'playing' || this.declarer?.position !== position) return false;
+    if (!this.trumpCard || this.trumpCardPlayed) return false;
+    const isLastTrick = this.trickNumber >= 5;
+    if (!isLastTrick) {
+      if (this.currentTrick.length === 0) return false;
+      if (this.leadSuit) {
+        const hasSuit = saved.hand.some(c => c.suit === this.leadSuit);
+        if (hasSuit) return false;
+      }
+    }
+    const played = this.trumpCard;
+    this.trumpCard = null;
+    this.trumpRevealed = true;
+    this.trumpCardPlayed = true;
+    if (this.currentTrick.length === 0) this.leadSuit = played.suit;
+    this.currentTrick.push({ player: this.vacatedPseudo(position), card: played });
+    if (this.currentTrick.length === 4) {
+      this.endTrick();
+    } else {
+      this.currentPlayer = this.seatAfter(position);
+    }
+    this.lastActivity = Date.now();
+    return true;
   }
 
   endTrick() {
@@ -527,8 +550,22 @@ class Game {
     if (this.trumpRevealed) return false;
     if (this.currentTrick.length === 0) return false;
     this.trumpRevealed = true;
+    this.rejoinTrumpCard();
     this.lastActivity = Date.now();
     return true;
+  }
+
+  rejoinTrumpCard() {
+    if (!this.trumpCard || this.trumpCardPlayed) return;
+    const dPos = this.declarer?.position;
+    if (!dPos) return;
+    const live = this.players.find(p => p.position === dPos);
+    if (live) {
+      live.hand.push(this.trumpCard);
+    } else if (this.vacatedHands[dPos]) {
+      this.vacatedHands[dPos].hand.push(this.trumpCard);
+    }
+    this.trumpCard = null;
   }
 
   playTrumpCard(playerId) {
@@ -538,17 +575,20 @@ class Game {
     const player = this.getPlayer(playerId);
     if (!player || !this.trumpCard) return false;
     if (this.trumpCardPlayed) return false;
-    if (this.currentTrick.length === 0) return false;
-    const idx = player.hand.findIndex(c => c.equals(this.trumpCard));
-    if (idx === -1) return false;
-    if (this.currentTrick.length > 0 && this.leadSuit) {
-      const hasSuit = player.hand.some((c, i) => c.suit === this.leadSuit && i !== idx);
-      if (hasSuit) return false;
+    const isLastTrick = this.trickNumber >= 5;
+    if (!isLastTrick) {
+      if (this.currentTrick.length === 0) return false;
+      if (this.leadSuit) {
+        const hasSuit = player.hand.some(c => c.suit === this.leadSuit);
+        if (hasSuit) return false;
+      }
     }
-    const played = player.hand.splice(idx, 1)[0];
+    const played = this.trumpCard;
+    this.trumpCard = null;
     this.trumpRevealed = true;
     this.trumpCardPlayed = true;
     player.playedCard = played;
+    if (this.currentTrick.length === 0) this.leadSuit = played.suit;
     this.currentTrick.push({ player, card: played });
     if (this.currentTrick.length === 4) {
       this.endTrick();
@@ -689,7 +729,7 @@ class Game {
       dealer: this.dealer ? { id: this.dealer.id, name: this.dealer.name, position: this.dealer.position } : null,
       currentPlayer: this.currentPlayer ? { id: this.currentPlayer.id, name: this.currentPlayer.name, position: this.currentPlayer.position } : null,
       trumpSuit: (this.trumpRevealed || this.state === 'game_over' || viewer?.id === this.declarer?.id) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
-      trumpCard: (this.trumpRevealed || viewer?.id === this.declarer?.id) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
+      trumpCard: (this.trumpRevealed || viewer?.id === this.declarer?.id || viewer?.isAdmin) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
       trickNumber: this.trickNumber, handNumber: this.handNumber,
       contractLevel: this.contractLevel, targetTricks: this.targetTricks,
       highestBid: this.highestBid,
@@ -717,18 +757,19 @@ if (viewer) {
         };
         const showHand = (p) => seesAll || p.id === viewer.id ||
           (!viewer.isAdmin && this.state === 'playing' && this.dummy && p.id === this.dummy.id);
+        const reservedTrumpCount = (p) => (p.id === this.declarer?.id && this.trumpCard && !this.trumpCardPlayed ? 1 : 0);
         state.players = this.players.map(p => {
           const hand = showHand(p) ? this.checkMemo('p:' + p.id, p.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined;
           return { id: p.id, name: p.name, position: p.position, team: p.team,
             isAdmin: p.isAdmin, bid: p.bid, score: p.score,
-            hand, cardCount: hand ? undefined : p.hand.length };
+            hand, cardCount: hand ? undefined : p.hand.length + reservedTrumpCount(p) };
         });
         for (const [pos, v] of Object.entries(this.vacatedHands)) {
           state.players.push({
             id: null, name: v.playerName || pos, position: pos, team: v.team,
             isAdmin: false, bid: v.bid, score: 0, vacated: true,
             hand: seesAll ? this.checkMemo('v:' + pos, v.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined,
-            cardCount: seesAll ? undefined : v.hand.length
+            cardCount: seesAll ? undefined : v.hand.length + (pos === this.declarer?.position && this.trumpCard && !this.trumpCardPlayed ? 1 : 0)
           });
         }
       if (viewer.isAdmin) {

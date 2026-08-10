@@ -369,6 +369,7 @@ function App() {
   const ledSuit = gameState.currentTrick?.[0]?.card?.suit || null;
   const iHoldLeadSuit = !!ledSuit && (me?.hand || []).some(c => c.suit === ledSuit);
   const canTrumpAction = isMyTurn && !!ledSuit && !iHoldLeadSuit;
+  const isLastTrick = gameState.trickNumber === 5;
 
   // Build table positions relative to viewer (admin has no position — fixed N/E/S/W)
   const ORDER = ['N', 'E', 'S', 'W'];
@@ -408,6 +409,9 @@ function App() {
     if (!v) return null;
     const isTurn = curPlayer && curPlayer.id === null && curPlayer.position === pos;
     const clickable = isAdmin && isPlaying && isTurn;
+    const vacatedHoldsLead = !!ledSuit && (v.hand || []).some(c => c.suit === ledSuit);
+    const isVacatedDeclarer = isPlaying && gameState.declarer && gameState.declarer.position === pos;
+    const vacatedTrumpAllowed = isAdmin && isPlaying && isTurn && isVacatedDeclarer && gameState.trumpCard && !gameState.trumpRevealed && (isLastTrick || (!!ledSuit && !vacatedHoldsLead));
     return (
       <div className={`vacated-hand${vertical ? ' vert' : ''}`}>
         {isAdmin && isTurn && <div className="vacated-tag">Play for {v.playerName}</div>}
@@ -417,6 +421,11 @@ function App() {
             {renderCard(c)}
           </button>
         ))}
+        {vacatedTrumpAllowed && (
+          <button className="action-btn" onClick={() => (setTimedOut(null), sendOnce('admin_play', { position: pos, trump: true }))}>
+            Play Trump (take over)
+          </button>
+        )}
       </div>
     );
   }
@@ -425,6 +434,9 @@ function App() {
     if (!timedOutHand) return null;
     const isTurn = curPlayer && curPlayer.id === timedOutHand.playerId;
     const clickable = isAdmin && isPlaying && isTurn;
+    const timedOutHoldsLead = !!ledSuit && (timedOutHand.hand || []).some(c => c.suit === ledSuit);
+    const isTimedOutDeclarer = isPlaying && gameState.declarer && gameState.declarer.id === timedOutHand.playerId;
+    const timedOutTrumpAllowed = isAdmin && isPlaying && isTurn && isTimedOutDeclarer && gameState.trumpCard && !gameState.trumpRevealed && (isLastTrick || (!!ledSuit && !timedOutHoldsLead));
     return (
       <div className="vacated-hand">
         {isAdmin && isTurn && <div className="vacated-tag">Play for {timedOutHand.playerName}</div>}
@@ -434,6 +446,11 @@ function App() {
             {renderCard(c)}
           </button>
         ))}
+        {timedOutTrumpAllowed && (
+          <button className="action-btn" onClick={() => (setTimedOut(null), sendOnce('admin_play', { targetId: timedOutHand.playerId, trump: true }))}>
+            Play Trump (take over)
+          </button>
+        )}
       </div>
     );
   }
@@ -822,10 +839,9 @@ function App() {
             ) : (
               <div className="my-hand">
                 {(me?.hand || []).map((c, i) => {
-                  const isTrumpCard = isPlaying && gameState.trumpSuit && c.suit === gameState.trumpSuit && me.hand.length > 4;
                   const canPlay = isMyTurn && isPlaying && !isBidding && !isTrump;
                   return (
-                    <button key={i} className={`hand-card${isTrumpCard ? ' trump' : ''}`}
+                    <button key={i} className="hand-card"
                       disabled={!canPlay}
                       onClick={() => canPlay && sendOnce('play', { card: { suit: c.suit, rank: c.rank } })}>
                       {renderCard(c)}
@@ -836,6 +852,12 @@ function App() {
             )
           )
         )}
+        {isDeclarer && isPlaying && gameState.trumpCard && !gameState.trumpRevealed && (
+          <div className="trump-reserved">
+            {renderCard(gameState.trumpCard)}
+            <span className="trump-reserved-label">TRUMP</span>
+          </div>
+        )}
       </div>
 
       {/* Action buttons */}
@@ -845,7 +867,8 @@ function App() {
             {isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && canTrumpAction && (
               <button className="action-btn" onClick={() => sendOnce('ask_trump')}>Ask Trump</button>
             )}
-            {isPlaying && isDeclarer && !isAdmin && !gameState.trumpRevealed && gameState.trumpCard && canTrumpAction && (
+            {isPlaying && isDeclarer && !isAdmin && !gameState.trumpRevealed && gameState.trumpCard && isMyTurn &&
+              (isLastTrick || canTrumpAction) && (
               <button className="action-btn" onClick={() => sendOnce('play_trump')}>Play Trump</button>
             )}
           </>

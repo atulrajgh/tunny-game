@@ -110,7 +110,12 @@ input, button { font-family: inherit; }
 .bidding-top { position: fixed; top: 10px; left: 10px; transform: none; z-index: 100; width: 220px; max-width: calc(100vw - 20px); margin: 0 auto; box-sizing: border-box; padding: 10px 10px; }
 
 /* ---- My hand ---- */
-.my-area { display: flex; align-items: center; justify-content: center; padding: 4px 0; }
+.my-area { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 4px 0; }
+
+/* Reserved face-down trump card slot (declarer only, before reveal) */
+.trump-reserved { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+.trump-reserved .card-face { width: 66px; height: 94px; background: #2c3e50; color: #f0c040; border: 2px dashed #f0c040; }
+.trump-reserved-label { font-size: 11px; font-weight: 700; color: #f0c040; letter-spacing: 1px; }
 
 /* ---- Cards ---- */
 .card-face { display: inline-flex; align-items: center; justify-content: center; width: 66px; height: 94px; background: #fff; color: #222; border: 1px solid #333; border-radius: 8px; font-weight: 700; font-size: 34px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
