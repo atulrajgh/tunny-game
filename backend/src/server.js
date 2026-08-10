@@ -109,7 +109,7 @@ td{font-size:13px}
 <p>Example: a <strong>100</strong> bid requires 235 HCP; a <strong>170</strong> bid requires all 340 HCP — otherwise the defending team wins.</p>
 
 <h2>Winning the Match</h2>
-<p>The first team to reach or cross <strong>12 points</strong> wins. A match lasts up to <strong>6 hands</strong>.</p>
+<p>The first team to reach or cross <strong>12 points</strong> wins.</p>
 
 <h2>Timeouts &amp; Disconnects</h2>
 <ul>

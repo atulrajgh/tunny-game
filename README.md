@@ -4,7 +4,7 @@ Real-time multiplayer card game: Node.js/Express/Socket.IO backend + React front
 
 ## Rules
 
-- 24 cards (J, 9, A, 10, K, Q in 4 suits ♠♥♦♣); ranking J > 9 > A > 10 > K > Q. 6 hands per game.
+- 24 cards (J, 9, A, 10, K, Q in 4 suits ♠♥♦♣); ranking J > 9 > A > 10 > K > Q.
 - HCP values: J=30, 9=20, A=15, 10=10, K=5, Q=5 (hand total 340).
 - Bidding 50–170 (multiples of 10) plus Pass. The bid stepper (top-left) uses ▲/▼ to adjust by 10 (floor: current high bid + 10, cap 170). Highest bidder is declarer, chooses a trump suit (hidden).
 - Contract: bid < 100 → level 1 (4 tricks), bid ≥ 100 → level 2 (5 tricks).
