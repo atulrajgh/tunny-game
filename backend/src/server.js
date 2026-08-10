@@ -96,7 +96,7 @@ td{font-size:13px}
 <p>Until the trump is revealed, trump-suit cards count as ordinary cards and cannot beat the led suit; once revealed, the highest trump in a trick wins.</p>
 
 <h3>7. Scoring</h3>
-<p>When all tricks are done, the admin reviews the hand and confirms it. The declarer's team wins the hand if their collected HCP is at least <strong>the bid × 1.5 + 85</strong>; otherwise the defending team wins.</p>
+<p>When all tricks are done, the admin reviews the hand and confirms it.</p>
 <ul>
 <li>The winning team earns <strong>2 points</strong> when the winning bid is <strong>≥ 100</strong> (a level-2 contract), otherwise <strong>1 point</strong>.</li>
 <li>They earn <strong>1 bonus point</strong> for a <strong>slam</strong> — collecting all 340 HCP.</li>
@@ -106,7 +106,7 @@ td{font-size:13px}
 <tr><th>Bid</th><td>50</td><td>60</td><td>70</td><td>80</td><td>90</td><td>100</td><td>110</td><td>120</td><td>130</td><td>140</td><td>150</td><td>160</td><td>170</td></tr>
 <tr><th>HCP needed</th><td>160</td><td>175</td><td>190</td><td>205</td><td>220</td><td>235</td><td>250</td><td>265</td><td>280</td><td>295</td><td>310</td><td>325</td><td>340</td></tr>
 </table>
-<p>Example: a <strong>100</strong> bid requires 235 HCP; a <strong>170</strong> bid requires all 340 HCP.</p>
+<p>Example: a <strong>100</strong> bid requires 235 HCP; a <strong>170</strong> bid requires all 340 HCP — otherwise the defending team wins.</p>
 
 <h2>Winning the Match</h2>
 <p>The first team to reach or cross <strong>12 points</strong> wins. A match lasts up to <strong>6 hands</strong>.</p>
