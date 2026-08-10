@@ -315,7 +315,7 @@ function App() {
         </div>
         {isAdmin && (
           <button className="start-btn" onClick={() => sendOnce('confirm_hand')}>
-            {gameState.handNumber >= 6 ? 'End Game' : 'Confirm & Next Hand'}
+            Confirm & Next Hand
           </button>
         )}
         {!isAdmin && <p>Waiting for admin to confirm...</p>}
@@ -580,7 +580,7 @@ function App() {
               )}
               {!timedOut && (
                 <button className="ac-btn green" onClick={() => sendOnce('confirm_hand')}>
-                  {gameState.handNumber >= 6 ? 'End Game' : 'Confirm & Next Hand'}
+                  Confirm & Next Hand
                 </button>
               )}
           </div>
