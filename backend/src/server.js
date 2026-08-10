@@ -53,71 +53,77 @@ td{font-size:13px}
 @media(min-width:768px){body{max-width:720px;margin:auto}}
 </style></head><body>
 <h1>♠ TUNNY ♥</h1>
-<p class="sub">A 4-player trick-taking card game</p>
-<h2>Overview</h2>
-<p>Tunny is played by <strong>4 players</strong> in fixed partnerships: <strong>North+South</strong> vs <strong>East+West</strong>. A match ends when the first team reaches <strong>12 points</strong>. Teams score points based on high-card-point (HCP) bidding.</p>
+<p class="sub">A 4-player partnership trick-taking card game</p>
 
-<h2>Cards</h2>
-<p>24 cards: 6 ranks × 4 suits. Rank order (high to low):</p>
+<h2>Overview</h2>
+<p>Tunny is played by <strong>4 players</strong> in fixed partnerships: <strong>North + South</strong> vs <strong>East + West</strong>. The first team to reach <strong>12 points</strong> wins the match. Teams earn points by bidding on their hand's strength, then trying to make (or beat) the contract.</p>
+
+<h2>The Cards</h2>
+<p>Each hand uses a 24-card deck: <strong>6 ranks × 4 suits</strong> (♠ ♥ ♦ ♣). Rank order, high to low:</p>
 <p><span class="card">J</span> <span class="card">9</span> <span class="card">A</span> <span class="card">10</span> <span class="card">K</span> <span class="card">Q</span></p>
-<p>Each card has an HCP value:</p>
+<p>Each card has a high-card-point (HCP) value:</p>
 <table><tr><th>Card</th><td><span class="card">J</span></td><td><span class="card">9</span></td><td><span class="card">A</span></td><td><span class="card">10</span></td><td><span class="card">K</span></td><td><span class="card">Q</span></td></tr>
 <tr><th>HCP</th><td>30</td><td>20</td><td>15</td><td>10</td><td>5</td><td>5</td></tr></table>
-<p>Total HCP in each hand: <strong>340</strong> (4 cards per player × 6).</p>
+<p>Total HCP in each hand: <strong>340</strong>.</p>
 
 <h2>Game Flow</h2>
 <h3>1. Waiting Room</h3>
-<p>Players join and the admin assigns positions (N/S/E/W). Once all 4 seats are filled, the admin can <strong>Start Game</strong>.</p>
+<p>The first player to join becomes the <strong>admin</strong>; the next four players fill the N/S/E/W seats, and anyone after that joins as a <strong>spectator</strong>. The admin assigns positions and starts the game once all four seats are filled.</p>
 
 <h3>2. Cut</h3>
-<p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>. The first bidder is the player to the dealer's left. The dealer <strong>rotates clockwise</strong> to the next seat at the start of each new hand.</p>
+<p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>, and the player to their left bids first. The dealer rotates clockwise to the next seat at the start of each new hand (the admin can also move the dealer manually).</p>
 
 <h3>3. Bidding</h3>
-<p>Starting from the player left of the dealer, each player may <strong>Pass</strong> or bid a multiple of <strong>10 between 50 and 170</strong>. The bid panel sits in the <strong>top-left corner</strong> over the scorecard — use the <strong>▲/▼</strong> buttons to raise or lower your bid by 10 (the value can't drop below the current highest bid + 10, and caps at 170), then press the value button to place it. A bid must be higher than the current highest bid. Bidding ends when <strong>3 consecutive passes</strong> follow a bid. If all 4 pass without any bid, the hand is re-dealt with the same dealer.</p>
-<p>The winning bidder becomes <strong>declarer</strong>.</p>
+<p>Starting with the player left of the dealer, each player either <strong>Passes</strong> or bids a multiple of <strong>10 between 50 and 170</strong>. Each bid must be higher than the current highest bid. The bidding panel appears in the <strong>top-left corner</strong>: use <strong>▲/▼</strong> to adjust your bid in steps of 10 (from the highest current bid + 10, up to a cap of 170), then press the value button to submit it.</p>
+<p>Bidding ends after <strong>3 consecutive passes</strong> following a bid. If everyone passes, the hand is re-dealt with the same dealer. The winning bidder becomes the <strong>declarer</strong>.</p>
 
 <h3>4. Contract Level</h3>
-<table><tr><th>Bid</th><th>Level</th><th>Tricks to Win</th></tr>
-<tr><td>&lt; 100</td><td>1</td><td>4</td></tr>
-<tr><td>≥ 100</td><td>2</td><td>5</td></tr></table>
+<p>The contract level determines how many tricks the declarer's team must win:</p>
+<table><tr><th>Bid</th><th>Level</th><th>Tricks Needed</th></tr>
+<tr><td>&lt; 100 (50–90)</td><td>1</td><td>4</td></tr>
+<tr><td>≥ 100 (100–170)</td><td>2</td><td>5</td></tr></table>
 
 <h3>5. Trump Selection</h3>
-<p>The declarer selects a card from their hand. That card's suit becomes <strong>trump</strong>. The trump card stays face-up in the declarer's hand until played. After selection, the remaining deck cards are dealt.</p>
+<p>The declarer selects one card from their hand. That card's suit becomes <strong>trump</strong>. The selected card is set aside from the declarer's hand and is visible only to the declarer (and admin) until it is played or the trump is revealed. The remaining deck is then dealt out.</p>
 
 <h3>6. Play</h3>
-<p>Players play tricks clockwise. You must <strong>follow suit</strong> if possible. If you cannot follow suit, you may play any card (including trump). The highest card of the lead suit wins the trick, unless a trump is played — then the highest trump wins.</p>
-<p><strong>Trump visibility:</strong> The trump suit is hidden from all players and the admin until it is revealed. Any non-declarer (the declarer's partner or a defender) can use <strong>Ask Trump</strong> to reveal the suit, and the declarer can use <strong>Play Trump</strong> to play the reserved trump card and reveal the suit. The trump card sits outside the declarer's hand until it is played — the <strong>Play Trump</strong> button is the only way to play it (and it rejoins the hand once the trump is revealed via Ask Trump). The <strong>Ask Trump</strong> and <strong>Play Trump</strong> buttons are hidden by default — they appear only when it is your turn and you do not hold the current trick's led suit in your hand; on the final trick of a hand, <strong>Play Trump</strong> is always available to the declarer. The trump card is always visible to the declarer (and admin) until played. Until the trump is revealed, cards of the trump suit are counted as regular cards — they cannot beat the led suit; once revealed, the highest trump card in a trick wins.</p>
+<p>Players play tricks clockwise, following the lead suit whenever possible. If you cannot follow suit, you may play any card, including a trump. The highest card of the lead suit wins the trick unless a trump is played — then the highest trump wins. The dummy (declarer's partner) plays as directed.</p>
+<p><strong>Trump visibility:</strong> The trump suit is hidden from everyone until it is revealed.</p>
+<ul>
+<li><strong>Ask Trump</strong> — any non-declarer player (the declarer's partner or a defender) may reveal the trump on their turn when they cannot follow the led suit. The reserved trump card then rejoins the declarer's hand as a normal card.</li>
+<li><strong>Play Trump</strong> — the declarer may play the reserved trump card to reveal the trump, but only when following a led suit while holding no card of that suit (never while leading), except on the <strong>final trick of a hand</strong>, where it is always available.</li>
+</ul>
+<p>Until the trump is revealed, trump-suit cards count as ordinary cards and cannot beat the led suit; once revealed, the highest trump in a trick wins.</p>
 
 <h3>7. Scoring</h3>
-<p>After all tricks, the admin reviews and confirms the hand:</p>
+<p>When all tricks are done, the admin reviews the hand and confirms it. The declarer's team wins the hand if their collected HCP is at least <strong>the bid × 1.5 + 85</strong>; otherwise the defending team wins.</p>
 <ul>
-<li><strong>Defenders</strong> win if declarer's team fails to meet the bid</li>
-<li>The winning team earns <strong>2 points</strong> when the winning bid is <strong>≥ 100</strong> (a level-2 contract), else <strong>1 point</strong></li>
-<li>Winning team earns <strong>1 additional point</strong> for a <strong>slam</strong> (collecting all 340 HCP)</li>
+<li>The winning team earns <strong>2 points</strong> when the winning bid is <strong>≥ 100</strong> (a level-2 contract), otherwise <strong>1 point</strong>.</li>
+<li>They earn <strong>1 bonus point</strong> for a <strong>slam</strong> — collecting all 340 HCP.</li>
 </ul>
-<p><strong>Bid vs required HCP</strong> (your team must collect at least this many HCP to make the contract):</p>
+<p><strong>Bid vs. required HCP</strong> (the minimum HCP the declarer's team must collect):</p>
 <table>
 <tr><th>Bid</th><td>50</td><td>60</td><td>70</td><td>80</td><td>90</td><td>100</td><td>110</td><td>120</td><td>130</td><td>140</td><td>150</td><td>160</td><td>170</td></tr>
 <tr><th>HCP needed</th><td>160</td><td>175</td><td>190</td><td>205</td><td>220</td><td>235</td><td>250</td><td>265</td><td>280</td><td>295</td><td>310</td><td>325</td><td>340</td></tr>
 </table>
-<p>Example: bidding <strong>100</strong> requires your team to win <strong>235 HCP</strong>; a <strong>170</strong> bid needs all <strong>340 HCP</strong>.</p>
+<p>Example: a <strong>100</strong> bid requires 235 HCP; a <strong>170</strong> bid requires all 340 HCP.</p>
 
-<h2>Winning</h2>
-<p>The first team to reach or cross <strong>12 points</strong> wins the match.</p>
+<h2>Winning the Match</h2>
+<p>The first team to reach or cross <strong>12 points</strong> wins. A match lasts up to <strong>6 hands</strong>.</p>
 
 <h2>Timeouts &amp; Disconnects</h2>
 <ul>
-<li>Players have <strong>5 minutes</strong> to bid or play. If they time out, the admin can <strong>Take Over</strong> their turn.</li>
-<li>If a player disconnects mid-game, their hand and state are saved. The admin can <strong>promote a spectator</strong> to fill the seat, restoring their saved cards and turn.</li>
-<li>If the admin disconnects, the first observer (or player) is promoted to admin. If no players or observers remain, the room is closed and a fresh join starts a brand-new table.</li>
+<li>Players have <strong>5 minutes</strong> for a turn (10 minutes when the admin must act). On timeout the admin can <strong>Take Over</strong> the seat — bidding, choosing trump, or playing that player's cards for them.</li>
+<li>If a player disconnects mid-game, their hand and state are saved. The admin can <strong>promote a spectator</strong> to fill the seat and restore their turn; until then, the admin can play that seat.</li>
+<li>If the admin disconnects, the first spectator (or player) is promoted to admin. If only the admin remains, the room closes and a fresh join starts a new table.</li>
 </ul>
 
 <h2>Admin Controls</h2>
-<p>The admin panel (collapsible below the game table) provides:</p>
+<p>The collapsible admin panel below the table includes:</p>
 <ul>
-<li><strong>Gallery</strong> — unseated players with position assign buttons and kick</li>
-<li><strong>Table</strong> — seated players and kick</li>
-<li><strong>Spectators</strong> — promote to player</li>
+<li><strong>Gallery</strong> — unseated players, with position assign and kick</li>
+<li><strong>Table</strong> — seated players with team badges and kick</li>
+<li><strong>Spectators</strong> — promote a spectator to a seat</li>
 <li><strong>Game State</strong> — hand/trick, state, level, declarer, bid, trump</li>
 <li><strong>Bids</strong> — each player's bid</li>
 <li><strong>Current Trick</strong> — cards played</li>
