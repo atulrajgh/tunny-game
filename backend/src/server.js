@@ -84,11 +84,11 @@ td{font-size:13px}
 <tr><td>≥ 100 (100–170)</td><td>2</td><td>5</td></tr></table>
 
 <h3>5. Trump Selection</h3>
-<p>The declarer selects one card from their hand. That card's suit becomes <strong>trump</strong>. The selected card is set aside from the declarer's hand and is visible only to the declarer (and admin) until it is played or the trump is revealed. The remaining deck is then dealt out.</p>
+<p>The declarer selects one card from their hand. That card's suit becomes <strong>trump</strong>. The selected card is set aside from the declarer's hand and is visible only to the declarer until it is played or the trump is revealed. The remaining deck is then dealt out.</p>
 
 <h3>6. Play</h3>
 <p>Players play tricks clockwise, following the lead suit whenever possible. If you cannot follow suit, you may play any card, including a trump. The highest card of the lead suit wins the trick unless a trump is played — then the highest trump wins. The dummy (declarer's partner) plays as directed.</p>
-<p><strong>Trump visibility:</strong> The trump suit is hidden from everyone until it is revealed.</p>
+<p><strong>Trump visibility:</strong> The trump suit is hidden from everyone (players and admin) until it is revealed. The admin sees the trump only when it is revealed or when the admin is acting as the declarer.</p>
 <ul>
 <li><strong>Ask Trump</strong> — any non-declarer player (the declarer's partner or a defender) may reveal the trump on their turn when they cannot follow the led suit. The reserved trump card then rejoins the declarer's hand as a normal card.</li>
 <li><strong>Play Trump</strong> — the declarer may play the reserved trump card to reveal the trump, but only when following a led suit while holding no card of that suit (never while leading), except on the <strong>final trick of a hand</strong>, where it is always available.</li>

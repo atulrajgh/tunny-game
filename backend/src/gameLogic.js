@@ -724,12 +724,14 @@ class Game {
     const viewer = this.getViewer(playerId);
     const isSpectator = viewer && !this.getPlayer(playerId);
     const seesAll = viewer && !!isSpectator;
+    const adminActsDeclarer = viewer?.isAdmin && this.declarer &&
+      (!!this.vacatedHands[this.declarer.position] || this._timedOutPlayerId === this.declarer.id);
     const state = {
       roomId: this.id, state: this.state,
       dealer: this.dealer ? { id: this.dealer.id, name: this.dealer.name, position: this.dealer.position } : null,
       currentPlayer: this.currentPlayer ? { id: this.currentPlayer.id, name: this.currentPlayer.name, position: this.currentPlayer.position } : null,
-      trumpSuit: (this.trumpRevealed || this.state === 'game_over' || viewer?.id === this.declarer?.id) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
-      trumpCard: (this.trumpRevealed || viewer?.id === this.declarer?.id || viewer?.isAdmin) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
+      trumpSuit: (this.trumpRevealed || this.state === 'game_over' || viewer?.id === this.declarer?.id || adminActsDeclarer) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
+      trumpCard: (this.trumpRevealed || viewer?.id === this.declarer?.id || adminActsDeclarer) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
       trickNumber: this.trickNumber, handNumber: this.handNumber,
       contractLevel: this.contractLevel, targetTricks: this.targetTricks,
       highestBid: this.highestBid,
