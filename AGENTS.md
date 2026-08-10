@@ -22,7 +22,7 @@ No lint, typecheck, or formatter scripts exist. `backend/tests/` is empty.
 - All state is in-memory, persisted to `backend/rooms.json` every 30s. Restart restores rooms but not active games.
 - Real-time via Socket.IO WebSockets; REST API at `/api/games` for room listing/creation.
 - First player to join a room becomes admin automatically.
-- Room lifecycle: rooms visible in public list in any state. A room closes when no players or observers remain (only the admin, or nobody). Non-admin mid-game disconnect saves their hand/state in `vacatedHands` for spectator promotion; admin mid-game disconnect promotes an observer/player via `promoteToAdmin`. A vacant seat's turn pauses; the admin can take over that seat (bid/choose trump/play its saved hand via `admin_play` with a `position`) until a spectator is promoted to fill it.
+- Room lifecycle: rooms visible in public list in any state. A room closes when no players or observers remain (only the admin, or nobody).
 - CORS: `origin: "*"` — wide open.
 
 ## Game state machine
@@ -31,7 +31,7 @@ No lint, typecheck, or formatter scripts exist. `backend/tests/` is empty.
 
 Game ends when a team reaches/crosses 12 points (WINNING_SCORE); up to 6 hands per game (MAX_HANDS). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–170 (multiples of 10) plus Pass. HCP values: J=30, 9=20, A=15, 10=10, K=5, Q=5.
 
-Contract: bid < 100 → level 1 (4 tricks), bid ≥ 100 → level 2 (5 tricks). Scoring: the winning team earns 2 points when the winning bid is ≥ 100 (a level-2 contract), else 1 point, and earns 1 additional point for a slam (collecting all 340 HCP). The declarer's team wins if their HCP total ≥ `bid*1.5+85`; otherwise the defending team wins. HCP↔bid table: 50→160, 60→175, 70→190, … 160→325, 170→340.
+Contract: bid < 100 → level 1 (4 tricks), bid ≥ 100 → level 2 (5 tricks). Scoring: the winning team earns 2 points when the winning bid is ≥ 100 (a level-2 contract), else 1 point, and earns 1 additional point for a slam (collecting all 340 HCP). HCP↔bid table: 50→160, 60→175, 70→190, … 160→325, 170→340.
 
 ## Login (single global table)
 
@@ -49,7 +49,7 @@ Embedded below the game table as a collapsible section (toggle at bottom of acti
 - **Bids** — each player's current bid
 - **Current Trick** — cards played this trick
 - **Scores** — running scores, HCP this hand, tricks this hand
-- **Controls** — Move Dealer, Reset Scores, Reset Game, Take Over (timed-out player), Confirm Hand / End Game
+- **Controls** — Move Dealer, Reset Scores, Reset Game, Take Over (timed-out player), Confirm & Next Hand
 
 On mobile (< 768px) the 3-column grid stacks to single column; button sizes increase for touch targets. All admin buttons have `touch-action: manipulation` for reliable Android tap handling.
 
@@ -63,7 +63,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## Trump visibility
 
-- Trump suit is hidden from all players and admin until revealed via **Ask Trump** (any non-declarer player — the declarer's partner or a defender — may use it) or by the declarer playing their **Play Trump** card. `trumpRevealed` controls general visibility; the admin does not see the trump suit or the reserved trump card until it is revealed. The admin sees the trump only when it is revealed or when the admin becomes the declarer (i.e. the declarer seat is vacated or the declarer has timed out, so the admin acts for them).
+- Trump suit is hidden from all players and admin until revealed via **Ask Trump** (any non-declarer player — the declarer's partner or a defender — may use it) or by the declarer playing their **Play Trump** card. The admin sees the trump (suit and reserved card) only when it is revealed or when the admin becomes the declarer (i.e. the declarer seat is vacated or the declarer has timed out, so the admin acts for them).
 - The trump card lives OUTSIDE the declarer's hand at selection (`hand.splice(idx,1)` in `_selectTrump`), so a normal `play` can never touch it. To play it the declarer uses **Play Trump** (`playTrumpCard`), which plays the reserved card and reveals the trump. Gating in `playTrumpCard`: declarer's turn, card unplayed; before the final trick it must be following AND they hold no led-suit card; on the final trick (`trickNumber >= 5`) it's allowed regardless of led suit or leading (`leadSuit` is set if played as lead).
 - When a defender reveals via **Ask Trump** (`askTrump`), the reserved card rejoins the declarer's hand via `rejoinTrumpCard()` so it is then played as a normal card (`trumpCard` set to null). If the declarer seat is vacated, the card is pushed into `vacatedHands[pos].hand`.
 - Admin take-over for a vacated/timed-out declarer uses `playVacatedTrump(position)` (or `playTrumpCard(targetId)`) via `admin_play` with `{ trump: true }`; the admin sees the reserved trump card in state only when acting as the declarer (vacated/timed-out declarer) — `trumpCard` in `getGameState` gates on `adminActsDeclarer` (`vacatedHands[declarer.position]` set or `_timedOutPlayerId === declarer.id`), never on `isAdmin` alone.
@@ -73,7 +73,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## WebSocket events (server → client)
 
-`state`, `room_list`, `room_joined`, `player_joined`, `player_left`, `player_demoted`, `spectator_joined`, `spectator_left`, `spectator_promoted`, `demoted_to_spectator`, `cut_start`, `game_started`, `trump_selection`, `game_playing`, `trump_revealed`, `hand_end`, `next_hand`, `game_over`, `game_reset`, `dealer_rotated`, `player_timed_out`, `room_closed`, `kicked`, `error`
+`state`, `room_list`, `room_joined`, `player_joined`, `player_left`, `player_demoted`, `spectator_joined`, `spectator_left`, `spectator_promoted`, `demoted_to_spectator`, `cut_start`, `game_started`, `trump_selection`, `game_playing`, `trump_revealed`, `hand_end`, `next_hand`, `game_over`, `game_reset`, `dealer_rotated`, `player_timed_out`, `admin_changed`, `room_closed`, `error`
 
 ## WebSocket events (client → server)
 
