@@ -303,7 +303,7 @@ function App() {
                 const isWinner = r.winnerPosition === pos;
                 return (
                   <span key={pos} className="ac-tt-card">
-                    {r.cards[pos] ? <span className={`mini-card${isWinner ? ' trick-winner' : ''} ${r.cards[pos].suit === '♥' || r.cards[pos].suit === '♦' ? 'red' : ''}`}>{r.cards[pos].rank}{r.cards[pos].suit}</span> : <span className="ac-empty" style={{ padding: 0 }}>—</span>}
+                    {r.cards[pos] ? <span className={`mini-card${isWinner ? ' trick-winner' : ''} ${r.cards[pos].suit === '♥' || r.cards[pos].suit === '♦' ? 'red' : ''}`}>{r.cards[pos].rank}<span className="suit-mark">{r.cards[pos].suit}</span></span> : <span className="ac-empty" style={{ padding: 0 }}>—</span>}
                   </span>
                 );
               })}
@@ -391,13 +391,13 @@ function App() {
   function renderCard(c, small) {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
-    return <span className={`card-face${small ? ' small' : ''}${isRed ? ' red' : ''}`}>{c.rank}{c.suit}</span>;
+    return <span className={`card-face${small ? ' small' : ''}${isRed ? ' red' : ''}`}>{c.rank}<span className="suit-mark">{c.suit}</span></span>;
   }
 
   function miniCard(c) {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
-    return <span className={`mini-card ${isRed ? ' red' : ''}`}>{c.rank}{c.suit}</span>;
+    return <span className={`mini-card ${isRed ? ' red' : ''}`}>{c.rank}<span className="suit-mark">{c.suit}</span></span>;
   }
 
   function vacatedAt(pos) {
@@ -613,7 +613,7 @@ function App() {
                       <span key={pos} className="ac-tt-card">
                         {entry?.card ? (
                           <span className={`mini-card ${entry.card.suit === '♥' || entry.card.suit === '♦' ? 'red' : ''}`}>
-                            {entry.card.rank}{entry.card.suit}
+                            {entry.card.rank}<span className="suit-mark">{entry.card.suit}</span>
                           </span>
                         ) : <span className="ac-empty" style={{ padding: 0 }}>·</span>}
                       </span>
@@ -639,7 +639,7 @@ function App() {
                         <span key={pos} className="ac-tt-card">
                           {entry ? (
                             <span className={`mini-card${isWinner ? ' trick-winner' : ''} ${entry.card.suit === '♥' || entry.card.suit === '♦' ? 'red' : ''}`}>
-                              {entry.card.rank}{entry.card.suit}
+                              {entry.card.rank}<span className="suit-mark">{entry.card.suit}</span>
                             </span>
                           ) : <span className="ac-empty" style={{ padding: 0 }}>—</span>}
                         </span>

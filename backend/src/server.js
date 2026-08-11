@@ -98,8 +98,9 @@ td{font-size:13px}
 <h3>7. Scoring</h3>
 <p>When all tricks are done, the admin reviews the hand and confirms it.</p>
 <ul>
-<li>The winning team earns <strong>2 points</strong> when the winning bid is <strong>≥ 100</strong> (a level-2 contract), otherwise <strong>1 point</strong>.</li>
-<li>They earn <strong>1 bonus point</strong> for a <strong>slam</strong> — collecting all 340 HCP.</li>
+<li>If the declarer's team makes the contract, they earn <strong>2 points</strong> when the winning bid is <strong>≥ 100</strong> (a level-2 contract), otherwise <strong>1 point</strong>.</li>
+<li>If the declarer's team fails, the defending team earns <strong>double the bid's points</strong> (4 points for a level-2 bid, 2 otherwise).</li>
+<li>The winning team also earns <strong>1 bonus point</strong> for a <strong>slam</strong> — collecting all 340 HCP.</li>
 </ul>
 <p><strong>Bid vs. required HCP</strong> (the minimum HCP the declarer's team must collect):</p>
 <table>
