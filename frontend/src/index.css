@@ -164,7 +164,7 @@ input, button { font-family: inherit; }
 
 /* ---- Review Screen ---- */
 .review-screen { text-align: center; }
-.review-table { max-height: none; margin: 16px auto; max-width: 760px; }
+.review-screen .review-table { max-height: none; overflow-y: visible; margin: 16px auto; max-width: 760px; }
 .review-table .ac-trick-table-header, .review-table .ac-trick-table-row { font-size: 13px; }
 .review-hands { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin: 16px 0; }
 .review-hand { background: #2d6e2d; border-radius: 12px; padding: 16px; }
