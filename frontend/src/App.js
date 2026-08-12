@@ -344,6 +344,7 @@ function App() {
           </div>
           </div>
           <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 16 }}>How to Play</a>
+          <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
         </div>
     );
   }
