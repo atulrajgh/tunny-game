@@ -145,6 +145,7 @@ function App() {
             onKeyDown={e => e.key === 'Enter' && joinGame()} />
           <button onClick={joinGame}>Join</button>
         </div>
+        <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
       </div>
     );
   }
@@ -281,7 +282,7 @@ function App() {
     });
     return (
       <div className="app review-screen">
-        <h2>Hand {gameState.handNumber} Review</h2>
+        <h2 className="review-title">Hand {gameState.handNumber} Review{gameState.highestBid ? <> · Highest Bid: {gameState.highestBid} ({handHCPRequirement(gameState.highestBid)} HCP)</> : ''}</h2>
         {error && <div className="toast error">{error}</div>}
         <div className="ac-trick-table review-table">
           <div className="ac-trick-table-header">
@@ -319,6 +320,7 @@ function App() {
           </button>
         )}
         {!isAdmin && <p>Waiting for admin to confirm...</p>}
+        <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
       </div>
     );
   }
