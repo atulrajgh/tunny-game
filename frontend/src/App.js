@@ -79,7 +79,7 @@ function App() {
       } else if (state.state === 'cut') {
         setScreen('cut');
       } else if (state.state === 'waiting') {
-        setScreen('room');
+        setScreen('game');
       } else {
         setScreen('game');
       }
@@ -160,81 +160,7 @@ function App() {
 
   function cardAt(idx) { return me?.hand?.[idx]; }
 
-  // --- Room view (admin uses the admin/game screen instead) ---
-  if (!isAdmin && (gameState.state === 'waiting' || gameState.state === 'cut')) {
-    return (
-      <div className="app room-screen">
-        <h2>Room: {gameId || gameState.roomId?.slice(0, 8)}</h2>
-        <div className="host-info">Host: {gameState.admin?.name || (isAdmin ? name : 'Unknown')}</div>
-        {error && <div className="toast error">{error}</div>}
-        <div className="seating">
-          {['N', 'S', 'E', 'W'].map(pos => {
-            const pid = gameState.positions?.[pos];
-            const p = players.find(x => x.id === pid);
-            return (
-              <div key={pos} className={`seat ${pos}`}>
-                <div className="seat-label">{POSITION_NAMES[pos]}</div>
-                {p ? (
-                  <div className="seat-player">
-                    <span>{p.name}</span>
-                    {p.isAdmin && <span className="badge">Admin</span>}
-                  </div>
-                ) : (
-                  <div className="seat-empty">
-                    {isAdmin && <button onClick={() => {
-                      const unseated = players.find(x => x.id !== playerId && !x.position);
-                      if (unseated) socket.emit('assign_position', { playerId: unseated.id, position: pos });
-                    }}>Assign</button>}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        <div className="unseated">
-          {players.filter(p => !p.position).map(p => (
-            <div key={p.id} className="player-chip">
-              {p.name} {p.isAdmin && '(Admin)'}
-              {isAdmin && gameState.state === 'waiting' && ['N','S','E','W'].map(pos =>
-                !gameState.positions?.[pos] && (
-                  <button key={pos} className="mini-btn"
-                    onClick={() => socket.emit('assign_position', { playerId: p.id, position: pos })}>
-                    {pos}
-                  </button>
-                )
-              )}
-              {isAdmin && p.id !== playerId && (
-                <button className="mini-btn kick" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
-              )}
-            </div>
-          ))}
-        </div>
-        {gameState.spectators?.length > 0 && (
-          <div className="spectator-list">
-            <h4>Spectators ({gameState.spectators.length})</h4>
-            {gameState.spectators.map(s => (
-              <div key={s.id} className="player-chip">
-                {s.name}
-                {isAdmin && players.length < 4 && (
-                  <button className="mini-btn" onClick={() => socket.emit('promote_to_player', { spectatorId: s.id })}>Promote</button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-        {isAdmin && gameState.state === 'waiting' && (
-          <button className="start-btn"
-            disabled={Object.keys(gameState.positions || {}).length < 4}
-            onClick={() => sendOnce('start_game')}>
-            Start Game
-          </button>
-        )}
-        {gameState.state === 'cut' && isAdmin && (
-          <button className="start-btn" onClick={() => sendOnce('cut_done')}>Reveal Cut Results</button>
-        )}
-      </div>
-    );
-  }
+  // --- Room view removed: single global table, non-admin waiting players see the game table ---
 
   // --- Cut phase ---
   if (gameState.state === 'cut' && screen === 'cut') {
@@ -677,6 +603,9 @@ function App() {
       )}
 
       {/* Top: current state message + scores */}
+      {!isAdmin && gameState.state === 'waiting' && (
+        <div className="waiting-banner">Waiting for Admin to assign a seat</div>
+      )}
       <div className="state-bar">
         <div className="team-scores">
           <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
@@ -687,7 +616,7 @@ function App() {
         <div className="state-info">
           <div className="round-info">Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
           <div className="current-action">
-            {gameState.state === 'waiting' && `Waiting — assign positions and start the game`}
+            {gameState.state === 'waiting' && (isAdmin ? `Waiting — assign positions and start the game` : `Waiting for Admin to assign a seat`)}
             {gameState.state === 'cut' && `Waiting for ${players.find(p => p.isAdmin)?.name || 'admin'} to cut the deck`}
             {isBidding && `${curPlayer?.name} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`}
             {isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`}

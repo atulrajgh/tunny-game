@@ -9,7 +9,7 @@ const { Game } = require('./gameLogic.js');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, { cors: { origin: "*", methods: ["GET", "POST"] } });
+const io = socketIo(server, { cors: { origin: "*", methods: ["GET", "POST"] }, pingInterval: 45000 });
 
 const PORT = process.env.PORT || 3001;
 const ROOMS_FILE = path.join(__dirname, '..', 'rooms.json');
