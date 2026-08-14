@@ -76,15 +76,13 @@ function App() {
         setScreen('review');
       } else if (state.me?.isAdmin) {
         setScreen('game');
-      } else if (state.state === 'cut') {
-        setScreen('cut');
       } else if (state.state === 'waiting') {
         setScreen('game');
       } else {
         setScreen('game');
       }
     });
-    socket.on('cut_start', () => { setScreen('cut'); });
+    socket.on('cut_start', () => { setScreen('game'); });
     socket.on('game_started', () => { setCutCard(null); });
     socket.on('game_over', () => setScreen('game'));
     socket.on('next_hand', () => setScreen('game'));
@@ -161,28 +159,6 @@ function App() {
   function cardAt(idx) { return me?.hand?.[idx]; }
 
   // --- Room view removed: single global table, non-admin waiting players see the game table ---
-
-  // --- Cut phase ---
-  if (gameState.state === 'cut' && screen === 'cut') {
-    const myCut = me?.cutCard;
-    return (
-      <div className="app">
-        <h2>Cut for Dealer</h2>
-        {myCut ? (
-          <div className="cut-display">
-            <div className={`card ${myCut.suit === '♥' || myCut.suit === '♦' ? 'red' : ''}`}>
-              <span className="rank">{myCut.rank}</span>
-              <span className="suit">{myCut.suit}</span>
-            </div>
-            <p>Your card: {myCut.rank}{myCut.suit}</p>
-            {isAdmin && <button className="start-btn" onClick={() => sendOnce('cut_done')}>Continue</button>}
-          </div>
-        ) : (
-          <p>Waiting for cut results...</p>
-        )}
-      </div>
-    );
-  }
 
   // --- Hand Review ---
   if (gameState.state === 'hand_review' && screen === 'review') {
@@ -639,6 +615,24 @@ function App() {
                 {t.card ? renderCard(t.card) : <span className="card-back tiny" />}
               </div>
             ))}
+          </div>
+        )}
+        {gameState.state === 'cut' && (
+          <div className="current-trick cut-card-area">
+            {me?.cutCard ? (
+              <div className="cut-card">
+                <div className={`card ${me.cutCard.suit === '♥' || me.cutCard.suit === '♦' ? 'red' : ''}`}>
+                  <span className="rank">{me.cutCard.rank}</span>
+                  <span className="suit">{me.cutCard.suit}</span>
+                </div>
+                <span className="cut-card-label">Your card</span>
+              </div>
+            ) : (
+              <div className="ac-empty">Waiting for cut results...</div>
+            )}
+            {isAdmin && (
+              <button className="start-btn" onClick={() => sendOnce('cut_done')}>Reveal Cut Results</button>
+            )}
           </div>
         )}
       </div>
