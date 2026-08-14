@@ -621,13 +621,20 @@ function App() {
         )}
         {gameState.state === 'cut' && (
           <div className="current-trick cut-card-area">
-            {me?.cutCard ? (
-              <div className="cut-card">
-                {renderCard(me.cutCard)}
-                <span className="cut-card-label">Your card</span>
+            {(gameState.cutCards || []).length > 0 ? (
+              <div className="cut-cards">
+                {gameState.cutCards.map((c, i) => (
+                  <div key={i} className="cut-card">
+                    <span className="cut-card-label">{c.name}</span>
+                    {c.card ? renderCard(c.card) : <span className="cut-card-pending">Cutting…</span>}
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="ac-empty">Waiting for cut results...</div>
+              <div className="cut-card">
+                {me?.cutCard ? renderCard(me.cutCard) : <span className="cut-card-pending">Cutting…</span>}
+                <span className="cut-card-label">Your card</span>
+              </div>
             )}
             {isAdmin && (
               <button className="start-btn" onClick={() => sendOnce('cut_done')}>Reveal Cut Results</button>

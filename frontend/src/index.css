@@ -35,15 +35,18 @@ input, button { font-family: inherit; }
 
 .unseated { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 16px 0; }
 .player-chip { background: #3a8a3a; padding: 8px 12px; border-radius: 20px; font-size: 15px; display: flex; align-items: center; gap: 6px; }
-.mini-btn { padding: 2px 8px; border: none; border-radius: 4px; background: #4a9a4a; color: #fff; cursor: pointer; font-size: 12px; }
+.mini-btn { padding: 2px 8px; border: none; border-radius: 4px; background: #4a9a4a; color: #fff; cursor: pointer; font-size: 14px; }
 .mini-btn.kick { background: #c0392b; }
 .start-btn { padding: 14px 36px; border: none; border-radius: 8px; font-size: 20px; font-weight: 600; background: #f0c040; color: #2d4a2d; cursor: pointer; margin: 16px 0; }
 .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ---- Cut ---- */
 .cut-card-area { flex-direction: column; align-items: center; min-width: 140px; }
+.cut-cards { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.cut-card-area.four-wide .cut-cards { flex-wrap: wrap; }
 .cut-card { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.cut-card-label { font-size: 13px; color: #a0d0a0; }
+.cut-card-pending { font-size: 13px; color: #a0d0a0; padding: 20px 8px; }
+.cut-card-label { font-size: 13px; color: #a0d0a0; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cut-card-area .start-btn { margin: 4px 0 0; padding: 10px 18px; font-size: 15px; }
 
 /* ---- Game Table ---- */
@@ -57,8 +60,8 @@ input, button { font-family: inherit; }
 .hand-cards { display: flex; gap: 2px; }
 .hand-cards.vert { flex-direction: column; }
 .card-back { display: inline-block; width: 30px; height: 44px; background: linear-gradient(135deg, #1a3a6a, #2a5a8a); border-radius: 4px; border: 1px solid #3a6a9a; }
-.card-back.mini { width: 20px; height: 30px; }
-.card-back.tiny { width: 24px; height: 36px; }
+.card-back.mini { width: 22px; height: 32px; }
+.card-back.tiny { width: 26px; height: 38px; }
 .dummy-card { position: relative; width: 72px; height: 96px; background: linear-gradient(135deg, #3a1a6a, #6a2a9a); border-radius: 8px; border: 1px solid #8a4abc; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 8px; padding: 4px; box-sizing: border-box; gap: 2px; }
 .dummy-name { font-size: 11px; font-weight: 700; color: #e6d0ff; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
 .dummy-role { font-size: 10px; font-weight: 400; color: #8fbf8f; }
@@ -69,7 +72,7 @@ input, button { font-family: inherit; }
 .vacated-hand { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; max-width: 320px; }
 .vacated-hand.vert { flex-direction: column; }
 .vacated-card-btn { background: none; border: none; padding: 2px; cursor: default; }
-.vacated-card-btn .mini-card { font-size: 13px; padding: 3px 6px; }
+.vacated-card-btn .mini-card { font-size: 16px; padding: 3px 6px; }
 .vacated-card-btn:not(:disabled) { cursor: pointer; }
 .vacated-card-btn:not(:disabled) .card-face { border: 2px solid #f0c040; box-shadow: 0 0 6px rgba(240,192,64,0.5); }
 .vacated-card-btn:disabled { opacity: 0.6; }
@@ -88,7 +91,7 @@ input, button { font-family: inherit; }
 .state-details { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 6px; font-size: 14px; color: #a0d0a0; }
 .round-info { color: #a0d0a0; margin-bottom: 4px; }
 .current-action { font-size: 18px; font-weight: 700; color: #f0c040; text-align: center; }
-.trump-indicator { font-size: 20px; font-weight: 700; color: #f0c040; }
+.trump-indicator { font-size: 22px; font-weight: 700; color: #f0c040; }
 .trump-revealed { background: #f0c040; color: #2d4a2d; padding: 2px 12px; border-radius: 20px; font-weight: 700; display: inline-block; animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
@@ -178,7 +181,7 @@ input, button { font-family: inherit; }
 .review-hand { background: #2d6e2d; border-radius: 12px; padding: 16px; }
 .review-player { font-weight: 700; margin-bottom: 8px; }
 .review-cards { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
-.mini-card { background: #fff; color: #222; padding: 4px 8px; border-radius: 4px; font-size: 17px; font-weight: 700; }
+.mini-card { background: #fff; color: #222; padding: 4px 8px; border-radius: 4px; font-size: 19px; font-weight: 700; }
 .mini-card .suit-mark { font-size: 1.1em; }
 .mini-card.red { color: #c0392b; }
 .review-score { font-size: 22px; font-weight: 700; margin: 16px; }
@@ -195,7 +198,7 @@ input, button { font-family: inherit; }
 .review-grid-row.win-ns { background: #2d4a7a; }
 .review-grid-row.win-ew { background: #7a2d2d; }
 .review-grid-card { display: flex; justify-content: center; }
-.review-grid-card .mini-card { font-size: 14px; padding: 3px 6px; }
+.review-grid-card .mini-card { font-size: 16px; padding: 3px 6px; }
 .review-grid-pts { font-size: 15px; font-weight: 700; color: #f0c040; text-align: center; }
 .review-grid-pts:empty { color: #6a9a6a; }
 
@@ -215,7 +218,7 @@ input, button { font-family: inherit; }
   .game-table { grid-template-columns: 70px 1fr 70px; }
   .card-face { width: 48px; height: 68px; font-size: 29px; }
   .card-back { width: 22px; height: 32px; }
-  .card-back.mini { width: 14px; height: 20px; }
+  .card-back.mini { width: 16px; height: 22px; }
   .card-face.small { width: 38px; height: 54px; font-size: 20px; }
   .card-btn .card-face { width: 56px; height: 78px; font-size: 31px; }
   .table-felt { min-height: 150px; }
@@ -274,7 +277,7 @@ input, button { font-family: inherit; }
 .ac-tt-win { font-size: 12px; font-weight: 700; color: #f0c040; }
 .ac-tt-pts { font-size: 12px; text-align: center; }
 .mini-card.trick-winner { position: relative; border: 2px solid #f0c040; border-radius: 4px; padding: 2px 4px; }
-.mini-card.trick-winner::after { content: '✓'; position: absolute; top: -8px; right: -8px; background: #27ae60; color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 12px; line-height: 16px; text-align: center; }
+.mini-card.trick-winner::after { content: '✓'; position: absolute; top: -8px; right: -8px; background: #27ae60; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 14px; line-height: 18px; text-align: center; }
 
 @media (max-width: 768px) {
   .ac-grid { grid-template-columns: 1fr; }

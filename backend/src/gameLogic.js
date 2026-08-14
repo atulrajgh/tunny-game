@@ -752,6 +752,13 @@ class Game {
     state.teamTricks = { ...this.teamTricks };
     state.teamPoints = { ...this.teamPoints };
     state.admin = this.admin ? { id: this.admin.id, name: this.admin.name } : null;
+    if (this.state === 'cut') {
+      state.cutCards = this.players.map(p => ({
+        name: p.name,
+        position: p.position,
+        card: p.cutCard ? { suit: p.cutCard.suit, rank: p.cutCard.rank } : null
+      }));
+    }
 if (viewer) {
         state.me = {
           id: viewer.id, name: viewer.name, position: viewer.position,
