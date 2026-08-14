@@ -234,7 +234,7 @@ function App() {
     return (
       <div className="app gameover-screen">
         <h2>Game Over</h2>
-        <div className="winner-banner">{winNames} = Wins</div>
+        <div className="winner-banner">{winNames} Win</div>
         <div className="final-scores">
           <div className="score-card">
             <h3>N-S</h3>
