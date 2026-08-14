@@ -35,7 +35,7 @@ Contract: bid < 100 → level 1 (4 tricks), bid ≥ 100 → level 2 (5 tricks). 
 
 ## Login (single global table)
 
-There is one shared table (module `GLOBAL_TABLE`, fallback `ROOMS[g.id]`). First player to join becomes admin; the next four become players; everyone else becomes an observer. On login the frontend emits `create_room` (auto-routes onto the global table). On admin disconnect, the first observer is promoted to admin (`promoteToAdmin`); if no observers, the first player is promoted and their seat is vacated (hand saved to `vacatedHands`). Uses admin-taking-over rules already in place. If no players or observers remain (only the admin, or nobody), the room is closed and `GLOBAL_TABLE` reset via `closeRoom` (so a fresh join creates a brand-new table).
+There is one shared table (module `GLOBAL_TABLE`, fallback `ROOMS[g.id]`). First player to join becomes admin; the next four become players; everyone else becomes an observer. On login the frontend emits `create_room` (auto-routes onto the global table). On admin disconnect, the first observer is promoted to admin (`promoteToAdmin`); if no observers, the first player is promoted and their seat is vacated (hand saved to `vacatedHands`). If no players or observers remain (only the admin, or nobody), the room is closed and `GLOBAL_TABLE` reset via `closeRoom` (so a fresh join creates a brand-new table).
 
 Teams: N+S vs E+W. Admin assigns positions in waiting room. Dealer rotates clockwise to the next seat at the start of each new hand (`confirmHand` calls `resetForNextHand(true)`); the admin "Move Dealer" button is available for manual adjustment.
 
@@ -81,9 +81,9 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## Key conventions
 
-- Card display format: `rank + suit` (e.g. `J♠`). Red suits (♥♦) render with red color. Cards render with a larger rank/suit (`.card-face` 34px on desktop, scaled down responsively).
+- Card display format: `rank + suit` (e.g. `J♠`). Red suits (♥♦) render with red color. Cards render with a larger rank/suit (`.card-face`), scaled down responsively.
 - Bidding UI is a fixed overlay in the top-left (`bidding-top`) with Pass and a value stepper: ▲/▼ adjust the bid in increments of 10 (cap 170), floored at `max(50, highestBid + 10)` so the bid always exceeds the current high bid; the value button submits.
-- `getGameState(playerId)` hides non-admin player names as `[Hidden]` and only shows own hand + dummy's face-up hand. The dummy's hand is rendered as a single dummy-card image showing the card count, not individual cards.
+- `getGameState(playerId)` shows each player only their own hand plus the dummy's face-up hand. The dummy's hand is rendered as a single dummy-card image showing the card count, not individual cards.
 - Admin (host-only, not a seated player) sees **no** players' cards normally — only card counts. The admin sees a player's hand only when that seat is vacated (`vacatedHands`) or that player has timed out (`timedOutHand`). Admin sees the trump suit and reserved trump card only when revealed or when acting as a vacated/timed-out declarer; all played trick cards are always visible.
 - Table view rotates so each player sees themselves at South (bottom).
 

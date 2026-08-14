@@ -5,8 +5,6 @@ import './index.css';
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL;
 
 const POSITION_NAMES = { N: 'North', S: 'South', E: 'East', W: 'West' };
-const PARTNER = { N: 'S', S: 'N', E: 'W', W: 'E' };
-const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E' };
 
 function handHCPRequirement(bid) {
   return Math.round(bid * 1.5 + 85);
@@ -20,10 +18,7 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSpectator, setIsSpectator] = useState(false);
   const [name, setName] = useState(localStorage.getItem('tunny_name') || '');
-  const [gameId, setGameId] = useState('');
-  const [roomList, setRoomList] = useState({});
   const [error, setError] = useState('');
-  const [cutCard, setCutCard] = useState(null);
   const [timedOut, setTimedOut] = useState(null);
   const [incBid, setIncBid] = useState(50);
   const actionLockRef = useRef(false);
@@ -42,7 +37,7 @@ function App() {
   useEffect(() => {
     const s = SOCKET_URL ? io(SOCKET_URL) : io();
     setSocket(s);
-    s.on('room_list', (list) => setRoomList(list));
+    s.on('room_list', () => {});
     s.on('error', (e) => { showError(e.message); unlockAction(); });
     s.on('kicked', () => { setScreen('login'); setGameState(null); showError('You were kicked'); });
     s.on('demoted_to_spectator', (d) => {
@@ -60,7 +55,6 @@ function App() {
       setPlayerId(data.playerId);
       setIsAdmin(data.isAdmin);
       setIsSpectator(!!data.isSpectator);
-      setGameId(data.gameId);
       setScreen(data.isAdmin ? 'game' : 'room');
     });
     socket.on('state', (state) => {
@@ -72,21 +66,12 @@ function App() {
         setIsSpectator(!!state.me.isSpectator);
         setPlayerId(state.me.id);
       }
-      if (state.state === 'hand_review') {
-        setScreen('review');
-      } else if (state.me?.isAdmin) {
-        setScreen('game');
-      } else if (state.state === 'waiting') {
-        setScreen('game');
-      } else {
-        setScreen('game');
-      }
+      setScreen(state.state === 'hand_review' ? 'review' : 'game');
     });
     socket.on('cut_start', () => { setScreen('game'); });
-    socket.on('game_started', () => { setCutCard(null); });
     socket.on('game_over', () => setScreen('game'));
     socket.on('next_hand', () => setScreen('game'));
-    socket.on('game_reset', () => { setScreen('login'); setGameState(null); setCutCard(null); });
+    socket.on('game_reset', () => { setScreen('login'); setGameState(null); });
     socket.on('player_timed_out', (d) => setTimedOut(d));
     socket.on('hand_end', () => setScreen('review'));
     socket.on('trump_selection', () => setScreen('game'));
@@ -155,8 +140,6 @@ function App() {
   const { me } = gameState;
   const myPos = me?.position;
   const players = gameState.players || [];
-
-  function cardAt(idx) { return me?.hand?.[idx]; }
 
   // --- Room view removed: single global table, non-admin waiting players see the game table ---
 
@@ -263,8 +246,6 @@ function App() {
   const curPlayer = gameState.currentPlayer;
   const isMyTurn = curPlayer?.id === playerId;
   const isDeclarer = gameState.declarer?.id === playerId;
-  const declarerPos = gameState.declarer?.position;
-  const isDefender = myPos && declarerPos && PARTNER[myPos] !== declarerPos && myPos !== declarerPos;
   const vacatedTurnPos = curPlayer && curPlayer.id === null ? curPlayer.position : null;
   const vacatedPlayer = vacatedTurnPos ? vacatedAt(vacatedTurnPos) : null;
   const declarerVacated = gameState.declarer ? vacatedAt(gameState.declarer.position) : null;
@@ -299,12 +280,6 @@ function App() {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
     return <span className={`card-face${small ? ' small' : ''}${isRed ? ' red' : ''}`}>{c.rank}<span className="suit-mark">{c.suit}</span></span>;
-  }
-
-  function miniCard(c) {
-    if (!c) return null;
-    const isRed = c.suit === '♥' || c.suit === '♦';
-    return <span className={`mini-card ${isRed ? ' red' : ''}`}>{c.rank}<span className="suit-mark">{c.suit}</span></span>;
   }
 
   function vacatedAt(pos) {

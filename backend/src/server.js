@@ -129,7 +129,7 @@ td{font-size:13px}
 <li><strong>Bids</strong> — each player's bid</li>
 <li><strong>Current Trick</strong> — cards played</li>
 <li><strong>Scores</strong> — running scores, HCP, tricks</li>
-<li><strong>Controls</strong> — Move Dealer, Reset Scores, Reset Game, Take Over, Confirm Hand</li>
+<li><strong>Controls</strong> — Move Dealer, Reset Scores, Reset Game, Take Over, Confirm & Next Hand</li>
 </ul>
 
 <div class="back"><a href="/">← Back to Game</a></div>
