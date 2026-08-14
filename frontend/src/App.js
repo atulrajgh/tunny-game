@@ -621,10 +621,7 @@ function App() {
           <div className="current-trick cut-card-area">
             {me?.cutCard ? (
               <div className="cut-card">
-                <div className={`card ${me.cutCard.suit === '♥' || me.cutCard.suit === '♦' ? 'red' : ''}`}>
-                  <span className="rank">{me.cutCard.rank}</span>
-                  <span className="suit">{me.cutCard.suit}</span>
-                </div>
+                {renderCard(me.cutCard)}
                 <span className="cut-card-label">Your card</span>
               </div>
             ) : (
