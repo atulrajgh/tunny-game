@@ -229,10 +229,12 @@ function App() {
 
   // --- Game over ---
   if (gameState.state === 'game_over') {
+    const winnerTeam = gameState.winner;
+    const winNames = players.filter(p => p.team === winnerTeam).map(p => p.name).join(' & ');
     return (
       <div className="app gameover-screen">
         <h2>Game Over</h2>
-        <div className="winner-banner">{gameState.winner} Wins!</div>
+        <div className="winner-banner">{winNames} = Wins</div>
         <div className="final-scores">
           <div className="score-card">
             <h3>N-S</h3>
