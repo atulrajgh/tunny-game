@@ -385,7 +385,7 @@ class Game {
     if (bid === 'pass') {
       seat.bid = 'pass';
       this.passCount++;
-    } else if (typeof bid === 'number' && bid >= 50 && bid <= 170 && bid > (this.highestBid || 0)) {
+    } else if (typeof bid === 'number' && bid >= 50 && bid <= 170 && bid % 10 === 0 && bid > (this.highestBid || 0)) {
       seat.bid = bid;
       this.lastBidder = seat;
       this.highestBid = bid;
@@ -747,7 +747,8 @@ class Game {
   getGameState(playerId) {
     const viewer = this.getViewer(playerId);
     const isSpectator = viewer && !this.getPlayer(playerId);
-    const seesAll = viewer && !!isSpectator;
+    // Spectators (observers) see no player's hand — only the cards played on the
+    // table during a trick (state.currentTrick) and each player's card count.
     const adminActsDeclarer = viewer?.isAdmin && this.declarer &&
       (!!this.vacatedHands[this.declarer.position] || this._timedOutPlayerId === this.declarer.id);
     const state = {
@@ -783,13 +784,13 @@ class Game {
 if (viewer) {
         state.me = {
           id: viewer.id, name: viewer.name, position: viewer.position,
-          hand: seesAll ? [] : this.checkMemo('me:' + viewer.id, viewer.hand).map(c => ({ suit: c.suit, rank: c.rank })),
+          hand: isSpectator ? [] : this.checkMemo('me:' + viewer.id, viewer.hand).map(c => ({ suit: c.suit, rank: c.rank })),
           isAdmin: viewer.isAdmin, isSpectator: !!isSpectator, team: viewer.team,
           bid: viewer.bid, score: viewer.score,
           cutCard: viewer.cutCard ? { suit: viewer.cutCard.suit, rank: viewer.cutCard.rank } : null
         };
-        const showHand = (p) => seesAll || p.id === viewer.id ||
-          (!viewer.isAdmin && this.state === 'playing' && this.dummy && p.id === this.dummy.id);
+        const showHand = (p) => p.id === viewer.id ||
+          (!viewer.isAdmin && !isSpectator && this.state === 'playing' && this.dummy && p.id === this.dummy.id);
         const reservedTrumpCount = (p) => (p.id === this.declarer?.id && this.trumpCard && !this.trumpCardPlayed ? 1 : 0);
         state.players = this.players.map(p => {
           const hand = showHand(p) ? this.checkMemo('p:' + p.id, p.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined;
@@ -802,8 +803,7 @@ if (viewer) {
           state.players.push({
             id: null, name: v.playerName || pos, position: pos, team: v.team,
             isAdmin: false, bid: v.bid, score: 0, vacated: true,
-            hand: seesAll ? this.checkMemo('v:' + pos, v.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined,
-            cardCount: seesAll ? undefined : v.hand.length + (pos === this.declarer?.position && this.trumpCard && !this.trumpCardPlayed ? 1 : 0)
+            cardCount: v.hand.length + (pos === this.declarer?.position && this.trumpCard && !this.trumpCardPlayed ? 1 : 0)
           });
         }
       if (viewer.isAdmin) {

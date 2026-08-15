@@ -5,6 +5,7 @@
 Repo root is `C:\SpringARM\Tunny\`. Two packages:
 - `backend/` — Node.js + Express + Socket.IO server, entry: `src/server.js`, port **3001**
 - `frontend/` — React (CRA), entry: `src/App.js`, `src/index.js`, port **3000**
+- `frontend/public/settings.json` — app version (`version` field), served to the frontend at `/settings.json` and read by the backend at startup for the `/instructions` page.
 
 ## Commands
 
@@ -15,7 +16,13 @@ cd frontend && npm install && npm start
 # Open http://localhost:3000
 ```
 
-No lint, typecheck, or formatter scripts exist. `backend/tests/` is empty.
+Tests (backend, no extra deps — Node's built-in runner):
+
+```bash
+cd backend && npm test
+```
+
+No lint, typecheck, or formatter scripts exist. Backend tests live in `backend/tests/` (60 tests in `gameLogic.test.js` covering deck/cards, bidding, trump, trick resolution, scoring, disconnects, visibility, persistence).
 
 ## Architecture
 
@@ -88,7 +95,18 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 - Bidding UI is a fixed overlay in the top-left (`bidding-top`) with Pass and a value stepper: ▲/▼ adjust the bid in increments of 10 (cap 170), floored at `max(50, highestBid + 10)` so the bid always exceeds the current high bid; the value button submits.
 - `getGameState(playerId)` shows each player only their own hand plus the dummy's face-up hand. The dummy's hand is rendered as a single dummy-card image showing the card count, not individual cards.
 - Admin (host-only, not a seated player) sees **no** players' cards normally — only card counts. The admin sees a player's hand only when that seat is vacated (`vacatedHands`) or that player has timed out (`timedOutHand`). Admin sees the trump suit and reserved trump card only when revealed or when acting as a vacated/timed-out declarer; all played trick cards are always visible.
+- Spectators see **no** hands either (not even the dummy's) — only the cards played on the table during a trick (`currentTrick`) and each player's card count (`cardCount`). Trump stays hidden from them until revealed.
 - Table view rotates so each player sees themselves at South (bottom).
+
+## Versioning
+
+- The app version lives in `frontend/public/settings.json` (`version` field), 3 parts joined by dots:
+  - **Year part**: `2026` → `1`, `2027` → `2`, … (increments only by calendar year)
+  - **Month part**: `1`–`12` (month the change was made)
+  - **Day+count part**: `ddnn` — `dd` = day of the change, `nn` = `01`..`99` count of changes that day (capped at `99`)
+- Example: `1.8.1501` = year 2026, August, the 15th, first change of the day.
+- **Bump the version whenever you make a change and want it versioned** — increment `nn` for later changes on the same day, else use the current date.
+- The version is displayed on the login screen, all in-game screens (`.version` element), and the `/instructions` page. The frontend fetches `/settings.json` at runtime (a fresh `frontend/build` is needed for the new version to appear); the backend reads `settings.json` at startup (`APP_VERSION` in `server.js`) and injects it into the instructions HTML.
 
 ## Deployment
 

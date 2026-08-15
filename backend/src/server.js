@@ -22,6 +22,15 @@ const PLAYER_SOCKETS = {}; // playerId -> Set<socketId>
 const ADMIN_GRACE_TIMERS = {}; // adminId -> timeout (deferred admin promotion on disconnect)
 let GLOBAL_TABLE = null;
 
+// App version (see frontend/public/settings.json). Bump per scheme: <yearPart>.<month>.<ddnn>.
+const SETTINGS_FILE = path.join(__dirname, '..', '..', 'frontend', 'public', 'settings.json');
+let APP_VERSION = '1.0.0';
+try {
+  if (fs.existsSync(SETTINGS_FILE)) {
+    APP_VERSION = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')).version || APP_VERSION;
+  }
+} catch (e) { console.error('load settings.json failed:', e); }
+
 app.use(express.json());
 
 // Serve built frontend if available (keep at bottom so API routes match first)
@@ -52,6 +61,7 @@ th{background:#2d4a2d;color:#f0c040;font-size:13px}
 td{font-size:13px}
 .back{display:block;text-align:center;margin:20px 0;font-size:14px}
 .back a{color:#f0c040}
+.version{text-align:center;color:#a0d0a0;font-size:13px;margin:24px 0 4px}
 @media(min-width:768px){body{max-width:720px;margin:auto}}
 </style></head><body>
 <h1>♠ TUNNY ♥</h1>
@@ -135,6 +145,7 @@ td{font-size:13px}
 </ul>
 
 <div class="back"><a href="/">← Back to Game</a></div>
+<div class="version">Version ${APP_VERSION}</div>
 </body></html>`);
 });
 

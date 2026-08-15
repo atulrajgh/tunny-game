@@ -42,3 +42,15 @@ cd frontend && npm install && npm start
 ## Game flow
 
 `waiting` → `cut` → `bidding` → `trump_selection` → `playing` → `hand_review` → (next hand or `game_over`). Rooms are visible in the public list in any state; a room closes when no players or observers remain (only the admin, or nobody).
+
+## Versioning
+
+The app version is defined in `frontend/public/settings.json` (field `version`). It uses a 3-part scheme, joined with dots:
+
+- **Part 1 (year)** — increments only by calendar year: `2026` → `1`, `2027` → `2`, and so on.
+- **Part 2 (month)** — the month of the year when the change is made: `1`–`12`.
+- **Part 3 (day + count)** — `ddnn`, where `dd` is the day of the month the change was made and `nn` is a 2-digit counter of changes on that day (`01`..`99`; capped at `99` if more than 99 changes happen in one day).
+
+Example: `1.8.1501` = year 2026, month 8, the 15th day, first change of that day.
+
+Bump the version whenever you make a change and want it versioned. The version is displayed on the login screen, every in-game screen, and the `/instructions` page (the backend reads the same `settings.json` at startup and injects it into the instructions HTML). The frontend fetches `/settings.json` at runtime, so a fresh build is required for the new version to appear.

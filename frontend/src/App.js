@@ -29,6 +29,7 @@ function App() {
   const [incBid, setIncBid] = useState(50);
   const actionLockRef = useRef(false);
   const joinedRef = useRef(false);
+  const [version, setVersion] = useState('');
 
   const sendOnce = useCallback((type, payload) => {
     if (actionLockRef.current) return;
@@ -131,6 +132,13 @@ function App() {
     }
   }, [gameState?.state, gameState?.highestBid]);
 
+  useEffect(() => {
+    fetch('/settings.json')
+      .then(r => r.json())
+      .then(s => { if (s && s.version) setVersion(s.version); })
+      .catch(() => {});
+  }, []);
+
   const placeMyBid = () => {
     sendOnce('bid', { bid: incBid });
   };
@@ -155,6 +163,7 @@ function App() {
           <button onClick={joinGame}>Join</button>
         </div>
         <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
+        {version && <div className="version">Version {version}</div>}
       </div>
     );
   }
@@ -233,6 +242,7 @@ function App() {
         )}
         {!isAdmin && <p>Waiting for admin to confirm...</p>}
         <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
+        {version && <div className="version">Version {version}</div>}
       </div>
     );
   }
@@ -259,6 +269,7 @@ function App() {
           </div>
           <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 16 }}>How to Play</a>
           <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
+          {version && <div className="version">Version {version}</div>}
         </div>
     );
   }
@@ -829,6 +840,7 @@ function App() {
 
       {/* Admin Panel (collapsible) */}
       {adminPanel}
+      {version && <div className="version">Version {version}</div>}
     </div>
   );
 }

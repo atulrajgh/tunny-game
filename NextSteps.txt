@@ -1,0 +1,9 @@
+do not push to git
+
+improvements (in priority order):
+	1. Auth/reconnect — no tokens, so a refresh boots the player out of their seat. Add socket reconnection with a persistent player token (localStorage).
+	2. Security — CORS origin "*" (backend/src/server.js:12) is wide open; restrict to the app origin. Validate all socket inputs server-side.
+	3. Tests — backend/tests/ is empty; add tests for gameLogic.js (scoring, trump, trick resolution, HCP table).
+	4. Atomic persistence — rooms.json writes every 30s can corrupt on crash; write to temp file then rename, or debounce on change.
+	5. Dev tooling — add lint/typecheck scripts.
+	6. PWA / installability — small win for mobile users.
