@@ -145,7 +145,7 @@ function saveRooms() {
     const tmp = ROOMS_FILE + '.tmp';
     fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
     fs.renameSync(tmp, ROOMS_FILE);
-  } catch (e) { /* ignore */ }
+  } catch (e) { console.error('saveRooms failed:', e); }
 }
 
 function loadRooms() {
@@ -154,10 +154,13 @@ function loadRooms() {
       for (const [id, json] of Object.entries(JSON.parse(fs.readFileSync(ROOMS_FILE, 'utf8')))) {
         const g = Game.fromJSON(json);
         if (!g.players.length) continue;
+        // Skip rooms nobody can play in anymore (restored players/spectators are
+        // offline) so dead tables don't linger after a restart.
+        if (allPlayersOffline(g)) continue;
         ROOMS[id] = g;
       }
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) { console.error('loadRooms failed:', e); }
 }
 loadRooms();
 setInterval(saveRooms, SAVE_INTERVAL);
@@ -228,10 +231,10 @@ function clearAdminGrace(adminId) {
 }
 
 // True when nobody can play anymore: every seated player is offline (or the seats
-// are all vacated) and no spectators remain — only the admin is left, so the room
+// are all vacated) and no spectator is online — only the admin is left, so the room
 // should close so a fresh join starts a brand-new table.
 function allPlayersOffline(g) {
-  return g.spectators.length === 0 && !g.players.some(p => p.online !== false);
+  return !g.players.some(p => p.online !== false) && !g.spectators.some(s => s.online !== false);
 }
 
 function closeRoom(g) {

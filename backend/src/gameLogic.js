@@ -832,9 +832,9 @@ if (viewer) {
       id: this.id, roomId: this.roomId, state: this.state,
       players: this.players.map(p => ({
         id: p.id, name: p.name, position: p.position, team: p.team,
-        isAdmin: false, bid: p.bid, score: p.score
+        isAdmin: false, bid: p.bid, score: p.score, online: p.online
       })),
-      spectators: this.spectators.map(s => ({ id: s.id, name: s.name })),
+      spectators: this.spectators.map(s => ({ id: s.id, name: s.name, online: s.online })),
       admin: this.admin ? { id: this.admin.id, name: this.admin.name } : null,
       dealer: this.dealer ? this.dealer.id : null,
       scores: this.scores, winner: this.winner,
@@ -860,12 +860,14 @@ if (viewer) {
       p.position = pd.position; p.team = pd.team;
       p.isAdmin = false; p.bid = pd.bid;
       p.score = pd.score || 0;
+      p.online = pd.online !== false;
       g.players.push(p);
       pMap[pd.id] = p;
     }
     if (data.spectators) {
       for (const sd of data.spectators) {
         const s = new Player(sd.id, sd.name);
+        s.online = sd.online !== false;
         g.spectators.push(s);
       }
     }
