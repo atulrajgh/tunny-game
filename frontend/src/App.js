@@ -161,6 +161,7 @@ function App() {
   const { me } = gameState;
   const myPos = me?.position;
   const players = gameState.players || [];
+  const adminName = gameState.admin?.name || 'Admin';
 
   // --- Room view removed: single global table, non-admin waiting players see the game table ---
 
@@ -585,7 +586,7 @@ function App() {
 
       {/* Top: current state message + scores */}
       {!isAdmin && gameState.state === 'waiting' && (
-        <div className="waiting-banner">Waiting for Admin to assign a seat</div>
+        <div className="waiting-banner">Waiting for {adminName} to assign a seat</div>
       )}
       <div className="state-bar">
         <div className="team-scores">
@@ -597,8 +598,8 @@ function App() {
         <div className="state-info">
           <div className="round-info">Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
           <div className="current-action">
-            {gameState.state === 'waiting' && (isAdmin ? `Waiting — assign positions and start the game` : `Waiting for Admin to assign a seat`)}
-            {gameState.state === 'cut' && `Waiting for ${players.find(p => p.isAdmin)?.name || 'admin'} to cut the deck`}
+            {gameState.state === 'waiting' && (isAdmin ? `Waiting — assign positions and start the game` : `Waiting for ${adminName} to assign a seat`)}
+            {gameState.state === 'cut' && `Waiting for ${adminName} to cut the deck`}
             {isBidding && `${curPlayer?.name} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`}
             {isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`}
             {isPlaying && `${curPlayer?.name}'s turn${isAdmin && vacatedTurnPos ? ' — you play this seat' : ''}`}
