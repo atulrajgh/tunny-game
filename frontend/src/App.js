@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import io from 'socket.io-client';
 import './index.css';
+import UIViewer from './UIViewer';
 
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL;
 
@@ -11,6 +12,10 @@ function handHCPRequirement(bid) {
 }
 
 function App() {
+  if (window.location.pathname === '/ui') {
+    return <UIViewer />;
+  }
+
   const [socket, setSocket] = useState(null);
   const [socketConnected, setSocketConnected] = useState(true);
   const [gameState, setGameState] = useState(null);
