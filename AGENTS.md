@@ -5,7 +5,7 @@
 Repo root is `C:\SpringARM\Tunny\`. Two packages:
 - `backend/` — Node.js + Express + Socket.IO server, entry: `src/server.js`, port **3001**
 - `frontend/` — React (CRA), entry: `src/App.js`, `src/index.js`, port **3000**
-- `frontend/public/settings.json` — app version (`version` field), served to the frontend at `/settings.json` and read by the backend at startup for the `/instructions` page.
+- `frontend/public/settings.json` — app version (`version` field), served to the frontend at `/settings.json` and read by the backend at startup for the `/instructions` page (HTML lives in `backend/src/instructions.js`, rendered by `renderInstructions(version)`).
 
 ## Commands
 
@@ -22,7 +22,7 @@ Tests (backend, no extra deps — Node's built-in runner):
 cd backend && npm test
 ```
 
-No lint, typecheck, or formatter scripts exist. Backend tests live in `backend/tests/` (60 tests in `gameLogic.test.js` covering deck/cards, bidding, trump, trick resolution, scoring, disconnects, visibility, persistence).
+No lint, typecheck, or formatter scripts exist. Backend tests live in `backend/tests/` (63 tests across `gameLogic.test.js` and `instructions.test.js` covering deck/cards, bidding, trump, trick resolution, scoring, disconnects, visibility, persistence, instructions render).
 
 ## Architecture
 
@@ -38,7 +38,7 @@ No lint, typecheck, or formatter scripts exist. Backend tests live in `backend/t
 
 Game ends when a team reaches/crosses 12 points (WINNING_SCORE). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–170 (multiples of 10) plus Pass. HCP values: J=30, 9=20, A=15, 10=10, K=5, Q=5.
 
-Contract: bid < 100 → level 1 (4 tricks), bid ≥ 100 → level 2 (5 tricks). Scoring: if the declarer's team makes the contract they earn 2 points when the winning bid is ≥ 100 (a level-2 contract), else 1 point; if they fail, the defending team earns double the bid's points (4 or 2). The winning team earns 1 additional point for a slam (collecting all 340 HCP). HCP↔bid table: 50→160, 60→175, 70→190, … 160→325, 170→340.
+Scoring is decided by HCP, not trick count: if the declarer's team makes the contract they earn 2 points when the winning bid is ≥ 100, else 1 point; if they fail, the defending team earns double the bid's points (4 or 2). The winning team earns 1 additional point for a slam (collecting all 340 HCP). HCP↔bid table: 50→160, 60→175, 70→190, … 160→325, 170→340.
 
 ## Login (single global table)
 
@@ -52,7 +52,7 @@ Embedded below the game table as a collapsible section (toggle at bottom of acti
 - **Gallery** — unseated players with position assign buttons (N/S/E/W) and kick
 - **Table** — seated players with position, team badge, and kick
 - **Spectators** — list with promote-to-position buttons
-- **Game State** — hand/trick number, state, level, declarer, bid, trump
+- **Game State** — hand/trick number, state, declarer, bid, trump
 - **Bids** — each player's current bid
 - **Current Trick** — cards played this trick
 - **Scores** — running scores, HCP this hand, tricks this hand
@@ -106,7 +106,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
   - **Day+count part**: `ddnn` — `dd` = day of the change, `nn` = `01`..`99` count of changes that day (capped at `99`)
 - Example: `1.8.1501` = year 2026, August, the 15th, first change of the day.
 - **Bump the version whenever you make a change and want it versioned** — increment `nn` for later changes on the same day, else use the current date.
-- The version is displayed on the login screen, all in-game screens (`.version` element), and the `/instructions` page. The frontend fetches `/settings.json` at runtime (a fresh `frontend/build` is needed for the new version to appear); the backend reads `settings.json` at startup (`APP_VERSION` in `server.js`) and injects it into the instructions HTML.
+- The version is displayed on the login screen, all in-game screens (`.version` element), and the `/instructions` page. The frontend fetches `/settings.json` at runtime (a fresh `frontend/build` is needed for the new version to appear); the backend reads `settings.json` at startup (`APP_VERSION` in `server.js`) and injects it into the instructions HTML via `renderInstructions(APP_VERSION)` in `backend/src/instructions.js`.
 
 ## Deployment
 
