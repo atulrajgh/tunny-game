@@ -210,11 +210,11 @@ function startAdminGrace(g, adminId) {
     const gg = ROOMS[roomId];
     if (!gg) return;
     if (gg.getPlayer(adminId)) gg.removePlayer(adminId);
-    if (gg.players.length === 0 && gg.spectators.length === 0) {
+    if (allPlayersOffline(gg)) {
       closeRoom(gg);
     } else {
       promoteNewAdmin(gg);
-      io.to(gg.id).emit('admin_changed', {});
+      io.to(g.id).emit('admin_changed', {});
     }
     io.emit('room_list', getPublicList());
   }, ADMIN_GRACE_MS);
@@ -225,6 +225,13 @@ function clearAdminGrace(adminId) {
     clearTimeout(ADMIN_GRACE_TIMERS[adminId]);
     delete ADMIN_GRACE_TIMERS[adminId];
   }
+}
+
+// True when nobody can play anymore: every seated player is offline (or the seats
+// are all vacated) and no spectators remain — only the admin is left, so the room
+// should close so a fresh join starts a brand-new table.
+function allPlayersOffline(g) {
+  return g.spectators.length === 0 && !g.players.some(p => p.online !== false);
 }
 
 function closeRoom(g) {
@@ -357,7 +364,11 @@ io.on('connection', (socket) => {
       // Token was revoked (seat reassigned): rejoin as spectator only.
       if (GLOBAL_TABLE.isTokenRevoked(token)) {
         const err = joinError(GLOBAL_TABLE, clean);
-        if (err) return error(err);
+        // Their own vacated seat now holds the name, so let them back in as a spectator
+        // rather than rejecting them.
+        const selfVacated = Object.values(GLOBAL_TABLE.vacatedHands).some(
+          v => v.playerName && v.playerName.toLowerCase() === clean.toLowerCase());
+        if (err && !selfVacated) return error(err);
         attachSpectator(GLOBAL_TABLE, clean);
         io.emit('room_list', getPublicList());
         updateAll();
@@ -578,7 +589,13 @@ io.on('connection', (socket) => {
         // until the 300s turn timeout fires for this player (then vacate + revoke) or the
         // admin kicks/promotes someone into the seat.
         io.to(g.id).emit('player_left', { playerId, playerName: pName, playerCount: g.players.length, reconnecting: true });
-        if (ROOMS[g.id]) updateAll();
+        // If every player is now gone and nobody is watching, end the room so a
+        // fresh join creates a brand-new table instead of a dead, stuck game.
+        if (allPlayersOffline(g)) {
+          closeRoom(g);
+        } else if (ROOMS[g.id]) {
+          updateAll();
+        }
       } else {
         // Waiting-state player or spectator: existing immediate removal.
         g.removePlayer(playerId);

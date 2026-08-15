@@ -193,6 +193,11 @@ class Game {
     if (this.admin && this.admin.name.toLowerCase() === n) return true;
     if (this.players.some(p => p.name.toLowerCase() === n)) return true;
     if (this.spectators.some(s => s.name.toLowerCase() === n)) return true;
+    // A name held by a vacated seat is still in use — block reuse so the admin
+    // panel never shows two players with the same name.
+    for (const v of Object.values(this.vacatedHands)) {
+      if (v.playerName && v.playerName.toLowerCase() === n) return true;
+    }
     return false;
   }
 

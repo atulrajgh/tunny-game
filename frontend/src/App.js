@@ -661,7 +661,7 @@ function App() {
                   <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
                   <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
                 </div>
-                <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.pos, card: incBid })} className="bid-inc">{incBid}</button>
+                <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.position, card: incBid })} className="bid-inc">{incBid}</button>
               </div>
             )}
             {timedOutTurn && (
@@ -674,7 +674,13 @@ function App() {
                 <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: incBid }); }} className="bid-inc">{incBid}</button>
               </div>
             )}
-            <button onClick={() => sendOnce('admin_play', { position: (vacatedPlayer || {}).pos, targetId: timedOutHand?.playerId, card: 'pass' })} className="bid-pass">Pass</button>
+            <button onClick={() => {
+              const payload = vacatedPlayer
+                ? { position: vacatedPlayer.position, card: 'pass' }
+                : { targetId: timedOutHand.playerId, card: 'pass' };
+              setTimedOut(null);
+              sendOnce('admin_play', payload);
+            }} className="bid-pass">Pass</button>
           </div>
         </>
       )}

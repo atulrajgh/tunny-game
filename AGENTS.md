@@ -61,6 +61,9 @@ Timeout is 300 seconds (5 minutes) for a player's turn and 600 seconds (10 minut
 
 When a player disconnects mid-game, their hand, bid, played card, and role (currentPlayer/declarer/dummy) are saved in `vacatedHands` keyed by position. The turn becomes a vacated pseudo-player (`id: null`) at that position, and the admin plays that seat — bidding via `admin_play` with a `position` + `card` (bid number), choosing trump for a vacated declarer, or clicking the seat's saved cards in the table. The game never freezes while the seat stays vacant; vacated seats are re-dealt fresh hands on the next hand. When the admin promotes a spectator to fill the seat, the saved state is restored — cards remain unchanged for other players, and turn/declarer/dummy references are reassigned to the new player object.
 
+- Names held by a vacated seat count as "in use" (`getViewerName` checks `vacatedHands`), so a new join can't reuse a held name — except the vacated player themselves, who may rejoin as a spectator with their old name (revoked-token path).
+- When every seated player is offline and no spectators remain (`allPlayersOffline`), the room is closed on the last player's disconnect — so a dead game ends instead of lingering; the same check applies in the admin-grace timer.
+
 ## Trump visibility
 
 - Trump suit is hidden from all players and admin until revealed via **Ask Trump** (any non-declarer player — the declarer's partner or a defender — may use it) or by the declarer playing their **Play Trump** card. The admin sees the trump (suit and reserved card) only when it is revealed or when the admin becomes the declarer (i.e. the declarer seat is vacated or the declarer has timed out, so the admin acts for them).
