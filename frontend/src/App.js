@@ -301,7 +301,12 @@ function App() {
   function renderCard(c, small) {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
-    return <span className={`card-face${small ? ' small' : ''}${isRed ? ' red' : ''}`}>{c.rank}<span className="suit-mark">{c.suit}</span></span>;
+    return (
+      <span className={`card-face${small ? ' small' : ''}${isRed ? ' red' : ''}`}>
+        <span className="card-suit-top">{c.suit}</span>
+        <span className="card-rank-bottom">{c.rank}</span>
+      </span>
+    );
   }
 
   function vacatedAt(pos) {
