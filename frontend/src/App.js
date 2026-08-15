@@ -12,6 +12,7 @@ function handHCPRequirement(bid) {
 
 function App() {
   const [socket, setSocket] = useState(null);
+  const [socketConnected, setSocketConnected] = useState(true);
   const [gameState, setGameState] = useState(null);
   const [screen, setScreen] = useState('login');
   const [playerId, setPlayerId] = useState('');
@@ -37,6 +38,18 @@ function App() {
   useEffect(() => {
     const s = SOCKET_URL ? io(SOCKET_URL) : io();
     setSocket(s);
+    // Fires on initial connect and every transport-level reconnect. Re-emits the
+    // saved token so the seat re-binds instead of being dropped.
+    s.on('connect', () => {
+      setSocketConnected(true);
+      const savedName = localStorage.getItem('tunny_name');
+      const savedId = localStorage.getItem('tunny_id');
+      if (savedId && savedName) {
+        s.emit('create_room', { playerName: savedName, playerId: savedId });
+      }
+    });
+    s.on('disconnect', () => setSocketConnected(false));
+    s.on('connect_error', () => setSocketConnected(false));
     s.on('room_list', () => {});
     s.on('error', (e) => { showError(e.message); unlockAction(); });
     s.on('kicked', () => { setScreen('login'); setGameState(null); showError('You were kicked'); });
@@ -52,6 +65,7 @@ function App() {
   useEffect(() => {
     if (!socket) return;
     socket.on('room_joined', (data) => {
+      if (data.playerId) localStorage.setItem('tunny_id', data.playerId);
       setPlayerId(data.playerId);
       setIsAdmin(data.isAdmin);
       setIsSpectator(!!data.isSpectator);
@@ -84,7 +98,8 @@ function App() {
       showError(data.message);
     });
     socket.on('player_left', (data) => {
-      showError(`${data.playerName} dropped out`);
+      if (data.reconnecting) showError(`${data.playerName} is reconnecting…`);
+      else showError(`${data.playerName} dropped out`);
     });
     socket.on('player_demoted', (data) => {
       if (data.playerId === playerId) return;
@@ -113,7 +128,7 @@ function App() {
   const joinGame = () => {
     if (!name) return showError('Enter your name');
     localStorage.setItem('tunny_name', name);
-    socket.emit('create_room', { playerName: name });
+    socket.emit('create_room', { playerName: name, playerId: localStorage.getItem('tunny_id') || undefined });
   };
 
   // --- Login ---
@@ -122,6 +137,7 @@ function App() {
       <div className="app login-screen">
         <h1 className="title">♠ TUNNY ♥</h1>
         <a href="/instructions" target="_blank" className="help-link" style={{ marginBottom: 12 }}>How to Play</a>
+        {!socketConnected && <div className="reconnect-banner">Connection lost — reconnecting…</div>}
         {error && <div className="toast error">{error}</div>}
         <div className="login-box">
           <input placeholder="Your Name" value={name} onChange={e => setName(e.target.value)}
@@ -374,7 +390,7 @@ function App() {
                   <span style={{ fontWeight: 700, width: 20 }}>{pos}</span>
                   {p ? (
                     <>
-                      <span className="ac-name">{p.name}</span>
+                      <span className="ac-name">{p.name}{p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
                       <span className="ac-team">{p.team || '—'}</span>
                       <div className="ac-actions">
                         {isAdmin && p.id !== playerId && (
@@ -544,6 +560,7 @@ function App() {
 
   return (
     <div className="app game-table">
+      {!socketConnected && <div className="reconnect-banner">Connection lost — reconnecting…</div>}
       {error && <div className="toast error">{error}</div>}
       {timedOut && (
         <div className="timeout-banner">
@@ -680,7 +697,7 @@ function App() {
             <div key={cls} className={`table-seat ${cls}`}>
               {vacatedAt(pos) ? renderVacated(pos, true) : (
                 <div className="dummy-card" title={`${p?.name || POSITION_NAMES[pos]} — ${faceDownCount(p)} cards`}>
-                  <span className="dummy-name">{p?.name || POSITION_NAMES[pos]}</span>
+                  <span className="dummy-name">{p?.name || POSITION_NAMES[pos]}{p && p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
                   {label && <span className="dummy-role">{label}</span>}
                   <span className="dummy-count">{faceDownCount(p)}</span>
                 </div>

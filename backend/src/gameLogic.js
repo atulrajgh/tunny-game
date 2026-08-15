@@ -32,6 +32,7 @@ class Player {
     this.score = 0;
     this.cutCard = null;
     this.team = null;
+    this.online = true;
   }
 }
 
@@ -72,6 +73,7 @@ class Game {
     this.roomId = null;
     this.lastActivity = Date.now();
     this._timedOutPlayerId = null;
+    this.revokedTokens = new Set();
   }
 
   setupDeck() {
@@ -121,6 +123,7 @@ class Game {
       if (this.state !== 'waiting' && p.position) {
         this.vacatedHands[p.position] = {
           id: null,
+          originalPlayerId: playerId,
           playerName: p.name,
           position: p.position,
           hand: [...p.hand],
@@ -155,7 +158,7 @@ class Game {
       const player = this.players[0];
       if (this.state !== 'waiting' && this.state !== 'cut' && player.position) {
         this.vacatedHands[player.position] = {
-          id: null, playerName: player.name, position: player.position,
+          id: null, originalPlayerId: player.id, playerName: player.name, position: player.position,
           hand: [...player.hand], team: player.team, bid: player.bid,
           playedCard: player.playedCard,
           wasCurrentPlayer: !!this.currentPlayer && this.currentPlayer.id === player.id,
@@ -218,6 +221,21 @@ class Game {
 
   getViewer(playerId) {
     return this.getPlayer(playerId) || this.spectators.find(s => s.id === playerId);
+  }
+
+  revokeToken(playerId) {
+    if (playerId) this.revokedTokens.add(playerId);
+  }
+
+  isTokenRevoked(playerId) {
+    return !!playerId && this.revokedTokens.has(playerId);
+  }
+
+  // Reconnect window closed for an offline player: vacate their seat and invalidate their token.
+  vacateTimedOutPlayer(playerId) {
+    if (!this.getPlayer(playerId)) return false;
+    this.revokedTokens.add(playerId);
+    return this.removePlayer(playerId);
   }
 
   restoreSavedState(player, pos) {
@@ -772,6 +790,7 @@ if (viewer) {
           const hand = showHand(p) ? this.checkMemo('p:' + p.id, p.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined;
           return { id: p.id, name: p.name, position: p.position, team: p.team,
             isAdmin: p.isAdmin, bid: p.bid, score: p.score,
+            online: p.online !== false,
             hand, cardCount: hand ? undefined : p.hand.length + reservedTrumpCount(p) };
         });
         for (const [pos, v] of Object.entries(this.vacatedHands)) {
@@ -816,7 +835,8 @@ if (viewer) {
       scores: this.scores, winner: this.winner,
       teamTricks: this.teamTricks, teamPoints: this.teamPoints,
       adminId: this.adminId, positions: this.positions,
-      handNumber: this.handNumber, lastActivity: this.lastActivity
+      handNumber: this.handNumber, lastActivity: this.lastActivity,
+      revokedTokens: [...this.revokedTokens]
     };
   }
 
@@ -828,6 +848,7 @@ if (viewer) {
     g.teamPoints = data.teamPoints || { 'N-S': 0, 'E-W': 0 };
     g.adminId = data.adminId; g.positions = data.positions;
     g.handNumber = data.handNumber || 0; g.lastActivity = data.lastActivity || Date.now();
+    g.revokedTokens = new Set(data.revokedTokens || []);
     const pMap = {};
     for (const pd of data.players) {
       const p = new Player(pd.id, pd.name);

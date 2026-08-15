@@ -15,9 +15,11 @@ const PORT = process.env.PORT || 3001;
 const ROOMS_FILE = path.join(__dirname, '..', 'rooms.json');
 const TIMEOUT_MS = 300000;
 const ADMIN_TIMEOUT_MS = 600000;
+const ADMIN_GRACE_MS = 60000;
 const SAVE_INTERVAL = 30000;
 const ROOMS = {};
 const PLAYER_SOCKETS = {}; // playerId -> Set<socketId>
+const ADMIN_GRACE_TIMERS = {}; // adminId -> timeout (deferred admin promotion on disconnect)
 let GLOBAL_TABLE = null;
 
 app.use(express.json());
@@ -140,7 +142,9 @@ function saveRooms() {
   try {
     const data = {};
     for (const [id, g] of Object.entries(ROOMS)) data[id] = g.toJSON();
-    fs.writeFileSync(ROOMS_FILE, JSON.stringify(data, null, 2));
+    const tmp = ROOMS_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+    fs.renameSync(tmp, ROOMS_FILE);
   } catch (e) { /* ignore */ }
 }
 
@@ -195,6 +199,31 @@ function promoteNewAdmin(g) {
     // Broadcast to all remaining that a new admin took over
     for (const p of g.players) emitToPlayer(p.id, 'state', g.getGameState(p.id));
     for (const s of g.spectators) emitToPlayer(s.id, 'state', g.getGameState(s.id));
+  }
+}
+
+function startAdminGrace(g, adminId) {
+  if (ADMIN_GRACE_TIMERS[adminId]) return;
+  const roomId = g.id;
+  ADMIN_GRACE_TIMERS[adminId] = setTimeout(() => {
+    delete ADMIN_GRACE_TIMERS[adminId];
+    const gg = ROOMS[roomId];
+    if (!gg) return;
+    if (gg.getPlayer(adminId)) gg.removePlayer(adminId);
+    if (gg.players.length === 0 && gg.spectators.length === 0) {
+      closeRoom(gg);
+    } else {
+      promoteNewAdmin(gg);
+      io.to(gg.id).emit('admin_changed', {});
+    }
+    io.emit('room_list', getPublicList());
+  }, ADMIN_GRACE_MS);
+}
+
+function clearAdminGrace(adminId) {
+  if (ADMIN_GRACE_TIMERS[adminId]) {
+    clearTimeout(ADMIN_GRACE_TIMERS[adminId]);
+    delete ADMIN_GRACE_TIMERS[adminId];
   }
 }
 
@@ -270,10 +299,20 @@ io.on('connection', (socket) => {
     const isAdminTurn = !cp || cp.id === null || (g.admin && cp.id === g.admin.id);
     g._timeout = setTimeout(() => {
       const isAdminGame = !!g.admin;
-      g._timedOutPlayerId = cp ? cp.id : null;
+      const tViewer = cp ? g.getViewer(cp.id) : null;
+      const offline = cp && cp.id && tViewer && tViewer.online === false;
+      // Reconnect window closed for an offline player: vacate the seat and revoke the token.
+      if (offline) {
+        g.vacateTimedOutPlayer(cp.id);
+        g._timedOutPlayerId = null;
+        io.emit('room_list', getPublicList());
+        updateAll();
+      } else {
+        g._timedOutPlayerId = cp ? cp.id : null;
+      }
       if (isAdminGame && g.admin) {
         emitToPlayer(g.admin.id, 'player_timed_out', {
-          playerId: cp ? cp.id : null,
+          playerId: offline ? null : (cp ? cp.id : null),
           playerName: cp ? cp.name : 'Unknown (vacant seat)'
         });
       }
@@ -298,12 +337,36 @@ io.on('connection', (socket) => {
     return null;
   }
 
-  socket.on('create_room', ({ playerName }) => {
+  socket.on('create_room', ({ playerName, playerId: token }) => {
     if (!playerName) return error('Name required');
     if (!GLOBAL_TABLE) { GLOBAL_TABLE = new Game(); GLOBAL_TABLE.roomId = GLOBAL_TABLE.id; ROOMS[GLOBAL_TABLE.id] = GLOBAL_TABLE; }
-    const err = joinError(GLOBAL_TABLE, playerName);
+    const clean = String(playerName || '').trim();
+    // Reconnect with a valid token: rebind the existing viewer (admin, player, or spectator).
+    if (token) {
+      const existing = GLOBAL_TABLE.getViewer(token);
+      if (existing && existing.name.toLowerCase() === clean.toLowerCase()) {
+        gameId = GLOBAL_TABLE.id; playerId = existing.id;
+        socket.join(gameId); track();
+        existing.online = true;
+        clearAdminGrace(playerId);
+        socket.emit('room_joined', { gameId: gameId, playerId: playerId, isAdmin: existing.isAdmin, isSpectator: !!GLOBAL_TABLE.spectators.find(s => s.id === existing.id) });
+        io.to(gameId).emit('player_joined', { playerId: playerId, playerName: existing.name, isAdmin: existing.isAdmin, playerCount: GLOBAL_TABLE.players.length });
+        updateAll();
+        return;
+      }
+      // Token was revoked (seat reassigned): rejoin as spectator only.
+      if (GLOBAL_TABLE.isTokenRevoked(token)) {
+        const err = joinError(GLOBAL_TABLE, clean);
+        if (err) return error(err);
+        attachSpectator(GLOBAL_TABLE, clean);
+        io.emit('room_list', getPublicList());
+        updateAll();
+        return;
+      }
+    }
+    const err = joinError(GLOBAL_TABLE, clean);
     if (err) return error(err);
-    autoJoin(GLOBAL_TABLE, playerName);
+    autoJoin(GLOBAL_TABLE, clean);
     io.emit('room_list', getPublicList());
     updateAll();
   });
@@ -497,26 +560,40 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('Player disconnect:', playerId);
     const g = game();
-    if (g && playerId) {
+    const isLastSocket = !PLAYER_SOCKETS[playerId] || PLAYER_SOCKETS[playerId].size <= 1;
+    if (g && playerId && isLastSocket) {
+      const viewer = g.getViewer(playerId);
       const wasPlayer = !!g.getPlayer(playerId);
-      const wasSpectator = !wasPlayer && !!g.getViewer(playerId);
-      const p = g.getViewer(playerId);
-      const pName = p?.name || 'Unknown';
-      const wasAdmin = p?.isAdmin || false;
-      g.removePlayer(playerId);
-      // If no players or observers remain, close the room (even if admin is absent)
-      if (g.players.length === 0 && g.spectators.length === 0) {
-        closeRoom(g);
-      } else if (wasAdmin) {
-        // Try to promote an observer or player to admin
-        promoteNewAdmin(g);
-        io.to(g.id).emit('admin_changed', {});
-      } else if (wasSpectator) {
-        io.to(g.id).emit('spectator_left', { playerId, playerName: pName });
+      const wasSpectator = !wasPlayer && !!viewer;
+      const wasAdmin = viewer?.isAdmin || false;
+      const pName = viewer?.name || 'Unknown';
+      if (viewer) viewer.online = false;
+      if (wasAdmin) {
+        // Defer promotion so a quick refresh keeps the same admin (reconnect clears the grace).
+        startAdminGrace(g, playerId);
+        io.to(g.id).emit('player_left', { playerId, playerName: pName, playerCount: g.players.length, reconnecting: true });
+        if (ROOMS[g.id]) updateAll();
+      } else if (wasPlayer && g.state !== 'waiting') {
+        // Cut/bidding/trump/playing/review: hold the seat. The reconnect window stays open
+        // until the 300s turn timeout fires for this player (then vacate + revoke) or the
+        // admin kicks/promotes someone into the seat.
+        io.to(g.id).emit('player_left', { playerId, playerName: pName, playerCount: g.players.length, reconnecting: true });
+        if (ROOMS[g.id]) updateAll();
       } else {
-        io.to(g.id).emit('player_left', { playerId, playerName: pName, playerCount: g.players.length });
+        // Waiting-state player or spectator: existing immediate removal.
+        g.removePlayer(playerId);
+        if (g.players.length === 0 && g.spectators.length === 0) {
+          closeRoom(g);
+        } else if (wasAdmin) {
+          promoteNewAdmin(g);
+          io.to(g.id).emit('admin_changed', {});
+        } else if (wasSpectator) {
+          io.to(g.id).emit('spectator_left', { playerId, playerName: pName });
+        } else {
+          io.to(g.id).emit('player_left', { playerId, playerName: pName, playerCount: g.players.length });
+        }
+        if (ROOMS[g.id]) updateAll();
       }
-      if (ROOMS[g.id]) updateAll();
     }
     io.emit('room_list', getPublicList());
     untrack();
