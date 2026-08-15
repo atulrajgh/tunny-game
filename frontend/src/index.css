@@ -242,6 +242,11 @@ input, button { font-family: inherit; }
 .ac-panel.ac-wide { grid-column: 1 / -1; }
 .ac-player-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 4px; margin-bottom: 4px; font-size: 14px; }
 .ac-player-row:hover { background: #3a5a3a; }
+.ac-bids { display: flex; flex-direction: column; border: 1px solid #4a6a4a; border-radius: 6px; overflow: hidden; }
+.ac-bid-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; font-size: 14px; border-bottom: 1px solid #4a6a4a; }
+.ac-bid-row:last-child { border-bottom: none; }
+.ac-bid-row .ac-name { font-weight: 600; }
+.ac-bid-row.empty { background: #1a3a1a; color: #a0d0a0; font-style: italic; }
 .ac-player-row .ac-name { font-weight: 600; }
 .ac-player-row .ac-team { font-size: 12px; background: #1a3a1a; padding: 2px 8px; border-radius: 3px; }
 .ac-player-row .ac-actions { display: flex; gap: 6px; }

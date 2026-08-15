@@ -450,12 +450,18 @@ function App() {
             </div>
 
             <h3 style={{ marginTop: 12 }}>Bids</h3>
-            {players.map(p => (
-              <div key={p.id} className="ac-player-row">
-                <span className="ac-name">{p.name}</span>
-                <span>{p.bid || '—'}</span>
-              </div>
-            ))}
+            <div className="ac-bids">
+              {['N','S','E','W'].map(pos => {
+                const p = players.find(x => x.position === pos);
+                const occupied = !!(p && p.id);
+                return (
+                  <div key={pos} className={'ac-bid-row' + (occupied ? '' : ' empty')}>
+                    <span className="ac-name">{occupied ? p.name : POSITION_NAMES[pos]}</span>
+                    <span>{p?.bid || '—'}</span>
+                  </div>
+                );
+              })}
+            </div>
 
           </div>
 
