@@ -23,6 +23,7 @@ function App() {
   const [timedOut, setTimedOut] = useState(null);
   const [incBid, setIncBid] = useState(50);
   const actionLockRef = useRef(false);
+  const joinedRef = useRef(false);
 
   const sendOnce = useCallback((type, payload) => {
     if (actionLockRef.current) return;
@@ -38,13 +39,15 @@ function App() {
   useEffect(() => {
     const s = SOCKET_URL ? io(SOCKET_URL) : io();
     setSocket(s);
-    // Fires on initial connect and every transport-level reconnect. Re-emits the
-    // saved token so the seat re-binds instead of being dropped.
+    // Fires on initial connect and every transport-level reconnect. Only re-emits the
+    // saved token mid-session (after the user already joined this page) so the seat
+    // re-binds instead of being dropped. A fresh page load still shows the login
+    // screen so the name can be changed.
     s.on('connect', () => {
       setSocketConnected(true);
       const savedName = localStorage.getItem('tunny_name');
       const savedId = localStorage.getItem('tunny_id');
-      if (savedId && savedName) {
+      if (joinedRef.current && savedId && savedName) {
         s.emit('create_room', { playerName: savedName, playerId: savedId });
       }
     });
@@ -52,7 +55,7 @@ function App() {
     s.on('connect_error', () => setSocketConnected(false));
     s.on('room_list', () => {});
     s.on('error', (e) => { showError(e.message); unlockAction(); });
-    s.on('kicked', () => { setScreen('login'); setGameState(null); showError('You were kicked'); });
+    s.on('kicked', () => { joinedRef.current = false; setScreen('login'); setGameState(null); showError('You were kicked'); });
     s.on('demoted_to_spectator', (d) => {
       setIsSpectator(true);
       setIsAdmin(false);
@@ -65,6 +68,7 @@ function App() {
   useEffect(() => {
     if (!socket) return;
     socket.on('room_joined', (data) => {
+      joinedRef.current = true;
       if (data.playerId) localStorage.setItem('tunny_id', data.playerId);
       setPlayerId(data.playerId);
       setIsAdmin(data.isAdmin);
@@ -85,7 +89,7 @@ function App() {
     socket.on('cut_start', () => { setScreen('game'); });
     socket.on('game_over', () => setScreen('game'));
     socket.on('next_hand', () => setScreen('game'));
-    socket.on('game_reset', () => { setScreen('login'); setGameState(null); });
+    socket.on('game_reset', () => { joinedRef.current = false; setScreen('login'); setGameState(null); });
     socket.on('player_timed_out', (d) => setTimedOut(d));
     socket.on('hand_end', () => setScreen('review'));
     socket.on('trump_selection', () => setScreen('game'));
@@ -93,6 +97,7 @@ function App() {
     socket.on('trump_revealed', () => { /* state update handles it */ });
     socket.on('player_joined', () => {});
     socket.on('room_closed', (data) => {
+      joinedRef.current = false;
       setGameState(null);
       setScreen('login');
       showError(data.message);
