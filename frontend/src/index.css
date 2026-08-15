@@ -122,7 +122,7 @@ input, button { font-family: inherit; }
 .trump-reserved-label { font-size: 12px; font-weight: 700; color: #f0c040; letter-spacing: 1px; }
 
 /* ---- Cards ---- */
-.card-face { display: inline-flex; flex-direction: column; align-items: center; justify-content: space-between; width: 66px; height: 94px; background: #fff; color: #222; border: 1px solid #333; border-radius: 8px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.25); padding: 4px 2px; box-sizing: border-box; }
+.card-face { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 66px; height: 94px; background: #fff; color: #222; border: 1px solid #333; border-radius: 8px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.25); box-sizing: border-box; }
 .card-face .card-suit-top { font-size: 34px; line-height: 1; }
 .card-face .card-rank-bottom { font-size: 30px; line-height: 1; }
 .card-face.red { color: #c0392b; }
@@ -219,7 +219,7 @@ input, button { font-family: inherit; }
 /* ---- Responsive ---- */
 @media (max-width: 700px) {
   .game-table { grid-template-columns: 70px 1fr 70px; }
-  .card-face { width: 48px; height: 68px; padding: 2px 1px; }
+  .card-face { width: 48px; height: 68px; gap: 1px; }
   .card-face .card-suit-top { font-size: 26px; }
   .card-face .card-rank-bottom { font-size: 22px; }
   .card-back { width: 22px; height: 32px; }
@@ -235,7 +235,7 @@ input, button { font-family: inherit; }
 }
 @media (max-width: 500px) {
   .game-table { grid-template-columns: 50px 1fr 50px; gap: 4px; }
-  .card-face { width: 36px; height: 52px; padding: 1px; }
+  .card-face { width: 36px; height: 52px; gap: 1px; }
   .card-face .card-suit-top { font-size: 19px; }
   .card-face .card-rank-bottom { font-size: 16px; }
   .card-back { width: 16px; height: 24px; }
