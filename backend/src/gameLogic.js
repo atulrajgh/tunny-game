@@ -789,8 +789,7 @@ if (viewer) {
           bid: viewer.bid, score: viewer.score,
           cutCard: viewer.cutCard ? { suit: viewer.cutCard.suit, rank: viewer.cutCard.rank } : null
         };
-        const showHand = (p) => p.id === viewer.id ||
-          (!viewer.isAdmin && !isSpectator && this.state === 'playing' && this.dummy && p.id === this.dummy.id);
+        const showHand = (p) => p.id === viewer.id;
         const reservedTrumpCount = (p) => (p.id === this.declarer?.id && this.trumpCard && !this.trumpCardPlayed ? 1 : 0);
         state.players = this.players.map(p => {
           const hand = showHand(p) ? this.checkMemo('p:' + p.id, p.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined;

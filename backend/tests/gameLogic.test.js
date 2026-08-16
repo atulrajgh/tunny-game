@@ -657,7 +657,8 @@ describe('getGameState visibility', () => {
     assert.equal(e.trumpCard, null);
     assert.equal(e.me.hand.length, 4);
     const south = e.players.find(p => p.position === 'S');
-    assert.ok(south.hand, 'dummy hand is face-up to everyone');
+    assert.ok(!south.hand, 'dummy hand is hidden from everyone');
+    assert.ok(south.cardCount >= 0);
   });
 
   it('the admin sees no hands, only card counts', () => {

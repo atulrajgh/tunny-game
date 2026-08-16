@@ -93,7 +93,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 - Card display format: `rank + suit` (e.g. `J♠`). Red suits (♥♦) render with red color. Cards render with a larger rank/suit (`.card-face`), scaled down responsively.
 - Bidding UI is a fixed overlay in the top-left (`bidding-top`) with Pass and a value stepper: ▲/▼ adjust the bid in increments of 10 (cap 170), floored at `max(50, highestBid + 10)` so the bid always exceeds the current high bid; the value button submits.
-- `getGameState(playerId)` shows each player only their own hand plus the dummy's face-up hand. The dummy's hand is rendered as a single dummy-card image showing the card count, not individual cards.
+- `getGameState(playerId)` shows each player only their own hand. The declarer's partner (dummy) is an independent player — their hand is hidden from everyone like any other player's. Each player's seat is rendered as a single dummy-card image showing the card count, not individual cards.
 - Admin (host-only, not a seated player) sees **no** players' cards normally — only card counts. The admin sees a player's hand only when that seat is vacated (`vacatedHands`) or that player has timed out (`timedOutHand`). Admin sees the trump suit and reserved trump card only when revealed or when acting as a vacated/timed-out declarer; all played trick cards are always visible.
 - Spectators see **no** hands either (not even the dummy's) — only the cards played on the table during a trick (`currentTrick`) and each player's card count (`cardCount`). Trump stays hidden from them until revealed.
 - Table view rotates so each player sees themselves at South (bottom).
@@ -105,7 +105,8 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
   - **Month part**: `1`–`12` (month the change was made)
   - **Day+count part**: `ddnn` — `dd` = day of the change, `nn` = `01`..`99` count of changes that day (capped at `99`)
 - Example: `1.8.1501` = year 2026, August, the 15th, first change of the day.
-- **Bump the version whenever you make a change and want it versioned** — increment `nn` for later changes on the same day, else use the current date.
+- **All dates are computed from UTC** (`getUTCDay`/`getUTCMonth`/`getUTCFullYear`), so developers in different time zones (US CDT, AEST, …) derive the same version for the same change. Never compute the day/month from local time.
+- **Bump the version whenever you make a change and want it versioned** — run `node bump-version.mjs` (repo root). It reads the current UTC date: if it matches the current version's date it increments `nn`, otherwise it starts a new `dd01`. Use `node bump-version.mjs --dry-run` to preview.
 - The version is displayed on the login screen, all in-game screens (`.version` element), and the `/instructions` page. The frontend fetches `/settings.json` at runtime (a fresh `frontend/build` is needed for the new version to appear); the backend reads `settings.json` at startup (`APP_VERSION` in `server.js`) and injects it into the instructions HTML via `renderInstructions(APP_VERSION)` in `backend/src/instructions.js`.
 
 ## Deployment
@@ -114,3 +115,10 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 - Render auto-detects Node.js. Build: `cd backend && npm install && cd ../frontend && npm install && npm run build`. Start: `node backend/src/server.js`.
 - Backend serves built frontend from `frontend/build/` when directory exists (production).
 - Set `PORT` env var via Render (auto-set). No database service needed.
+
+## Commit message convention (pushes via push-to-github.mjs)
+
+- Keep the commit **subject terse** — one line, ≤ ~70 chars, imperative mood (e.g. `Remove contract-level section; extract instructions page`).
+- Put the detail in the commit **body** — bullet list of what changed, why, and the version bump.
+- `push-to-github.mjs` combines them as `"<subject>\n\n<body>"`, so GitHub lists show the short subject and the full description on the commit page.
+- Update the `COMMIT_SUBJECT`/`COMMIT_BODY` constants in the script before each push.

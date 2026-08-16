@@ -36,7 +36,7 @@ cd frontend && npm install && npm start
 
 - Admin sees no players' hands normally (only card counts) and all played trick cards.
 - Admin sees a player's hand when the seat is vacated (mid-game disconnect, `vacatedHands`) or the player has timed out (`timedOutHand`), and can play for that seat via `admin_play`.
-- Non-admin players see only their own hand and the dummy's face-up hand. Trump suit is hidden until revealed via **Ask Trump** (available to the declarer's partner or a defender, on their turn, when they can't follow the led suit) or **Play Trump** (declarer only). The trump card is visible to the declarer until played.
+- Non-admin players see only their own hand. Trump suit is hidden until revealed via **Ask Trump** (available to the declarer's partner or a defender, on their turn, when they can't follow the led suit) or **Play Trump** (declarer only). The trump card is visible to the declarer until played.
 
 ## Game flow
 
