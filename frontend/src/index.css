@@ -124,9 +124,28 @@ input, button { font-family: inherit; }
 .trump-reserved-label { font-size: 12px; font-weight: 700; color: #f0c040; letter-spacing: 1px; }
 
 /* ---- Cards ---- */
-.card-face { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35em; width: 66px; height: 94px; background: #fff; color: #222; border: 1px solid #333; border-radius: 8px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.25); box-sizing: border-box; font-size: 34px; }
-.card-face .card-suit-top { font-size: 1em; line-height: 1; height: 1em; display: flex; align-items: center; justify-content: center; }
-.card-face .card-rank-bottom { font-size: 0.88em; line-height: 1; height: 1em; display: flex; align-items: center; justify-content: center; width: 100%; border-top: 2px solid #222; padding-top: 0.3em; font-variant-numeric: lining-nums tabular-nums; font-feature-settings: "lnum", "tnum"; }
+.card-face { display: inline-grid; grid-template-rows: 1fr 1fr; align-items: center; justify-items: center; width: 66px; height: 94px; background: #fff; color: #222; border: 1px solid #333; border-radius: 8px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.25); box-sizing: border-box; font-size: 34px; }
+.card-face .card-suit-top { font-size: 1em; line-height: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.card-face .card-rank-bottom { position: relative; font-size: 0.88em; line-height: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-variant-numeric: lining-nums tabular-nums; font-feature-settings: "lnum", "tnum"; }
+.card-face .card-rank-bottom::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 92%;
+  height: 0.55em;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMjAiPjxwYXRoIGQ9Ik0wLDEwIEMxMCwxMCAxMCwzIDIyLDMgQzM0LDMgMzQsMTAgNDYsMTAgTDUyLDEwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTEyMCwxMCBDMTEwLDEwIDExMCwzIDk4LDMgQzg2LDMgODYsMTAgNzQsMTAgTDY4LDEwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTYwLDQgTDY2LDEwIEw2MCwxNiBMNTQsMTAgWiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMjAiPjxwYXRoIGQ9Ik0wLDEwIEMxMCwxMCAxMCwzIDIyLDMgQzM0LDMgMzQsMTAgNDYsMTAgTDUyLDEwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTEyMCwxMCBDMTEwLDEwIDExMCwzIDk4LDMgQzg2LDMgODYsMTAgNzQsMTAgTDY4LDEwIiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTYwLDQgTDY2LDEwIEw2MCwxNiBMNTQsMTAgWiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  pointer-events: none;
+}
 .card-face.red { color: #c0392b; }
 .card-face.small { width: 48px; height: 68px; padding: 2px 1px; font-size: 24px; }
 
