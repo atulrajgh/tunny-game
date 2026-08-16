@@ -434,6 +434,15 @@ io.on('connection', (socket) => {
     updateAll();
   });
 
+  socket.on('new_game', () => {
+    const g = game(); if (!g) return;
+    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    g.resetForNewGame();
+    io.to(g.id).emit('new_game', {});
+    io.emit('room_list', getPublicList());
+    updateAll();
+  });
+
   socket.on('reset_scores', () => {
     const g = game(); if (!g) return;
     const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');

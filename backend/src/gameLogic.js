@@ -897,6 +897,29 @@ if (viewer) {
     this.positions = {}; this.leadSuit = null;
     this._timedOutPlayerId = null;
   }
+
+  // Fresh game keeping the current table: players stay seated, admin stays admin,
+  // positions and spectators are preserved, scores are zeroed, and the game
+  // returns to the 'waiting' room so the admin can start a new game.
+  resetForNewGame() {
+    const savedPlayers = this.players;
+    const savedAdmin = this.admin;
+    const savedAdminId = this.adminId;
+    const savedPositions = { ...this.positions };
+    const savedSpectators = this.spectators;
+    const savedRevoked = this.revokedTokens;
+    this.reset();
+    this.players = savedPlayers;
+    this.admin = savedAdmin;
+    this.adminId = savedAdminId;
+    this.positions = savedPositions;
+    this.spectators = savedSpectators;
+    this.revokedTokens = savedRevoked;
+    for (const p of this.players) {
+      p.hand = []; p.bid = null; p.playedCard = null; p.cutCard = null; p.score = 0;
+    }
+    this.vacatedHands = {};
+  }
 }
 
 module.exports = { Game, Player, Card, SUITS, RANKS, RANK_ORDER, HCP_VALUES, WINNING_SCORE, bidRequirement };

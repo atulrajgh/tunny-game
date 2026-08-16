@@ -643,6 +643,36 @@ describe('resetForNextHand', () => {
   });
 });
 
+describe('resetForNewGame', () => {
+  it('keeps players, admin, positions, and spectators but zeroes the board and returns to waiting', () => {
+    const { g } = makeGame();
+    setupPlaying(g, { declarer: 'N', dealer: 'N', trumpSuit: '♥', hands: DEFAULT_HANDS });
+    g.scores = { 'N-S': 7, 'E-W': 3 };
+    g.winner = 'N-S';
+    g.state = 'game_over';
+    g.addSpectator('Watcher');
+    const playersBefore = g.players.map(p => p.id).sort();
+    const positionsBefore = { ...g.positions };
+    const spectatorsBefore = g.spectators.map(s => s.id).sort();
+    const adminId = g.admin.id;
+    g.resetForNewGame();
+    assert.equal(g.state, 'waiting');
+    assert.equal(g.scores['N-S'], 0);
+    assert.equal(g.scores['E-W'], 0);
+    assert.equal(g.winner, null);
+    assert.equal(g.declarer, null);
+    assert.deepEqual(g.players.map(p => p.id).sort(), playersBefore, 'players stay seated');
+    assert.equal(g.admin.id, adminId, 'admin is preserved');
+    assert.deepEqual(g.positions, positionsBefore, 'positions preserved');
+    assert.deepEqual(g.spectators.map(s => s.id).sort(), spectatorsBefore, 'spectators preserved');
+    for (const p of g.players) {
+      assert.equal(p.hand.length, 0);
+      assert.equal(p.bid, null);
+      assert.equal(p.score, 0);
+    }
+  });
+});
+
 describe('getGameState visibility', () => {
   it('the declarer sees trump and their hand; others do not see trump', () => {
     const { g } = makeGame();

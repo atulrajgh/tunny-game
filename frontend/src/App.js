@@ -96,6 +96,7 @@ function App() {
     socket.on('game_over', () => setScreen('game'));
     socket.on('next_hand', () => setScreen('game'));
     socket.on('game_reset', () => { joinedRef.current = false; setScreen('login'); setGameState(null); });
+    socket.on('new_game', () => { setScreen('game'); });
     socket.on('player_timed_out', (d) => setTimedOut(d));
     socket.on('hand_end', () => setScreen('review'));
     socket.on('trump_selection', () => setScreen('game'));
@@ -268,6 +269,11 @@ function App() {
           </div>
           </div>
           <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 16 }}>How to Play</a>
+          {isAdmin && (
+            <button className="start-btn" style={{ marginTop: 16 }} onClick={() => sendOnce('new_game')}>
+              Start a New Game
+            </button>
+          )}
           <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
           {version && <div className="version">Version {version}</div>}
         </div>
