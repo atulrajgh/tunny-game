@@ -199,6 +199,51 @@ export default function UIViewer() {
         </Row>
       </Section>
 
+      <Section title="Hand review screen">
+        <div className="review-screen" style={{ textAlign: 'center' }}>
+          <h2 className="review-title">Hand 4 Review · Highest Bid: 100 (235 HCP)</h2>
+          <div className="ac-trick-table review-table" style={{ margin: '16px auto', maxWidth: 760 }}>
+            <div className="ac-trick-table-header">
+              <span className="ac-tt-trick">Trick</span>
+              <span className="ac-tt-card">Alice<span className="trump-suit">♥</span></span>
+              <span className="ac-tt-card">Bob</span>
+              <span className="ac-tt-card">Carol</span>
+              <span className="ac-tt-card">Dan</span>
+              <span className="ac-tt-win">Winner</span>
+              <span className="ac-tt-pts">N-S</span>
+              <span className="ac-tt-pts">E-W</span>
+            </div>
+            {[
+              { cards: [card('♥', 'A'), card('♠', '10'), card('♥', 'J'), card('♠', 'K')], winner: 'N-S', winnerPosition: 'N', ns: 20, ew: null },
+              { cards: [card('♣', 'Q'), card('♦', '9'), card('♣', 'K'), card('♠', 'J')], winner: 'E-W', winnerPosition: 'E', ns: null, ew: 15 },
+              { cards: [card('♠', 'A'), card('♥', 'K'), card('♦', 'J'), card('♠', 'Q')], winner: 'N-S', winnerPosition: 'S', ns: 45, ew: null },
+              { cards: [card('♣', 'J'), card('♦', '10'), card('♥', 'Q'), card('♦', 'K')], winner: 'E-W', winnerPosition: 'W', ns: null, ew: 40 },
+              { cards: [card('♠', '9'), card('♣', '10'), card('♦', 'A'), card('♥', '10')], winner: 'N-S', winnerPosition: 'N', ns: 65, ew: null },
+              { cards: [card('♣', 'A'), card('♦', 'Q'), card('♣', '9'), card('♠', '10')], winner: 'E-W', winnerPosition: 'E', ns: null, ew: 70 }
+            ].map((t, i) => (
+              <div key={i} className={`ac-trick-table-row${t.winner === 'N-S' ? ' win-ns' : ' win-ew'}`}>
+                <span className="ac-tt-trick">{i + 1}</span>
+                {['N', 'S', 'E', 'W'].map(pos => {
+                  const c = t.cards[i % 4];
+                  const isWinner = t.winnerPosition === pos;
+                  return (
+                    <span key={pos} className="ac-tt-card">
+                      <span className={`mini-card${isWinner ? ' trick-winner' : ''} ${c.suit === '♥' || c.suit === '♦' ? 'red' : ''}`}>{c.rank}<span className="suit-mark">{c.suit}</span></span>
+                    </span>
+                  );
+                })}
+                <span className="ac-tt-win">{t.winner}</span>
+                <span className="ac-tt-pts">{t.ns != null ? `+${t.ns}` : '·'}</span>
+                <span className="ac-tt-pts">{t.ew != null ? `+${t.ew}` : '·'}</span>
+              </div>
+            ))}
+          </div>
+          <button className="start-btn">Confirm & Next Hand</button>
+          <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
+          <div className="version">Version 1.8.1606</div>
+        </div>
+      </Section>
+
       <Section title="Admin panel preview">
         <div className="admin-panel">
           <div className="ac-header">
