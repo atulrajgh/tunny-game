@@ -59,8 +59,6 @@ class Game {
     this.lastBidder = null;
     this.highestBid = null;
     this.passCount = 0;
-    this.contractLevel = null;
-    this.targetTricks = null;
     this.scores = { 'N-S': 0, 'E-W': 0 };
     this.teamTricks = { 'N-S': 0, 'E-W': 0 };
     this.teamPoints = { 'N-S': 0, 'E-W': 0 };
@@ -400,8 +398,6 @@ class Game {
     if (this.passCount >= 3 && this.lastBidder) {
       this.declarer = this.lastBidder;
       this.dummy = this.getPlayer(this.positions[this.getPartnerPosition(this.declarer.position)]);
-      this.contractLevel = this.declarer.bid < 100 ? 1 : 2;
-      this.targetTricks = this.contractLevel === 1 ? 4 : 5;
       this.state = 'trump_selection';
       this.currentPlayer = this.declarer;
       this.lastActivity = Date.now();
@@ -673,7 +669,6 @@ class Game {
     this.trumpRevealed = false; this.trumpCardPlayed = false; this.currentTrick = []; this.trickHistory = []; this.trickNumber = 0;
     this.declarer = null; this.dummy = null; this.lastBidder = null;
     this.highestBid = null; this.passCount = 0;
-    this.contractLevel = null; this.targetTricks = null;
     this.currentPlayer = null; this.leadSuit = null;
     this._timedOutPlayerId = null;
     if (rotateDealer && this.dealer) this.dealer = this.seatAfter(this.dealer.position);
@@ -758,7 +753,6 @@ class Game {
       trumpSuit: (this.trumpRevealed || this.state === 'game_over' || viewer?.id === this.declarer?.id || adminActsDeclarer) ? this.trumpSuit : null, trumpRevealed: this.trumpRevealed,
       trumpCard: (this.trumpRevealed || viewer?.id === this.declarer?.id || adminActsDeclarer) && this.trumpCard && !this.trumpCardPlayed ? { suit: this.trumpCard.suit, rank: this.trumpCard.rank } : null,
       trickNumber: this.trickNumber, handNumber: this.handNumber,
-      contractLevel: this.contractLevel, targetTricks: this.targetTricks,
       highestBid: this.highestBid,
       declarer: this.declarer ? { id: this.declarer.id, position: this.declarer.position } : null,
       scores: { ...this.scores }, winner: this.winner,
@@ -887,7 +881,6 @@ if (viewer) {
     this.trumpRevealed = false; this.currentTrick = []; this.trickHistory = []; this.trickNumber = 0;
     this.handNumber = 0; this.deck = []; this.lastBidder = null;
     this.highestBid = null; this.passCount = 0;
-    this.contractLevel = null; this.targetTricks = null;
     this.scores = { 'N-S': 0, 'E-W': 0 }; this.winner = null;
     this.teamTricks = { 'N-S': 0, 'E-W': 0 };
     this.teamPoints = { 'N-S': 0, 'E-W': 0 };
@@ -898,27 +891,51 @@ if (viewer) {
     this._timedOutPlayerId = null;
   }
 
-  // Fresh game keeping the current table: players stay seated, admin stays admin,
-  // positions and spectators are preserved, scores are zeroed, and the game
-  // returns to the 'waiting' room so the admin can start a new game.
+  // Fresh game keeping the admin: players and spectators stay in the room, but
+  // every player is UNSEATED (their old seat is remembered in rejoinPositions so
+  // a rejoin can restore it). Each player/spectator must actively rejoin via
+  // rejoinViewer() — not everyone may want to play again. The game returns to the
+  // 'waiting' room so the admin can start the new game once enough players rejoin.
   resetForNewGame() {
-    const savedPlayers = this.players;
     const savedAdmin = this.admin;
     const savedAdminId = this.adminId;
-    const savedPositions = { ...this.positions };
+    const savedPlayers = this.players;
     const savedSpectators = this.spectators;
     const savedRevoked = this.revokedTokens;
+    const rejoinPositions = {};
+    for (const p of savedPlayers) if (p.position) rejoinPositions[p.id] = p.position;
     this.reset();
     this.players = savedPlayers;
     this.admin = savedAdmin;
     this.adminId = savedAdminId;
-    this.positions = savedPositions;
     this.spectators = savedSpectators;
     this.revokedTokens = savedRevoked;
+    this.rejoinPositions = rejoinPositions;
     for (const p of this.players) {
       p.hand = []; p.bid = null; p.playedCard = null; p.cutCard = null; p.score = 0;
+      p.position = null; p.team = null;
     }
     this.vacatedHands = {};
+  }
+
+  // A player clicks 'Rejoin for new game': restore their previous seat if free,
+  // else the first free seat. Spectators need no seat. Returns the viewer type
+  // ('player' | 'spectator') or null if the viewer is unknown.
+  rejoinViewer(viewerId) {
+    const p = this.getPlayer(viewerId);
+    if (!p || p.isAdmin) return this.spectators.some(s => s.id === viewerId) ? 'spectator' : null;
+    if (this.state !== 'waiting') return 'player';
+    if (p.position) return 'player';
+    const prev = this.rejoinPositions ? this.rejoinPositions[viewerId] : null;
+    let pos = null;
+    if (prev && !this.positions[prev]) pos = prev;
+    if (!pos) pos = ['N', 'S', 'E', 'W'].find(x => !this.positions[x]);
+    if (pos) {
+      this.positions[pos] = viewerId;
+      p.position = pos;
+      p.team = (pos === 'N' || pos === 'S') ? 'N-S' : 'E-W';
+    }
+    return 'player';
   }
 }
 

@@ -42,8 +42,6 @@ function setupPlaying(g, { declarer = 'N', dealer = 'N', trumpSuit = '♥', bid 
   g.declarer = playerAt(g, declarer);
   g.dummy = playerAt(g, partner[declarer]);
   g.declarer.bid = bid;
-  g.contractLevel = bid < 100 ? 1 : 2;
-  g.targetTricks = g.contractLevel === 1 ? 4 : 5;
   const trump = hands[declarer].find(c => c.suit === trumpSuit);
   assert.ok(trump, 'declarer hand must include a trump-suit card');
   setHand(g, declarer, hands[declarer]);
@@ -273,24 +271,22 @@ describe('bidding', () => {
     for (const p of g.players) assert.equal(p.hand.length, 4, 'fresh deal');
   });
 
-  it('contract level 1 for bids below 100', () => {
+  it('bidding below 100 ends in trump_selection with correct state', () => {
     const g = biddingGame();
     g.placeBid(playerAt(g, 'E').id, 90);
     g.placeBid(playerAt(g, 'S').id, 'pass');
     g.placeBid(playerAt(g, 'W').id, 'pass');
     g.placeBid(playerAt(g, 'N').id, 'pass');
-    assert.equal(g.contractLevel, 1);
-    assert.equal(g.targetTricks, 4);
+    assert.equal(g.state, 'trump_selection');
   });
 
-  it('contract level 2 for bids >= 100', () => {
+  it('bidding >= 100 ends in trump_selection with correct state', () => {
     const g = biddingGame();
     g.placeBid(playerAt(g, 'E').id, 100);
     g.placeBid(playerAt(g, 'S').id, 'pass');
     g.placeBid(playerAt(g, 'W').id, 'pass');
     g.placeBid(playerAt(g, 'N').id, 'pass');
-    assert.equal(g.contractLevel, 2);
-    assert.equal(g.targetTricks, 5);
+    assert.equal(g.state, 'trump_selection');
   });
 });
 
@@ -644,7 +640,7 @@ describe('resetForNextHand', () => {
 });
 
 describe('resetForNewGame', () => {
-  it('keeps players, admin, positions, and spectators but zeroes the board and returns to waiting', () => {
+  it('keeps players, admin, and spectators in the room but unseats everyone and zeroes the board', () => {
     const { g } = makeGame();
     setupPlaying(g, { declarer: 'N', dealer: 'N', trumpSuit: '♥', hands: DEFAULT_HANDS });
     g.scores = { 'N-S': 7, 'E-W': 3 };
@@ -652,7 +648,6 @@ describe('resetForNewGame', () => {
     g.state = 'game_over';
     g.addSpectator('Watcher');
     const playersBefore = g.players.map(p => p.id).sort();
-    const positionsBefore = { ...g.positions };
     const spectatorsBefore = g.spectators.map(s => s.id).sort();
     const adminId = g.admin.id;
     g.resetForNewGame();
@@ -661,15 +656,31 @@ describe('resetForNewGame', () => {
     assert.equal(g.scores['E-W'], 0);
     assert.equal(g.winner, null);
     assert.equal(g.declarer, null);
-    assert.deepEqual(g.players.map(p => p.id).sort(), playersBefore, 'players stay seated');
+    assert.deepEqual(g.players.map(p => p.id).sort(), playersBefore, 'players stay in the room');
     assert.equal(g.admin.id, adminId, 'admin is preserved');
-    assert.deepEqual(g.positions, positionsBefore, 'positions preserved');
     assert.deepEqual(g.spectators.map(s => s.id).sort(), spectatorsBefore, 'spectators preserved');
     for (const p of g.players) {
+      assert.equal(p.position, null, 'player is unseated until they rejoin');
+      assert.equal(p.team, null);
       assert.equal(p.hand.length, 0);
       assert.equal(p.bid, null);
       assert.equal(p.score, 0);
     }
+  });
+
+  it('rejoinViewer restores the player seat and lets spectators rejoin', () => {
+    const { g } = makeGame();
+    setupPlaying(g, { declarer: 'N', dealer: 'N', trumpSuit: '♥', hands: DEFAULT_HANDS });
+    const watcher = g.addSpectator('Watcher');
+    const north = playerAt(g, 'N');
+    const east = playerAt(g, 'E');
+    g.resetForNewGame();
+    assert.equal(g.rejoinViewer(north.id), 'player');
+    assert.equal(north.position, 'N', 'restores the previous seat when free');
+    assert.equal(g.rejoinViewer(east.id), 'player');
+    assert.equal(east.position, 'E');
+    assert.equal(g.rejoinViewer(watcher.id), 'spectator');
+    assert.ok(g.spectators.find(s => s.id === watcher.id), 'spectator stays a spectator');
   });
 });
 

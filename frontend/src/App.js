@@ -30,6 +30,7 @@ function App() {
   const actionLockRef = useRef(false);
   const joinedRef = useRef(false);
   const [version, setVersion] = useState('');
+  const [pendingRejoin, setPendingRejoin] = useState(false);
 
   const sendOnce = useCallback((type, payload) => {
     if (actionLockRef.current) return;
@@ -96,7 +97,8 @@ function App() {
     socket.on('game_over', () => setScreen('game'));
     socket.on('next_hand', () => setScreen('game'));
     socket.on('game_reset', () => { joinedRef.current = false; setScreen('login'); setGameState(null); });
-    socket.on('new_game', () => { setScreen('game'); });
+    socket.on('new_game', () => { setPendingRejoin(true); });
+    socket.on('rejoined', () => { setPendingRejoin(false); setScreen('game'); });
     socket.on('player_timed_out', (d) => setTimedOut(d));
     socket.on('hand_end', () => setScreen('review'));
     socket.on('trump_selection', () => setScreen('game'));
@@ -177,6 +179,21 @@ function App() {
   const myPos = me?.position;
   const players = gameState.players || [];
   const adminName = gameState.admin?.name || 'Admin';
+
+  // --- Rejoin for new game (non-admin viewers) ---
+  if (pendingRejoin && !isAdmin) {
+    return (
+      <div className="app review-screen">
+        <h2 className="review-title">New game started</h2>
+        <p>The previous game is over. Click below to rejoin the fresh game.</p>
+        <button className="start-btn" onClick={() => sendOnce('rejoin_game')}>
+          Rejoin for new game
+        </button>
+        <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
+        {version && <div className="version">Version {version}</div>}
+      </div>
+    );
+  }
 
   // --- Room view removed: single global table, non-admin waiting players see the game table ---
 
