@@ -413,28 +413,6 @@ io.on('connection', (socket) => {
     updateAll();
   });
 
-  socket.on('new_game', () => {
-    const g = game(); if (!g) return;
-    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
-    g.resetForNewGame();
-    io.to(g.id).emit('new_game', {});
-    io.emit('room_list', getPublicList());
-    updateAll();
-  });
-
-  // A player or spectator opts back in for the fresh game. Players get their
-  // seat restored (previous position if free, else first free); spectators stay
-  // spectators. Emits a per-viewer 'rejoined' so the frontend leaves the rejoin
-  // prompt; updateAll broadcasts the new state to everyone.
-  socket.on('rejoin_game', () => {
-    const g = game(); if (!g) return;
-    const viewer = me(); if (!viewer) return;
-    if (g.state !== 'waiting') return;
-    const kind = g.rejoinViewer(viewer.id);
-    if (kind) socket.emit('rejoined', { kind });
-    updateAll();
-  });
-
   socket.on('reset_scores', () => {
     const g = game(); if (!g) return;
     const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');

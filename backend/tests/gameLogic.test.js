@@ -639,51 +639,6 @@ describe('resetForNextHand', () => {
   });
 });
 
-describe('resetForNewGame', () => {
-  it('keeps players, admin, and spectators in the room but unseats everyone and zeroes the board', () => {
-    const { g } = makeGame();
-    setupPlaying(g, { declarer: 'N', dealer: 'N', trumpSuit: '♥', hands: DEFAULT_HANDS });
-    g.scores = { 'N-S': 7, 'E-W': 3 };
-    g.winner = 'N-S';
-    g.state = 'game_over';
-    g.addSpectator('Watcher');
-    const playersBefore = g.players.map(p => p.id).sort();
-    const spectatorsBefore = g.spectators.map(s => s.id).sort();
-    const adminId = g.admin.id;
-    g.resetForNewGame();
-    assert.equal(g.state, 'waiting');
-    assert.equal(g.scores['N-S'], 0);
-    assert.equal(g.scores['E-W'], 0);
-    assert.equal(g.winner, null);
-    assert.equal(g.declarer, null);
-    assert.deepEqual(g.players.map(p => p.id).sort(), playersBefore, 'players stay in the room');
-    assert.equal(g.admin.id, adminId, 'admin is preserved');
-    assert.deepEqual(g.spectators.map(s => s.id).sort(), spectatorsBefore, 'spectators preserved');
-    for (const p of g.players) {
-      assert.equal(p.position, null, 'player is unseated until they rejoin');
-      assert.equal(p.team, null);
-      assert.equal(p.hand.length, 0);
-      assert.equal(p.bid, null);
-      assert.equal(p.score, 0);
-    }
-  });
-
-  it('rejoinViewer restores the player seat and lets spectators rejoin', () => {
-    const { g } = makeGame();
-    setupPlaying(g, { declarer: 'N', dealer: 'N', trumpSuit: '♥', hands: DEFAULT_HANDS });
-    const watcher = g.addSpectator('Watcher');
-    const north = playerAt(g, 'N');
-    const east = playerAt(g, 'E');
-    g.resetForNewGame();
-    assert.equal(g.rejoinViewer(north.id), 'player');
-    assert.equal(north.position, 'N', 'restores the previous seat when free');
-    assert.equal(g.rejoinViewer(east.id), 'player');
-    assert.equal(east.position, 'E');
-    assert.equal(g.rejoinViewer(watcher.id), 'spectator');
-    assert.ok(g.spectators.find(s => s.id === watcher.id), 'spectator stays a spectator');
-  });
-});
-
 describe('getGameState visibility', () => {
   it('the declarer sees trump and their hand; others do not see trump', () => {
     const { g } = makeGame();

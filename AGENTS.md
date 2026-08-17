@@ -48,7 +48,7 @@ Teams: N+S vs E+W. Admin assigns positions in waiting room. Dealer rotates clock
 
 ## Start a New Game / Rejoin
 
-On the game-over screen the admin sees a **Start a New Game** button. It emits `new_game`, which calls `resetForNewGame()`: the admin stays, players/spectators stay in the room, but every player is **unseated** (previous seats remembered in `rejoinPositions`) and the board is zeroed. The admin's screen drops straight into the new `waiting` room. Non-admin viewers see a **Rejoin for new game** prompt (frontend `pendingRejoin`); clicking it emits `rejoin_game`, which calls `rejoinViewer()` — the player's previous seat is restored if free, else the first free seat; spectators stay spectators. The server emits a per-viewer `rejoined` event so the prompt closes. This lets players opt out of the next game.
+The new-game/rejoin flow is currently **removed** (rework pending). On the game-over screen there is no "Start a New Game" button and no "Rejoin" button. The only restart path is the admin's **Reset Game** (`reset_game` → `g.reset()`), which returns everyone to the login screen. The server handlers `new_game`/`rejoin_game`, `Game.resetForNewGame()`, `Game.rejoinViewer()`, and the frontend `pendingRejoin` machinery have been deleted; the client→server events `new_game` and `rejoin_game` and the server→client `new_game` and `rejoined` events are removed from the event lists below.
 
 ## Admin Panel
 
@@ -87,11 +87,11 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## WebSocket events (server → client)
 
-`state`, `room_list`, `room_joined`, `player_joined`, `player_left`, `player_demoted`, `spectator_joined`, `spectator_left`, `spectator_promoted`, `demoted_to_spectator`, `cut_start`, `game_started`, `trump_selection`, `game_playing`, `trump_revealed`, `hand_end`, `next_hand`, `game_over`, `game_reset`, `new_game`, `rejoined`, `dealer_rotated`, `player_timed_out`, `admin_changed`, `room_closed`, `error`
+`state`, `room_list`, `room_joined`, `player_joined`, `player_left`, `player_demoted`, `spectator_joined`, `spectator_left`, `spectator_promoted`, `demoted_to_spectator`, `cut_start`, `game_started`, `trump_selection`, `game_playing`, `trump_revealed`, `hand_end`, `next_hand`, `game_over`, `game_reset`, `dealer_rotated`, `player_timed_out`, `admin_changed`, `room_closed`, `error`
 
 ## WebSocket events (client → server)
 
-`create_room`, `assign_position`, `start_game`, `cut_done`, `bid`, `choose_trump`, `play`, `play_trump`, `ask_trump`, `confirm_hand`, `kick_player`, `rotate_dealer`, `reset_game`, `new_game`, `rejoin_game`, `admin_play`, `promote_to_player`
+`create_room`, `assign_position`, `start_game`, `cut_done`, `bid`, `choose_trump`, `play`, `play_trump`, `ask_trump`, `confirm_hand`, `kick_player`, `rotate_dealer`, `reset_game`, `admin_play`, `promote_to_player`
 
 ## Key conventions
 

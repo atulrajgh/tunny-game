@@ -293,12 +293,25 @@ class Game {
     return true;
   }
 
+  seatedPlayers() {
+    const order = ['N', 'S', 'E', 'W'];
+    const out = [];
+    for (const pos of order) {
+      const pid = this.positions[pos];
+      if (pid) {
+        const p = this.getPlayer(pid);
+        if (p) out.push(p);
+      }
+    }
+    return out;
+  }
+
   startCut() {
     if (this.state !== 'waiting') return false;
-    if (this.players.length < 4) return false;
-    if (Object.keys(this.positions).length < 4) return false;
+    const seated = this.seatedPlayers();
+    if (seated.length < 4) return false;
     this.setupDeck();
-    for (const player of this.players) {
+    for (const player of seated) {
       player.cutCard = this.deck.pop();
     }
     this.state = 'cut';
@@ -307,14 +320,15 @@ class Game {
   }
 
   determineDealer() {
-    let highest = this.players[0];
-    for (const p of this.players) {
+    const seated = this.seatedPlayers();
+    let highest = seated[0];
+    for (const p of seated) {
       if (RANK_ORDER[p.cutCard.rank] > RANK_ORDER[highest.cutCard.rank]) {
         highest = p;
       }
     }
     this.dealer = highest;
-    for (const p of this.players) { p.cutCard = null; p.bid = null; }
+    for (const p of seated) { p.cutCard = null; p.bid = null; }
     this.setupDeck();
     this.dealCards(4);
     this.currentPlayer = this.seatAfter(this.dealer.position);
@@ -368,8 +382,9 @@ class Game {
   }
 
   dealCards(count) {
+    const seated = this.seatedPlayers();
     for (let i = 0; i < count && this.deck.length > 0; i++) {
-      for (const p of this.players) {
+      for (const p of seated) {
         if (this.deck.length > 0) p.hand.push(this.deck.pop());
       }
       for (const pos of Object.keys(this.vacatedHands)) {
@@ -889,53 +904,6 @@ if (viewer) {
     this.adminId = savedAdmin ? savedAdmin.id : null;
     this.positions = {}; this.leadSuit = null;
     this._timedOutPlayerId = null;
-  }
-
-  // Fresh game keeping the admin: players and spectators stay in the room, but
-  // every player is UNSEATED (their old seat is remembered in rejoinPositions so
-  // a rejoin can restore it). Each player/spectator must actively rejoin via
-  // rejoinViewer() — not everyone may want to play again. The game returns to the
-  // 'waiting' room so the admin can start the new game once enough players rejoin.
-  resetForNewGame() {
-    const savedAdmin = this.admin;
-    const savedAdminId = this.adminId;
-    const savedPlayers = this.players;
-    const savedSpectators = this.spectators;
-    const savedRevoked = this.revokedTokens;
-    const rejoinPositions = {};
-    for (const p of savedPlayers) if (p.position) rejoinPositions[p.id] = p.position;
-    this.reset();
-    this.players = savedPlayers;
-    this.admin = savedAdmin;
-    this.adminId = savedAdminId;
-    this.spectators = savedSpectators;
-    this.revokedTokens = savedRevoked;
-    this.rejoinPositions = rejoinPositions;
-    for (const p of this.players) {
-      p.hand = []; p.bid = null; p.playedCard = null; p.cutCard = null; p.score = 0;
-      p.position = null; p.team = null;
-    }
-    this.vacatedHands = {};
-  }
-
-  // A player clicks 'Rejoin for new game': restore their previous seat if free,
-  // else the first free seat. Spectators need no seat. Returns the viewer type
-  // ('player' | 'spectator') or null if the viewer is unknown.
-  rejoinViewer(viewerId) {
-    const p = this.getPlayer(viewerId);
-    if (!p || p.isAdmin) return this.spectators.some(s => s.id === viewerId) ? 'spectator' : null;
-    if (this.state !== 'waiting') return 'player';
-    if (p.position) return 'player';
-    const prev = this.rejoinPositions ? this.rejoinPositions[viewerId] : null;
-    let pos = null;
-    if (prev && !this.positions[prev]) pos = prev;
-    if (!pos) pos = ['N', 'S', 'E', 'W'].find(x => !this.positions[x]);
-    if (pos) {
-      this.positions[pos] = viewerId;
-      p.position = pos;
-      p.team = (pos === 'N' || pos === 'S') ? 'N-S' : 'E-W';
-    }
-    return 'player';
   }
 }
 
