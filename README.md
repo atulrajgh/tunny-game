@@ -52,4 +52,6 @@ The app version is defined in `frontend/public/settings.json` (field `version`).
 
 Example: `1.8.1501` = year 2026, month 8, the 15th day, first change of that day.
 
-Bump the version whenever you make a change and want it versioned. The version is displayed on the login screen, every in-game screen, and the `/instructions` page (the backend reads the same `settings.json` at startup and injects it into the instructions HTML). The frontend fetches `/settings.json` at runtime, so a fresh build is required for the new version to appear.
+All dates are computed from **UTC**. The version is bumped **automatically on every push**: `push-to-github.mjs` (repo root) runs `node bump-version.mjs` before uploading and appends the new version to the commit body. `bump-version.mjs` always recomputes all three parts from the current UTC date — if the date matches the current version's date it increments the `nn` counter, otherwise it starts a fresh `dd01` for the new day. Do not bump manually before a push; preview with `node bump-version.mjs --dry-run`.
+
+The version is displayed on the login screen, every in-game screen, and the `/instructions` page (the backend reads the same `settings.json` at startup and injects it into the instructions HTML). The frontend fetches `/settings.json` at runtime, so a fresh build is required for the new version to appear.

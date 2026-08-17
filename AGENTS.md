@@ -48,7 +48,7 @@ Teams: N+S vs E+W. Admin assigns positions in waiting room. Dealer rotates clock
 
 ## Start a New Game / Rejoin
 
-The new-game/rejoin flow is currently **removed** (rework pending). On the game-over screen there is no "Start a New Game" button and no "Rejoin" button. The only restart path is the admin's **Reset Game** (`reset_game` → `g.reset()`), which returns everyone to the login screen. The server handlers `new_game`/`rejoin_game`, `Game.resetForNewGame()`, `Game.rejoinViewer()`, and the frontend `pendingRejoin` machinery have been deleted; the client→server events `new_game` and `rejoin_game` and the server→client `new_game` and `rejoined` events are removed from the event lists below.
+The new-game/rejoin flow is currently **removed** (rework pending). On the game-over screen there is no "Start a New Game" button and no "Rejoin" button — it shows the winner, final scores, and a centered Name/Join login box at the bottom (reuses `.login-box`; block-level box centered with `margin: 0 auto`). The only restart path is the admin's **Reset Game** (`reset_game` → `g.reset()`), which returns everyone to the login screen. The server handlers `new_game`/`rejoin_game`, `Game.resetForNewGame()`, `Game.rejoinViewer()`, and the frontend `pendingRejoin` machinery have been deleted; the client→server events `new_game` and `rejoin_game` and the server→client `new_game` and `rejoined` events are removed from the event lists below.
 
 ## Admin Panel
 
@@ -110,7 +110,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
   - **Day+count part**: `ddnn` — `dd` = day of the change, `nn` = `01`..`99` count of changes that day (capped at `99`)
 - Example: `1.8.1501` = year 2026, August, the 15th, first change of the day.
 - **All dates are computed from UTC** (`getUTCDay`/`getUTCMonth`/`getUTCFullYear`), so developers in different time zones (US CDT, AEST, …) derive the same version for the same change. Never compute the day/month from local time.
-- **Bump the version whenever you make a change and want it versioned** — run `node bump-version.mjs` (repo root). It reads the current UTC date: if it matches the current version's date it increments `nn`, otherwise it starts a new `dd01`. Use `node bump-version.mjs --dry-run` to preview.
+- **The version is bumped automatically on every push** — `push-to-github.mjs` runs `node bump-version.mjs` (repo root) before uploading, then appends the new version to the commit body. `bump-version.mjs` reads the current UTC date: if it matches the current version's date it increments `nn`, otherwise it starts a new `dd01`. It always recomputes all three parts (year/month/day) from UTC — it never blindly increments `nn`. Use `node bump-version.mjs --dry-run` to preview the next version. Do NOT bump manually before a push (the script does it).
 - The version is displayed on the login screen, all in-game screens (`.version` element), and the `/instructions` page. The frontend fetches `/settings.json` at runtime (a fresh `frontend/build` is needed for the new version to appear); the backend reads `settings.json` at startup (`APP_VERSION` in `server.js`) and injects it into the instructions HTML via `renderInstructions(APP_VERSION)` in `backend/src/instructions.js`.
 
 ## Deployment
@@ -123,6 +123,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 ## Commit message convention (pushes via push-to-github.mjs)
 
 - Keep the commit **subject terse** — one line, ≤ ~70 chars, imperative mood (e.g. `Remove contract-level section; extract instructions page`).
-- Put the detail in the commit **body** — bullet list of what changed, why, and the version bump.
+- Put the detail in the commit **body** — bullet list of what changed and why.
 - `push-to-github.mjs` combines them as `"<subject>\n\n<body>"`, so GitHub lists show the short subject and the full description on the commit page.
+- The script bumps the version automatically before pushing (see Versioning) and appends `- Version <n>.<n>.<nnnn>` to the body — do not include the version in `COMMIT_BODY` yourself.
 - Update the `COMMIT_SUBJECT`/`COMMIT_BODY` constants in the script before each push.
