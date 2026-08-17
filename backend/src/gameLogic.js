@@ -904,6 +904,7 @@ if (viewer) {
     this.adminId = savedAdmin ? savedAdmin.id : null;
     this.positions = {}; this.leadSuit = null;
     this._timedOutPlayerId = null;
+    this.vacatedHands = {};
   }
 }
 

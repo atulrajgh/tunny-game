@@ -260,6 +260,14 @@ io.on('connection', (socket) => {
     if (!playerName) return error('Name required');
     if (!GLOBAL_TABLE) { GLOBAL_TABLE = new Game(); GLOBAL_TABLE.roomId = GLOBAL_TABLE.id; ROOMS[GLOBAL_TABLE.id] = GLOBAL_TABLE; }
     const clean = String(playerName || '').trim();
+    // The game is over and someone hits Join on the game-over screen: reset all
+    // parameters and send everyone back to the login screen to start fresh. The
+    // admin is preserved; the joiner is re-attached below as a player.
+    if (GLOBAL_TABLE.state === 'game_over') {
+      GLOBAL_TABLE.reset();
+      io.to(GLOBAL_TABLE.id).emit('game_reset', {});
+      io.emit('room_list', getPublicList());
+    }
     // Reconnect with a valid token: rebind the existing viewer (admin, player, or spectator).
     if (token) {
       const existing = GLOBAL_TABLE.getViewer(token);
