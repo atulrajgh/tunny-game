@@ -61,7 +61,6 @@ function App() {
     s.on('connect_error', () => setSocketConnected(false));
     s.on('room_list', () => {});
     s.on('error', (e) => { showError(e.message); unlockAction(); });
-    s.on('kicked', () => { joinedRef.current = false; setScreen('login'); setGameState(null); showError('You were kicked'); });
     s.on('demoted_to_spectator', (d) => {
       setIsSpectator(true);
       setIsAdmin(false);

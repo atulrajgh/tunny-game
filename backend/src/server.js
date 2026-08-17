@@ -261,10 +261,11 @@ io.on('connection', (socket) => {
     if (!GLOBAL_TABLE) { GLOBAL_TABLE = new Game(); GLOBAL_TABLE.roomId = GLOBAL_TABLE.id; ROOMS[GLOBAL_TABLE.id] = GLOBAL_TABLE; }
     const clean = String(playerName || '').trim();
     // The game is over and someone hits Join on the game-over screen: reset all
-    // parameters and send everyone back to the login screen to start fresh. The
-    // admin is preserved; the joiner is re-attached below as a player.
+    // parameters (including the admin — no admin is preserved) and send everyone
+    // back to the login screen to start fresh. The joiner becomes the new admin
+    // below via autoJoin (first viewer to join a table with no admin becomes admin).
     if (GLOBAL_TABLE.state === 'game_over') {
-      GLOBAL_TABLE.reset();
+      GLOBAL_TABLE.reset(false);
       io.to(GLOBAL_TABLE.id).emit('game_reset', {});
       io.emit('room_list', getPublicList());
     }

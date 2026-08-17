@@ -639,6 +639,38 @@ describe('resetForNextHand', () => {
   });
 });
 
+describe('reset', () => {
+  it('preserves the admin and clears the board by default', () => {
+    const { g } = makeGame();
+    setupPlaying(g, { declarer: 'N', dealer: 'N', trumpSuit: '♥', hands: DEFAULT_HANDS });
+    g.scores = { 'N-S': 7, 'E-W': 3 };
+    g.winner = 'N-S';
+    const adminId = g.admin.id;
+    g.reset();
+    assert.equal(g.state, 'waiting');
+    assert.equal(g.admin.id, adminId, 'admin preserved by default');
+    assert.equal(g.scores['N-S'], 0);
+    assert.equal(g.winner, null);
+    assert.equal(g.declarer, null);
+    assert.equal(g.players.length, 0);
+    assert.equal(g.spectators.length, 0);
+    assert.deepEqual(g.vacatedHands, {}, 'vacated seats are cleared');
+  });
+
+  it('clears the admin when keepAdmin is false (Join after game over)', () => {
+    const { g } = makeGame();
+    setupPlaying(g, { declarer: 'N', dealer: 'N', trumpSuit: '♥', hands: DEFAULT_HANDS });
+    g.state = 'game_over';
+    g.winner = 'N-S';
+    g.reset(false);
+    assert.equal(g.state, 'waiting');
+    assert.equal(g.admin, null, 'admin is not preserved');
+    assert.equal(g.adminId, null);
+    assert.equal(g.players.length, 0);
+    assert.equal(g.spectators.length, 0);
+  });
+});
+
 describe('getGameState visibility', () => {
   it('the declarer sees trump and their hand; others do not see trump', () => {
     const { g } = makeGame();

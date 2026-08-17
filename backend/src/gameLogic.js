@@ -274,10 +274,6 @@ class Game {
     return s;
   }
 
-  resetBids() {
-    for (const p of this.players) p.bid = null;
-  }
-
   setPosition(playerId, pos) {
     if (!['N', 'S', 'E', 'W'].includes(pos)) return false;
     const player = this.getPlayer(playerId);
@@ -888,8 +884,8 @@ if (viewer) {
     return g;
   }
 
-  reset() {
-    const savedAdmin = this.admin;
+  reset(keepAdmin = true) {
+    const savedAdmin = keepAdmin ? this.admin : null;
     this.players = []; this.state = 'waiting'; this.dealer = null;
     this.currentPlayer = null; this.declarer = null; this.dummy = null;
     this.trumpSuit = null; this.trumpCard = null; this.trumpCardIndex = -1;

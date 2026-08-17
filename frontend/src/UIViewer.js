@@ -244,6 +244,34 @@ export default function UIViewer() {
         </div>
       </Section>
 
+      <Section title="Game over screen">
+        <div className="app gameover-screen" style={{ background: 'transparent', padding: 0 }}>
+          <h2>Game Over</h2>
+          <div className="winner-banner">North & South Win</div>
+          <div className="final-scores">
+            <div className="score-card">
+              <h3>N-S</h3>
+              <div className="score-num">12</div>
+              <div>Alice<span className="trump-suit">♥</span></div>
+              <div>Bob</div>
+            </div>
+            <div className="score-card">
+              <h3>E-W</h3>
+              <div className="score-num">5</div>
+              <div>Carol</div>
+              <div>Dan</div>
+            </div>
+          </div>
+          <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 16 }}>How to Play</a>
+          <div className="login-box" style={{ margin: '16px auto 0' }}>
+            <input placeholder="Your Name" defaultValue="" />
+            <button>Join</button>
+          </div>
+          <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
+          <div className="version">Version 1.8.1606</div>
+        </div>
+      </Section>
+
       <Section title="Admin panel preview">
         <div className="admin-panel">
           <div className="ac-header">
