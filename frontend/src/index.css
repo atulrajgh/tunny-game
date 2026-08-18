@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400..900&family=Dancing+Script:wght@400..700&family=Spectral:wght@400..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400..900&family=Dancing+Script:wght@400..700&family=EB+Garamond:wght@400..800&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Spectral', Georgia, 'Times New Roman', serif; background: #1a5c1a; color: #fff; min-height: 100vh; }
+body { font-family: 'EB Garamond', Georgia, 'Times New Roman', serif; background: #1a5c1a; color: #fff; min-height: 100vh; }
 input, button { font-family: inherit; }
 
 .app { max-width: 1200px; margin: 0 auto; padding: 16px; }
@@ -10,7 +10,7 @@ input, button { font-family: inherit; }
 
 /* ---- Login ---- */
 .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-.title { font-family: 'Bodoni Moda', 'Spectral', serif; font-size: 58px; font-weight: 800; color: #f0c040; text-transform: uppercase; letter-spacing: 10px; text-shadow: 0 3px 6px rgba(0,0,0,0.45); position: relative; display: inline-block; margin-bottom: 8px; }
+.title { font-family: 'Bodoni Moda', 'EB Garamond', serif; font-size: 58px; font-weight: 800; color: #f0c040; text-transform: uppercase; letter-spacing: 10px; text-shadow: 0 3px 6px rgba(0,0,0,0.45); position: relative; display: inline-block; margin-bottom: 8px; }
 .title::first-letter { font-family: 'Dancing Script', cursive; font-size: 1.2em; }
 .title::after {
   content: "";
@@ -37,7 +37,7 @@ input, button { font-family: inherit; }
 .score-card h3,
 .score-num,
 .trump-indicator,
-.current-action { font-family: 'Bodoni Moda', 'Spectral', serif; font-weight: 800; }
+.current-action { font-family: 'Bodoni Moda', 'EB Garamond', serif; font-weight: 800; }
 .room-screen h2 { color: #f0c040; text-shadow: 0 2px 4px rgba(0,0,0,0.35); }
 
 .login-box { background: #2d6e2d; border-radius: 16px; padding: 32px; width: 400px; max-width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
