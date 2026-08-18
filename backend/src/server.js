@@ -97,6 +97,14 @@ function emitToPlayer(playerId, event, data) {
   if (sockets) for (const sid of sockets) io.to(sid).emit(event, data);
 }
 
+// Broadcast current state to every viewer in a game (players, admin, spectators).
+function broadcastState(g) {
+  if (!g) return;
+  for (const p of g.players) emitToPlayer(p.id, 'state', g.getGameState(p.id));
+  if (g.admin) emitToPlayer(g.admin.id, 'state', g.getGameState(g.admin.id));
+  for (const s of g.spectators) emitToPlayer(s.id, 'state', g.getGameState(s.id));
+}
+
 // SPA catch-all — must be after all API routes
 if (hasFrontendBuild) {
   app.get('*', (req, res) => {
@@ -109,8 +117,7 @@ function promoteNewAdmin(g) {
   if (a) {
     emitToPlayer(a.id, 'state', g.getGameState(a.id));
     // Broadcast to all remaining that a new admin took over
-    for (const p of g.players) emitToPlayer(p.id, 'state', g.getGameState(p.id));
-    for (const s of g.spectators) emitToPlayer(s.id, 'state', g.getGameState(s.id));
+    broadcastState(g);
   }
 }
 
@@ -175,11 +182,7 @@ io.on('connection', (socket) => {
   }
 
   function updateAll() {
-    const g = game();
-    if (!g) return;
-    for (const p of g.players) emitToPlayer(p.id, 'state', g.getGameState(p.id));
-    if (g.admin) emitToPlayer(g.admin.id, 'state', g.getGameState(g.admin.id));
-    for (const s of g.spectators) emitToPlayer(s.id, 'state', g.getGameState(s.id));
+    broadcastState(game());
   }
 
   function attachPlayer(g, name, admin) {
