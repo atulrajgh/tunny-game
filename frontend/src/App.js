@@ -648,8 +648,10 @@ function App() {
             {gameState.state === 'game_over' && `${gameState.winner} wins!`}
           </div>
           <div className="state-details">
-            {isPlaying && gameState.trumpSuit && (
-              <div className="trump-indicator">Trump: {gameState.trumpSuit}{declarerName ? ` · set by ${declarerName}` : ''}</div>
+            {isPlaying && declarerName && (
+              <div className="trump-indicator">
+                {gameState.trumpSuit ? `Trump: ${gameState.trumpSuit} · set by ${declarerName}` : `Trump set by ${declarerName}`}
+              </div>
             )}
             {contractNeed && (
               <div className="contract-progress">Need {contractNeed} HCP · made {gameState.teamPoints?.[declarerTeamPos] || 0}</div>
