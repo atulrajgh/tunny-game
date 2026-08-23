@@ -128,6 +128,11 @@ input, button { font-family: inherit; }
 
 .current-trick { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-width: 140px; }
 .trick-entry { display: flex; flex-direction: column; align-items: center; font-size: 13px; }
+.trick-entry.won > span { color: #f0c040; font-weight: 700; }
+.trick-entry.won .card-face { border: 2px solid #f0c040; box-shadow: 0 0 6px rgba(240,192,64,0.5); }
+
+/* Contract progress (declarer HCP needed vs made) */
+.contract-progress { font-size: 15px; font-weight: 600; color: #c0e8c0; }
 
 /* ---- Opponents row ---- */
 .opponents-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }

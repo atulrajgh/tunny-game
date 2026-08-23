@@ -84,6 +84,11 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 - `cardCount` for the declarer includes +1 for the reserved unplayed trump card (`getGameState`).
 - Until the trump is revealed, cards of the trump suit count as regular cards for trick resolution in `endTrick` (`trumpActive = trumpRevealed && trumpSuit` in `gameLogic.js`) — only the led suit can win. Once revealed, the highest trump card in a trick wins.
 - The **Ask Trump** and **Play Trump** buttons are hidden by default. Ask Trump shows for a non-declarer on their turn when they can't follow the led suit and the trump isn't revealed (`isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && canTrumpAction`). Play Trump shows for the declarer on their turn, card unplayed, trump unrevealed, when `isLastTrick (trickNumber === 5) || canTrumpAction` (i.e. following and holding no led-suit card) — the reserved card is displayed as a face-down `TRUMP` slot next to the hand.
+- When the trump is visible during play, the state bar shows **who set it** (`Trump: ♥ · set by <declarer name>`) and the declarer's contract progress: `Need <handHCPRequirement(bid)> HCP · made <teamPoints[declarerTeam]>` (`.contract-progress`). Public info — shown to players, admin, and spectators alike.
+
+## Trick display
+
+- The state bar's trick area falls back to the last completed trick when `currentTrick` is empty during `playing` (frontend maps the last `trickHistory` entry to the same shape as `currentTrick`). So a finished trick stays visible until the first card of the next trick replaces it; the winner's entry gets a `.won` gold highlight. Hidden outside `playing` (e.g. hand review has its own table).
 
 ## WebSocket events (server → client)
 

@@ -301,6 +301,23 @@ function App() {
   const canTrumpAction = isMyTurn && !!ledSuit && !iHoldLeadSuit;
   const isLastTrick = gameState.trickNumber === 5;
 
+  // Who set the trump + contract progress ("Need X · made Y" HCP)
+  const declarerName = gameState.declarer
+    ? (playerAtPos(gameState.declarer.position)?.name || POSITION_NAMES[gameState.declarer.position])
+    : null;
+  const declarerTeamPos = gameState.declarer ? (['N', 'S'].includes(gameState.declarer.position) ? 'N-S' : 'E-W') : null;
+  const contractNeed = isPlaying && gameState.highestBid ? handHCPRequirement(gameState.highestBid) : null;
+
+  // A completed trick stays on display until the first card of the next trick is played:
+  // while currentTrick is empty during play, fall back to the last trickHistory entry.
+  const lastTrickEntry = (!gameState.currentTrick?.length && gameState.trickHistory?.length)
+    ? gameState.trickHistory[gameState.trickHistory.length - 1] : null;
+  const shownTrick = gameState.currentTrick?.length > 0
+    ? gameState.currentTrick
+    : (lastTrickEntry
+      ? lastTrickEntry.cards.map(c => ({ playerId: c.playerId, playerName: c.playerName, position: c.position, card: { suit: c.card.suit, rank: c.card.rank } }))
+      : []);
+
   // Build table positions relative to viewer (admin has no position — fixed N/E/S/W)
   const ORDER = ['N', 'E', 'S', 'W'];
   let posOrder = ORDER.slice();
@@ -631,15 +648,20 @@ function App() {
             {gameState.state === 'game_over' && `${gameState.winner} wins!`}
           </div>
           <div className="state-details">
-            {isPlaying && gameState.trumpSuit && <div className="trump-indicator">Trump: {gameState.trumpSuit}</div>}
+            {isPlaying && gameState.trumpSuit && (
+              <div className="trump-indicator">Trump: {gameState.trumpSuit}{declarerName ? ` · set by ${declarerName}` : ''}</div>
+            )}
+            {contractNeed && (
+              <div className="contract-progress">Need {contractNeed} HCP · made {gameState.teamPoints?.[declarerTeamPos] || 0}</div>
+            )}
             {gameState.trumpCard && <div className="trump-card-display"><span className="trump-card-label">Trump card:</span>{renderCard(gameState.trumpCard)}</div>}
             {gameState.trumpRevealed && <div className="trump-revealed">♠ Trump Revealed! ♠</div>}
           </div>
         </div>
-        {isPlaying && gameState.currentTrick?.length > 0 && (
+        {isPlaying && shownTrick.length > 0 && (
           <div className="current-trick">
-            {gameState.currentTrick.map((t, i) => (
-              <div key={i} className="trick-entry">
+            {shownTrick.map((t, i) => (
+              <div key={i} className={`trick-entry${!gameState.currentTrick?.length && t.position === lastTrickEntry?.winnerPosition ? ' won' : ''}`}>
                 <span>{t.playerName}</span>
                 {t.card ? renderCard(t.card) : <span className="card-back tiny" />}
               </div>
