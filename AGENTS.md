@@ -36,9 +36,9 @@ No lint, typecheck, or formatter scripts exist. Backend tests live in `backend/t
 
 `waiting` → `cut` → `bidding` → `trump_selection` → `playing` → `hand_review` → (next hand or `game_over`)
 
-Game ends when a team reaches/crosses 12 points (WINNING_SCORE). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–170 (multiples of 10) plus Pass. HCP values: J=30, 9=20, A=15, 10=10, K=5, Q=5.
+Game ends when a team reaches/crosses 12 points (WINNING_SCORE). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–170 (multiples of 10) plus Pass. HCP values: J=30, 9=18, A=12, 10=10, K=3, Q=2.
 
-Scoring is decided by HCP, not trick count: if the declarer's team makes the contract they earn 2 points when the winning bid is ≥ 100, else 1 point; if they fail, the defending team earns double the bid's points (4 or 2). The winning team earns 1 additional point for a slam (collecting all 340 HCP). HCP↔bid table: 50→160, 60→175, 70→190, … 160→325, 170→340.
+Scoring is decided by HCP, not trick count: if the declarer's team makes the contract they earn 2 points when the winning bid is ≥ 100, else 1 point; if they fail, the defending team earns double the bid's points (4 or 2). The winning team earns 2 additional points for a slam (collecting all 300 HCP). HCP↔bid table: 50→156, 60→168, 70→180, … 160→288, 170→300 (requirement = bid×1.2+96).
 
 ## Login (single global table)
 

@@ -4,10 +4,10 @@ const { v4: uuidv4 } = require('uuid');
 const SUITS = ['♠', '♥', '♦', '♣'];
 const RANKS = ['J', '9', 'A', '10', 'K', 'Q'];
 const RANK_ORDER = { J: 6, 9: 5, A: 4, 10: 3, K: 2, Q: 1 };
-const HCP_VALUES = { J: 30, 9: 20, A: 15, 10: 10, K: 5, Q: 5 };
+const HCP_VALUES = { J: 30, 9: 18, A: 12, 10: 10, K: 3, Q: 2 };
 const WINNING_SCORE = 12;
 function bidRequirement(bid) {
-  return Math.round(bid * 1.5 + 85);
+  return Math.round(bid * 1.2 + 96);
 }
 
 class Card {
@@ -622,7 +622,7 @@ class Game {
     const bid = this.declarer.bid;
     // Points granted are 2 when the bid is 100 or more, else 1
     const basePts = bid >= 100 ? 2 : 1;
-    // Winning team also earns +1 for a slam (collecting all 340 HCP)
+    // Winning team also earns +2 for a slam (collecting all 300 HCP)
     let winnerTeam, pts;
     if (declarerHCP >= bidRequirement(bid)) {
       winnerTeam = declarerTeam;
@@ -633,8 +633,8 @@ class Game {
       pts = basePts * 2;
     }
     this.scores[winnerTeam] += pts;
-    if (this.teamPoints[winnerTeam] >= 340) {
-      this.scores[winnerTeam] += 1;
+    if (this.teamPoints[winnerTeam] >= 300) {
+      this.scores[winnerTeam] += 2;
     }
     for (const p of this.players) p.score = this.scores[p.team] || 0;
     if (this.scores['N-S'] >= WINNING_SCORE || this.scores['E-W'] >= WINNING_SCORE) {

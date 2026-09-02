@@ -8,7 +8,7 @@ const SOCKET_URL = process.env.REACT_APP_SOCKET_URL;
 const POSITION_NAMES = { N: 'North', S: 'South', E: 'East', W: 'West' };
 
 function handHCPRequirement(bid) {
-  return Math.round(bid * 1.5 + 85);
+  return Math.round(bid * 1.2 + 96);
 }
 
 function App() {

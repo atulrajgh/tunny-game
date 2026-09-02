@@ -13,7 +13,7 @@ test('renderInstructions returns a full HTML page with the version injected', ()
 test('instructions cover the game essentials', () => {
   const html = renderInstructions('x');
   assert.ok(html.includes('12 points'));
-  assert.ok(html.includes('340'));
+  assert.ok(html.includes('300'));
   assert.ok(html.includes('Bid vs. required HCP'));
   assert.ok(html.includes('Back to Game'));
 });

@@ -90,21 +90,21 @@ describe('deck & cards', () => {
     assert.equal(RANK_ORDER.Q, 1);
   });
 
-  it('HCP values are J=30 9=20 A=15 10=10 K=5 Q=5', () => {
+  it('HCP values are J=30 9=18 A=12 10=10 K=3 Q=2', () => {
     assert.equal(HCP_VALUES.J, 30);
-    assert.equal(HCP_VALUES['9'], 20);
-    assert.equal(HCP_VALUES.A, 15);
+    assert.equal(HCP_VALUES['9'], 18);
+    assert.equal(HCP_VALUES.A, 12);
     assert.equal(HCP_VALUES['10'], 10);
-    assert.equal(HCP_VALUES.K, 5);
-    assert.equal(HCP_VALUES.Q, 5);
+    assert.equal(HCP_VALUES.K, 3);
+    assert.equal(HCP_VALUES.Q, 2);
     assert.equal(new Card('♠', 'J').hcp, 30);
   });
 
   it('bidRequirement table', () => {
-    assert.equal(bidRequirement(50), 160);
-    assert.equal(bidRequirement(60), 175);
-    assert.equal(bidRequirement(100), 235);
-    assert.equal(bidRequirement(170), 340);
+    assert.equal(bidRequirement(50), 156);
+    assert.equal(bidRequirement(60), 168);
+    assert.equal(bidRequirement(100), 216);
+    assert.equal(bidRequirement(170), 300);
   });
 
   it('Card.equals matches suit+rank', () => {
@@ -340,7 +340,7 @@ describe('playing & trick resolution', () => {
     assert.equal(g.trickHistory.length, 1);
     assert.equal(g.trickHistory[0].winnerTeam, 'N-S');
     assert.equal(g.teamTricks['N-S'], 1);
-    assert.equal(g.teamPoints['N-S'], 15 + 5 + 10 + 30, 'A15+Q5+10-10+J30');
+    assert.equal(g.teamPoints['N-S'], 12 + 2 + 10 + 30, 'A12+Q2+10-10+J30');
     assert.equal(g.currentPlayer, playerAt(g, 'N'), 'winner leads the next trick');
   });
 
@@ -380,7 +380,7 @@ describe('playing & trick resolution', () => {
       { pos: 'N', suit: '♠', rank: '10' },
     ]);
     assert.equal(g.trickHistory[0].winnerTeam, 'E-W', 'led suit A wins, trump not active');
-    assert.equal(g.teamPoints['E-W'], 15 + 20 + 5 + 10);
+    assert.equal(g.teamPoints['E-W'], 12 + 18 + 3 + 10);
   });
 
   it('a revealed trump beats the led suit', () => {
@@ -402,7 +402,7 @@ describe('playing & trick resolution', () => {
       { pos: 'N', suit: '♠', rank: '10' },
     ]);
     assert.equal(g.trickHistory[0].winnerTeam, 'N-S', 'trump 9♥ beats the spade lead');
-    assert.equal(g.teamPoints['N-S'], 15 + 20 + 5 + 10, 'winner team tallies all cards in the trick');
+    assert.equal(g.teamPoints['N-S'], 12 + 18 + 3 + 10, 'winner team tallies all cards in the trick');
   });
 
   it('6 tricks advance to hand review', () => {
@@ -597,16 +597,16 @@ describe('scoring (confirmHand)', () => {
 
   it('a failed level-1 contract gives the defenders 2', () => {
     const g = reviewGame(60);
-    g.teamPoints['N-S'] = 170;
+    g.teamPoints['N-S'] = 150;
     assert.ok(g.confirmHand(g.admin.id));
     assert.equal(g.scores['E-W'], 2);
   });
 
   it('a slam adds a bonus point', () => {
     const g = reviewGame(60);
-    g.teamPoints['N-S'] = 340;
+    g.teamPoints['N-S'] = 300;
     assert.ok(g.confirmHand(g.admin.id));
-    assert.equal(g.scores['N-S'], 2, '1 base + 1 slam');
+    assert.equal(g.scores['N-S'], 3, '1 base + 2 slam');
   });
 
   it('reaching the winning score ends the game', () => {

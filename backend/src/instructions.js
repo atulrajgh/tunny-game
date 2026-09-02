@@ -35,8 +35,8 @@ td{font-size:13px}
 <p><span class="card">J</span> <span class="card">9</span> <span class="card">A</span> <span class="card">10</span> <span class="card">K</span> <span class="card">Q</span></p>
 <p>Each card has a high-card-point (HCP) value:</p>
 <table><tr><th>Card</th><td><span class="card">J</span></td><td><span class="card">9</span></td><td><span class="card">A</span></td><td><span class="card">10</span></td><td><span class="card">K</span></td><td><span class="card">Q</span></td></tr>
-<tr><th>HCP</th><td>30</td><td>20</td><td>15</td><td>10</td><td>5</td><td>5</td></tr></table>
-<p>Total HCP in each hand: <strong>340</strong>.</p>
+<tr><th>HCP</th><td>30</td><td>18</td><td>12</td><td>10</td><td>3</td><td>2</td></tr></table>
+<p>Total HCP in each hand: <strong>300</strong>.</p>
 
 <h2>Game Flow</h2>
 <h3>1. Waiting Room</h3>
@@ -66,14 +66,14 @@ td{font-size:13px}
 <ul>
 <li>If the declarer's team makes the contract, they earn <strong>2 points</strong> when the winning bid is <strong>≥ 100</strong>, otherwise <strong>1 point</strong>.</li>
 <li>If the declarer's team fails, the defending team earns <strong>double the bid's points</strong> (4 points for a bid ≥ 100, 2 otherwise).</li>
-<li>The winning team also earns <strong>1 bonus point</strong> for a <strong>slam</strong> — collecting all 340 HCP.</li>
+<li>The winning team also earns <strong>2 bonus points</strong> for a <strong>slam</strong> — collecting all 300 HCP.</li>
 </ul>
 <p><strong>Bid vs. required HCP</strong> (the minimum HCP the declarer's team must collect):</p>
 <table>
 <tr><th>Bid</th><td>50</td><td>60</td><td>70</td><td>80</td><td>90</td><td>100</td><td>110</td><td>120</td><td>130</td><td>140</td><td>150</td><td>160</td><td>170</td></tr>
-<tr><th>HCP needed</th><td>160</td><td>175</td><td>190</td><td>205</td><td>220</td><td>235</td><td>250</td><td>265</td><td>280</td><td>295</td><td>310</td><td>325</td><td>340</td></tr>
+<tr><th>HCP needed</th><td>156</td><td>168</td><td>180</td><td>192</td><td>204</td><td>216</td><td>228</td><td>240</td><td>252</td><td>264</td><td>276</td><td>288</td><td>300</td></tr>
 </table>
-<p>Example: a <strong>100</strong> bid requires 235 HCP; a <strong>170</strong> bid requires all 340 HCP — otherwise the defending team wins.</p>
+<p>Example: a <strong>100</strong> bid requires 216 HCP; a <strong>170</strong> bid requires all 300 HCP — otherwise the defending team wins.</p>
 
 <h2>Winning the Match</h2>
 <p>The first team to reach or cross <strong>12 points</strong> wins.</p>
