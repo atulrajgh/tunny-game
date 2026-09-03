@@ -34,7 +34,9 @@ No lint, typecheck, or formatter scripts exist. Backend tests live in `backend/t
 
 ## Game state machine
 
-`waiting` → `cut` → `bidding` → `trump_selection` → `playing` → `hand_review` → (next hand or `game_over`)
+`waiting` → `cut` → `bidding` → `trump_selection` → (`playing` or `redeal_pending`) → `hand_review` → (next hand or `game_over`)
+
+When the declarer's team (declarer + dummy, including the reserved trump card and any vacated seats) holds all 6 cards of the trump suit after the trump is chosen and cards dealt, the game pauses in `redeal_pending` before the first trick. A message shows on every console and the admin gets a **Redeal** button (`redeal` event → `redealAdmin()`), which re-deals fresh hands and returns to `bidding` with the same dealer. Up to 3 same-dealer redeals are allowed; on the 4th occurrence (`redealCount > 3`) the dealer rotates to the next player and the counter resets, so the game can't stall. `redealPending`/`redealCount` are exposed in `getGameState` (public to all viewers; only the admin can trigger `redeal`).
 
 Game ends when a team reaches/crosses 12 points (WINNING_SCORE). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–200 (multiples of 10) plus Pass. HCP values: J=30, 9=18, A=12, 10=10, K=3, Q=2.
 
@@ -92,11 +94,11 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## WebSocket events (server → client)
 
-`state`, `room_list`, `room_joined`, `player_joined`, `player_left`, `player_demoted`, `spectator_joined`, `spectator_left`, `spectator_promoted`, `demoted_to_spectator`, `cut_start`, `game_started`, `trump_selection`, `game_playing`, `trump_revealed`, `hand_end`, `next_hand`, `game_over`, `game_reset`, `dealer_rotated`, `player_timed_out`, `admin_changed`, `room_closed`, `error`
+`state`, `room_list`, `room_joined`, `player_joined`, `player_left`, `player_demoted`, `spectator_joined`, `spectator_left`, `spectator_promoted`, `demoted_to_spectator`, `cut_start`, `game_started`, `trump_selection`, `game_playing`, `trump_revealed`, `hand_end`, `next_hand`, `game_over`, `game_reset`, `dealer_rotated`, `player_timed_out`, `admin_changed`, `redeal_pending`, `redealed`, `room_closed`, `error`
 
 ## WebSocket events (client → server)
 
-`create_room`, `assign_position`, `start_game`, `cut_done`, `bid`, `choose_trump`, `play`, `play_trump`, `ask_trump`, `confirm_hand`, `kick_player`, `rotate_dealer`, `reset_game`, `admin_play`, `promote_to_player`
+`create_room`, `assign_position`, `start_game`, `cut_done`, `bid`, `choose_trump`, `play`, `play_trump`, `ask_trump`, `confirm_hand`, `kick_player`, `rotate_dealer`, `reset_game`, `admin_play`, `promote_to_player`, `redeal`
 
 ## Key conventions
 

@@ -356,7 +356,26 @@ io.on('connection', (socket) => {
     const g = game(); if (!g) return error('Not in a game');
     if (!g.selectTrump(playerId, card)) return error('Invalid trump selection');
     clearTimeout(g._timeout);
-    io.to(g.id).emit('game_playing', { trump: g.trumpSuit });
+    if (g.state === 'redeal_pending') {
+      io.to(g.id).emit('redeal_pending', {
+        message: g.redealPending ? g.redealPending.reason : 'Redeal needed',
+        redealCount: g.redealCount
+      });
+      updateAll();
+    } else {
+      io.to(g.id).emit('game_playing', { trump: g.trumpSuit });
+      timeoutStart();
+      updateAll();
+    }
+  });
+
+  socket.on('redeal', () => {
+    const g = game(); if (!g) return error('Not in a game');
+    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    if (!g.redealAdmin()) return error('No redeal pending');
+    clearTimeout(g._timeout);
+    io.to(g.id).emit('redealed', { dealer: g.dealer ? g.dealer.name : null, redealCount: g.redealCount });
+    io.to(g.id).emit('game_started', { dealer: g.dealer ? g.dealer.name : null });
     timeoutStart();
     updateAll();
   });

@@ -325,6 +325,71 @@ describe('trump selection', () => {
   });
 });
 
+describe('redeal (trump hog)', () => {
+  // Declarer N holds only one heart (which becomes the reserved trump card); partner S
+  // holds the remaining five hearts. Together the team holds all 6 hearts of the suit.
+  function hogSetup(g) {
+    g.state = 'trump_selection';
+    g.dealer = playerAt(g, 'N');
+    g.declarer = playerAt(g, 'N');
+    g.dummy = playerAt(g, 'S');
+    g.currentPlayer = g.declarer;
+    setHand(g, 'N', [C('♥', 'K'), C('♠', 'J'), C('♠', '9'), C('♦', 'A'), C('♣', 'K')]);
+    setHand(g, 'S', [C('♥', 'J'), C('♥', '9'), C('♥', 'A'), C('♥', '10'), C('♥', 'Q'), C('♠', 'Q')]);
+  }
+
+  it('pauses for an admin redeal when the declarer team holds all 6 trump cards', () => {
+    const { g } = makeGame();
+    hogSetup(g);
+    assert.ok(g.selectTrump(g.declarer.id, { suit: '♥', rank: 'K' }));
+    assert.equal(g.state, 'redeal_pending');
+    assert.equal(g.trumpSuit, '♥');
+    assert.ok(g.redealPending);
+    assert.equal(g.redealPending.trumpSuit, undefined, 'trump suit stays hidden from others');
+  });
+
+  it('does not redeal when the team does not hold all the trump cards', () => {
+    const { g } = makeGame();
+    g.state = 'trump_selection';
+    g.dealer = playerAt(g, 'N');
+    g.declarer = playerAt(g, 'N');
+    setHand(g, 'N', [C('♥', 'Q'), C('♠', 'J'), C('♠', '9'), C('♣', 'K')]);
+    setHand(g, 'S', [C('♠', 'Q'), C('♥', '9'), C('♥', 'K'), C('♣', 'A')]);
+    assert.ok(g.selectTrump(playerAt(g, 'N').id, { suit: '♥', rank: 'Q' }));
+    assert.equal(g.state, 'playing');
+    assert.equal(g.redealPending, null);
+  });
+
+  it('redealAdmin returns to bidding with the same dealer and clears the pending flag', () => {
+    const { g } = makeGame();
+    hogSetup(g);
+    assert.ok(g.selectTrump(g.declarer.id, { suit: '♥', rank: 'K' }));
+    assert.ok(g.redealAdmin());
+    assert.equal(g.state, 'bidding');
+    assert.equal(g.redealCount, 1);
+    assert.equal(g.redealPending, null);
+    assert.equal(g.dealer, playerAt(g, 'N'), 'dealer unchanged before the cap');
+  });
+
+  it('rotates the dealer and resets the count after 3 redeals', () => {
+    const { g } = makeGame();
+    g.redealCount = 3;
+    g.redealPending = { reason: 'declarer team holds all trump' };
+    g.state = 'redeal_pending';
+    g.dealer = playerAt(g, 'N');
+    assert.ok(g.redealAdmin());
+    assert.equal(g.state, 'bidding');
+    assert.equal(g.redealCount, 0);
+    assert.equal(g.redealPending, null);
+    assert.equal(g.dealer, playerAt(g, 'E'), 'dealer rotates to the next player on the 4th occurrence');
+  });
+
+  it('rejects a redeal when none is pending', () => {
+    const { g } = makeGame();
+    assert.ok(!g.redealAdmin());
+  });
+});
+
 describe('playing & trick resolution', () => {
   it('follows suit and resolves J over A; HCP goes to the winning team', () => {
     const { g } = makeGame();

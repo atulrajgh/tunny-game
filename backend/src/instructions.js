@@ -51,6 +51,7 @@ td{font-size:13px}
 
 <h3>4. Trump Selection</h3>
 <p>The declarer selects one card from their hand. That card's suit becomes <strong>trump</strong>. The selected card is set aside from the declarer's hand and is visible only to the declarer until it is played or the trump is revealed. The remaining deck is then dealt out.</p>
+<p><strong>Redeal:</strong> If the declarer's team happens to hold <strong>all 6 cards of the trump suit</strong> after the deal, the hand is paused and the admin can press <strong>Redeal</strong> to deal fresh cards and start bidding again. Up to 3 same-dealer redeals are allowed before the dealer rotates.</p>
 
 <h3>5. Play</h3>
 <p>Players play tricks clockwise, following the lead suit whenever possible. If you cannot follow suit, you may play any card, including a trump. The highest card of the lead suit wins the trick unless a trump is played — then the highest trump wins. Each player plays their own hand; the declarer's partner is an independent player like anyone else.</p>

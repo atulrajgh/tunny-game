@@ -72,6 +72,8 @@ class Game {
     this.lastActivity = Date.now();
     this._timedOutPlayerId = null;
     this.revokedTokens = new Set();
+    this.redealCount = 0;
+    this.redealPending = null;
   }
 
   setupDeck() {
@@ -437,12 +439,46 @@ class Game {
     this.trumpCard = hand.splice(idx, 1)[0];
     this.trumpCardIndex = idx;
     this.dealCards(2);
+    // Before the first trick, check whether the declarer's team holds every card of
+    // the trump suit. If so, pause and ask the admin to redeal instead of playing a
+    // lopsided hand (defenders would hold no trump at all).
+    if (this.trumpSuit && this.teamHoldsAllTrump()) {
+      this.redealPending = {
+        reason: "Declarer's team holds all 6 trump suit cards",
+        redealCount: this.redealCount,
+        declarerTeam: this.declarer ? (['N', 'S'].includes(this.declarer.position) ? 'N-S' : 'E-W') : null
+      };
+      this.state = 'redeal_pending';
+      this.currentPlayer = null;
+      return true;
+    }
     this.state = 'playing';
     this.currentTrick = [];
     this.trickNumber = 0;
     this.currentPlayer = this.seatAfter(this.dealer.position);
     this.lastActivity = Date.now();
     return true;
+  }
+
+  // True when the declarer's team (declarer + dummy, including any vacated seats and
+  // the reserved trump card) collectively holds all 6 cards of the trump suit.
+  teamHoldsAllTrump() {
+    if (!this.declarer || !this.trumpSuit) return false;
+    const trump = this.trumpSuit;
+    const teamSeats = ['N', 'S'].includes(this.declarer.position) ? ['N', 'S'] : ['E', 'W'];
+    const d = this.getPlayer(this.declarer.id);
+    const pid = this.positions[this.getPartnerPosition(this.declarer.position)];
+    const partner = pid ? this.getPlayer(pid) : null;
+    const held = [];
+    if (d) held.push(...(d.hand || []));
+    if (partner) held.push(...(partner.hand || []));
+    if (this.trumpCard) held.push(this.trumpCard);
+    for (const pos of teamSeats) {
+      const v = this.vacatedHands[pos];
+      if (v) held.push(...(v.hand || []));
+    }
+    const count = held.filter(c => c.suit === trump).length;
+    return count >= 6;
   }
 
   selectTrump(playerId, card) {
@@ -647,6 +683,21 @@ class Game {
     return true;
   }
 
+  redealAdmin() {
+    if (!this.redealPending) return false;
+    this.redealPending = null;
+    this.redealCount++;
+    // Up to 3 same-dealer redeals are allowed; on the 4th occurrence rotate the
+    // dealer to the next player and reset the counter so the game can't stall.
+    if (this.redealCount > 3) {
+      this.redealCount = 0;
+      this.resetForNextHand(true);
+    } else {
+      this.resetForNextHand(false);
+    }
+    return true;
+  }
+
   resetForNextHand(rotateDealer = false) {
     for (const p of this.players) {
       p.hand = []; p.bid = null; p.playedCard = null;
@@ -665,6 +716,7 @@ class Game {
     this.highestBid = null; this.passCount = 0;
     this.currentPlayer = null; this.leadSuit = null;
     this._timedOutPlayerId = null;
+    this.redealPending = null;
     if (rotateDealer && this.dealer) this.dealer = this.seatAfter(this.dealer.position);
     this.setupDeck();
     this.dealCards(4);
@@ -757,7 +809,9 @@ class Game {
         card: { suit: e.card.suit, rank: e.card.rank }
       })),
       trickHistory: this.trickHistory,
-      spectators: this.spectators.map(s => ({ id: s.id, name: s.name }))
+      spectators: this.spectators.map(s => ({ id: s.id, name: s.name })),
+      redealCount: this.redealCount,
+      redealPending: this.redealPending ? { ...this.redealPending } : null
     };
     state.teamTricks = { ...this.teamTricks };
     state.teamPoints = { ...this.teamPoints };
@@ -828,7 +882,8 @@ if (viewer) {
       teamTricks: this.teamTricks, teamPoints: this.teamPoints,
       adminId: this.adminId, positions: this.positions,
       handNumber: this.handNumber, lastActivity: this.lastActivity,
-      revokedTokens: [...this.revokedTokens]
+      revokedTokens: [...this.revokedTokens],
+      redealCount: this.redealCount
     };
   }
 
@@ -841,6 +896,7 @@ if (viewer) {
     g.adminId = data.adminId; g.positions = data.positions;
     g.handNumber = data.handNumber || 0; g.lastActivity = data.lastActivity || Date.now();
     g.revokedTokens = new Set(data.revokedTokens || []);
+    g.redealCount = data.redealCount || 0;
     const pMap = {};
     for (const pd of data.players) {
       const p = new Player(pd.id, pd.name);
@@ -884,6 +940,8 @@ if (viewer) {
     this.positions = {}; this.leadSuit = null;
     this._timedOutPlayerId = null;
     this.vacatedHands = {};
+    this.redealCount = 0;
+    this.redealPending = null;
   }
 }
 

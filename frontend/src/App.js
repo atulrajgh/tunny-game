@@ -100,6 +100,8 @@ function App() {
     socket.on('trump_selection', () => setScreen('game'));
     socket.on('game_playing', () => setScreen('game'));
     socket.on('trump_revealed', () => { /* state update handles it */ });
+    socket.on('redeal_pending', () => { setScreen('game'); setTimedOut(null); unlockAction(); });
+    socket.on('redealed', (d) => { unlockAction(); showError(`Redeal done${d && d.dealer ? ' — new dealer ' + d.dealer : ''}`); });
     socket.on('player_joined', () => {});
     socket.on('room_closed', (data) => {
       joinedRef.current = false;
@@ -524,6 +526,9 @@ function App() {
                 <button className="ac-btn blue" onClick={() => sendOnce('rotate_dealer')}>Move Dealer</button>
                 <button className="ac-btn orange" onClick={() => sendOnce('reset_scores')}>Reset Scores</button>
                 <button className="ac-btn orange" onClick={() => sendOnce('reset_game')}>Reset Game</button>
+              {gameState.redealPending && (
+                <button className="ac-btn green" onClick={() => sendOnce('redeal')}>Redeal Hand</button>
+              )}
               {timedOut && timedOut.playerId && (
                 <button className="ac-btn blue" onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOut.playerId }); }}>
                   Take Over ({timedOut.playerName})
@@ -615,6 +620,15 @@ function App() {
     <div className="app game-table">
       {!socketConnected && <div className="reconnect-banner">Connection lost — reconnecting…</div>}
       {error && <div className="toast error">{error}</div>}
+      {gameState.redealPending && (
+        <div className="redeal-banner">
+          <span>{gameState.redealPending.reason}</span>
+          {gameState.redealCount > 0 && <span className="redeal-count"> ({gameState.redealCount} redeal{gameState.redealCount > 1 ? 's' : ''} so far)</span>}
+          {isAdmin && (
+            <button className="action-btn" onClick={() => sendOnce('redeal')}>Redeal</button>
+          )}
+        </div>
+      )}
       {timedOut && (
         <div className="timeout-banner">
           {timedOut.playerId ? `${timedOut.playerName} timed out!` : `${timedOut.playerName}'s seat needs you!`}
@@ -643,6 +657,7 @@ function App() {
             {gameState.state === 'cut' && `Waiting for ${adminName} to cut the deck`}
             {isBidding && `${curPlayer?.name} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`}
             {isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`}
+            {gameState.state === 'redeal_pending' && 'Redeal needed — waiting for admin to redeal'}
             {isPlaying && `${curPlayer?.name}'s turn${isAdmin && vacatedTurnPos ? ' — you play this seat' : ''}`}
             {gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm'}
             {gameState.state === 'game_over' && `${gameState.winner} wins!`}
