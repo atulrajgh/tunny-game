@@ -46,7 +46,7 @@ td{font-size:13px}
 <p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>, and the player to their left bids first. The dealer rotates clockwise to the next seat at the start of each new hand (the admin can also move the dealer manually).</p>
 
 <h3>3. Bidding</h3>
-<p>Starting with the player left of the dealer, each player either <strong>Passes</strong> or bids a multiple of <strong>10 between 50 and 170</strong>. Each bid must be higher than the current highest bid. The bidding panel appears in the <strong>top-left corner</strong>: use <strong>▲/▼</strong> to adjust your bid in steps of 10 (from the highest current bid + 10, up to a cap of 170), then press the value button to submit it.</p>
+<p>Starting with the player left of the dealer, each player either <strong>Passes</strong> or bids a multiple of <strong>10 between 50 and 200</strong>. Each bid must be higher than the current highest bid. The bidding panel appears in the <strong>top-left corner</strong>: use <strong>▲/▼</strong> to adjust your bid in steps of 10 (from the highest current bid + 10, up to a cap of 200), then press the value button to submit it.</p>
 <p>Bidding ends after <strong>3 consecutive passes</strong> following a bid. If everyone passes, the hand is re-dealt with the same dealer. The winning bidder becomes the <strong>declarer</strong>.</p>
 
 <h3>4. Trump Selection</h3>
@@ -70,10 +70,10 @@ td{font-size:13px}
 </ul>
 <p><strong>Bid vs. required HCP</strong> (the minimum HCP the declarer's team must collect):</p>
 <table>
-<tr><th>Bid</th><td>50</td><td>60</td><td>70</td><td>80</td><td>90</td><td>100</td><td>110</td><td>120</td><td>130</td><td>140</td><td>150</td><td>160</td><td>170</td></tr>
-<tr><th>HCP needed</th><td>156</td><td>168</td><td>180</td><td>192</td><td>204</td><td>216</td><td>228</td><td>240</td><td>252</td><td>264</td><td>276</td><td>288</td><td>300</td></tr>
+<tr><th>Bid</th><td>50</td><td>60</td><td>70</td><td>80</td><td>90</td><td>100</td><td>110</td><td>120</td><td>130</td><td>140</td><td>150</td><td>160</td><td>170</td><td>180</td><td>190</td><td>200</td></tr>
+<tr><th>HCP needed</th><td>150</td><td>160</td><td>170</td><td>180</td><td>190</td><td>200</td><td>210</td><td>220</td><td>230</td><td>240</td><td>250</td><td>260</td><td>270</td><td>280</td><td>290</td><td>300</td></tr>
 </table>
-<p>Example: a <strong>100</strong> bid requires 216 HCP; a <strong>170</strong> bid requires all 300 HCP — otherwise the defending team wins.</p>
+<p>Example: a <strong>100</strong> bid requires 200 HCP; a <strong>200</strong> bid requires all 300 HCP — otherwise the defending team wins.</p>
 
 <h2>Winning the Match</h2>
 <p>The first team to reach or cross <strong>12 points</strong> wins.</p>

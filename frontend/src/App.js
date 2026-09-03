@@ -8,7 +8,7 @@ const SOCKET_URL = process.env.REACT_APP_SOCKET_URL;
 const POSITION_NAMES = { N: 'North', S: 'South', E: 'East', W: 'West' };
 
 function handHCPRequirement(bid) {
-  return Math.round(bid * 1.2 + 96);
+  return bid + 100;
 }
 
 function App() {
@@ -127,7 +127,7 @@ function App() {
   useEffect(() => {
     if (gameState?.state === 'bidding') {
       const hb = gameState.highestBid || 0;
-      setIncBid(hb === 0 ? 50 : Math.min(hb + 10, 170));
+      setIncBid(hb === 0 ? 50 : Math.min(hb + 10, 200));
     }
   }, [gameState?.state, gameState?.highestBid]);
 
@@ -702,7 +702,7 @@ function App() {
         <div className="bid-buttons">
           <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
           <div className="bid-stepper">
-            <button onClick={() => setIncBid(v => Math.min(v + 10, 170))} className="bid-arrow up" aria-label="Increase bid">▲</button>
+            <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
             <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
             <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
           </div>
@@ -716,7 +716,7 @@ function App() {
             {vacatedPlayer && (
               <div className="bid-buttons admin">
                 <div className="bid-stepper">
-                  <button onClick={() => setIncBid(v => Math.min(v + 10, 170))} className="bid-arrow up" aria-label="Increase bid">▲</button>
+                  <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
                   <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
                   <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
                 </div>
@@ -726,7 +726,7 @@ function App() {
             {timedOutTurn && (
               <div className="bid-buttons admin">
                 <div className="bid-stepper">
-                  <button onClick={() => setIncBid(v => Math.min(v + 10, 170))} className="bid-arrow up" aria-label="Increase bid">▲</button>
+                  <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
                   <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
                   <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
                 </div>

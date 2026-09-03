@@ -7,7 +7,7 @@ const RANK_ORDER = { J: 6, 9: 5, A: 4, 10: 3, K: 2, Q: 1 };
 const HCP_VALUES = { J: 30, 9: 18, A: 12, 10: 10, K: 3, Q: 2 };
 const WINNING_SCORE = 12;
 function bidRequirement(bid) {
-  return Math.round(bid * 1.2 + 96);
+  return bid + 100;
 }
 
 class Card {
@@ -389,7 +389,7 @@ class Game {
     if (bid === 'pass') {
       seat.bid = 'pass';
       this.passCount++;
-    } else if (typeof bid === 'number' && bid >= 50 && bid <= 170 && bid % 10 === 0 && bid > (this.highestBid || 0)) {
+    } else if (typeof bid === 'number' && bid >= 50 && bid <= 200 && bid % 10 === 0 && bid > (this.highestBid || 0)) {
       seat.bid = bid;
       this.lastBidder = seat;
       this.highestBid = bid;

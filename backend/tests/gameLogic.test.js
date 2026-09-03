@@ -101,10 +101,11 @@ describe('deck & cards', () => {
   });
 
   it('bidRequirement table', () => {
-    assert.equal(bidRequirement(50), 156);
-    assert.equal(bidRequirement(60), 168);
-    assert.equal(bidRequirement(100), 216);
-    assert.equal(bidRequirement(170), 300);
+    assert.equal(bidRequirement(50), 150);
+    assert.equal(bidRequirement(60), 160);
+    assert.equal(bidRequirement(100), 200);
+    assert.equal(bidRequirement(170), 270);
+    assert.equal(bidRequirement(200), 300);
   });
 
   it('Card.equals matches suit+rank', () => {
@@ -236,7 +237,7 @@ describe('bidding', () => {
     assert.ok(!g.placeBid(playerAt(g, 'S').id, 50), 'must exceed the high bid');
     assert.ok(!g.placeBid(playerAt(g, 'S').id, 40), 'below minimum');
     assert.ok(!g.placeBid(playerAt(g, 'S').id, 65), 'not a multiple of 10');
-    assert.ok(!g.placeBid(playerAt(g, 'S').id, 180), 'above maximum');
+    assert.ok(!g.placeBid(playerAt(g, 'S').id, 210), 'above maximum');
     assert.ok(g.placeBid(playerAt(g, 'S').id, 60));
     assert.equal(g.currentPlayer, playerAt(g, 'W'));
   });

@@ -36,9 +36,9 @@ No lint, typecheck, or formatter scripts exist. Backend tests live in `backend/t
 
 `waiting` → `cut` → `bidding` → `trump_selection` → `playing` → `hand_review` → (next hand or `game_over`)
 
-Game ends when a team reaches/crosses 12 points (WINNING_SCORE). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–170 (multiples of 10) plus Pass. HCP values: J=30, 9=18, A=12, 10=10, K=3, Q=2.
+Game ends when a team reaches/crosses 12 points (WINNING_SCORE). Card ranking: J > 9 > A > 10 > K > Q. 24 cards (6 ranks × 4 suits ♠♥♦♣). Bidding range 50–200 (multiples of 10) plus Pass. HCP values: J=30, 9=18, A=12, 10=10, K=3, Q=2.
 
-Scoring is decided by HCP, not trick count: if the declarer's team makes the contract they earn 2 points when the winning bid is ≥ 100, else 1 point; if they fail, the defending team earns double the bid's points (4 or 2). The winning team earns 2 additional points for a slam (collecting all 300 HCP). HCP↔bid table: 50→156, 60→168, 70→180, … 160→288, 170→300 (requirement = bid×1.2+96).
+Scoring is decided by HCP, not trick count: if the declarer's team makes the contract they earn 2 points when the winning bid is ≥ 100, else 1 point; if they fail, the defending team earns double the bid's points (4 or 2). The winning team earns 2 additional points for a slam (collecting all 300 HCP). HCP↔bid table: 50→150, 60→160, … 200→300 (requirement = bid + 100).
 
 ## Login (single global table)
 
@@ -101,7 +101,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 ## Key conventions
 
 - Card display format: `rank + suit` (e.g. `J♠`). Red suits (♥♦) render with red color. Cards render with a larger rank/suit (`.card-face`), scaled down responsively.
-- Bidding UI is a fixed overlay in the top-left (`bidding-top`) with Pass and a value stepper: ▲/▼ adjust the bid in increments of 10 (cap 170), floored at `max(50, highestBid + 10)` so the bid always exceeds the current high bid; the value button submits.
+- Bidding UI is a fixed overlay in the top-left (`bidding-top`) with Pass and a value stepper: ▲/▼ adjust the bid in increments of 10 (cap 200), floored at `max(50, highestBid + 10)` so the bid always exceeds the current high bid; the value button submits.
 - `getGameState(playerId)` shows each player only their own hand. The declarer's partner (dummy) is an independent player — their hand is hidden from everyone like any other player's. Each player's seat is rendered as a single dummy-card image showing the card count, not individual cards.
 - Admin (host-only, not a seated player) sees **no** players' cards normally — only card counts. The admin sees a player's hand only when that seat is vacated (`vacatedHands`) or that player has timed out (`timedOutHand`). Admin sees the trump suit and reserved trump card only when revealed or when acting as a vacated/timed-out declarer; all played trick cards are always visible.
 - Spectators see **no** hands either (not even the dummy's) — only the cards played on the table during a trick (`currentTrick`) and each player's card count (`cardCount`). Trump stays hidden from them until revealed.
