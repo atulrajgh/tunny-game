@@ -1,7 +1,7 @@
 "use strict";
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { Game, Card, RANK_ORDER, HCP_VALUES, WINNING_SCORE, bidRequirement } = require('../src/gameLogic.js');
+const { Game, Card, RANK_ORDER, HCP_VALUES, WINNING_SCORE, bidRequirement, BOT_NAMES, MAX_BOTS } = require('../src/gameLogic.js');
 
 const C = (suit, rank) => new Card(suit, rank);
 const partner = { N: 'S', S: 'N', E: 'W', W: 'E' };
@@ -879,14 +879,14 @@ function makeBotGame({ humanSeats = [], botSeats = [], spectatorBots = 0 }) {
 }
 
 describe('bots & host (computer players)', () => {
-  it('addBot creates bot spectators with reserved names, capped at 3', () => {
+  it('addBot creates bot spectators from the name pool, capped at 3', () => {
     const g = new Game();
     g.addPlayer('Admin', true);
     const b1 = g.addBot(); const b2 = g.addBot(); const b3 = g.addBot();
     assert.ok(b1 && b1.isBot); assert.ok(b2 && b2.isBot); assert.ok(b3 && b3.isBot);
-    assert.equal(b1.name, 'Bot 1');
-    assert.equal(b2.name, 'Bot 2');
-    assert.equal(b3.name, 'Bot 3');
+    const names = [b1.name, b2.name, b3.name];
+    for (const n of names) assert.ok(BOT_NAMES.includes(n), n + ' comes from the pool');
+    assert.equal(new Set(names).size, 3, 'names are unique');
     assert.equal(g.countBots(), 3);
     assert.equal(g.addBot(), null, 'no more than 3 bots total');
   });
@@ -905,9 +905,11 @@ describe('bots & host (computer players)', () => {
   it('bot names block human reuse', () => {
     const g = new Game();
     g.addPlayer('Admin', true);
-    g.addBot();
-    assert.equal(g.addPlayer('Bot 1'), null);
-    assert.equal(g.addSpectator('bot 1'), null, 'case-insensitive reuse blocked');
+    const bot = g.addBot();
+    assert.equal(g.addPlayer(bot.name), null);
+    assert.equal(g.addSpectator(bot.name.toLowerCase()), null, 'case-insensitive reuse blocked');
+    g.removeBot(bot.id);
+    assert.ok(g.addPlayer(bot.name), 'the name frees up when the bot is removed');
   });
 
   it('countBots counts seated and unseated bots together', () => {

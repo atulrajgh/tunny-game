@@ -292,7 +292,7 @@ export default function UIViewer() {
         </Row>
         <Row title="Bot controls">
           <div className="ac-player-row" style={{ maxWidth: 420 }}>
-            <span className="ac-name">Bot 1<span className="bot-tag">BOT</span></span>
+            <span className="ac-name">Alex<span className="bot-tag">BOT</span></span>
             <span className="ac-actions">
               <button className="ac-btn green pos">N</button>
               <button className="ac-btn green pos">S</button>

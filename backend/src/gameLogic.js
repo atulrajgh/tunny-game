@@ -6,7 +6,8 @@ const RANKS = ['J', '9', 'A', '10', 'K', 'Q'];
 const RANK_ORDER = { J: 6, 9: 5, A: 4, 10: 3, K: 2, Q: 1 };
 const HCP_VALUES = { J: 30, 9: 18, A: 12, 10: 10, K: 3, Q: 2 };
 const WINNING_SCORE = 12;
-const BOT_NAMES = ['Bot 1', 'Bot 2', 'Bot 3'];
+// Human-style names drawn at random (any unused one) for computer players.
+const BOT_NAMES = ['Abbot', 'Alex', 'Alicia', 'Bob', 'Bianca', 'Bette', 'Charlie', 'Chica', 'Chelsea'];
 const MAX_BOTS = 3;
 function bidRequirement(bid) {
   return bid + 100;
@@ -239,7 +240,9 @@ class Game {
 
   addBot() {
     if (this.countBots() >= MAX_BOTS) return null;
-    const name = BOT_NAMES.find(n => !this.getViewerName(n));
+    // Pick any unused pool name at random — never the same as a live/waiting name.
+    const pool = BOT_NAMES.slice().sort(() => Math.random() - 0.5);
+    const name = pool.find(n => !this.getViewerName(n));
     if (!name) return null;
     const bot = new Player(uuidv4(), name);
     bot.isBot = true;
