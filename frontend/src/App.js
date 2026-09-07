@@ -406,6 +406,8 @@ function App() {
   let adminPanel = null;
   if (isAdmin && !isSpectator) {
     const unseated = players.filter(p => !p.position);
+    const botSpectators = (gameState.spectators || []).filter(s => s.isBot);
+    const humanSpectators = (gameState.spectators || []).filter(s => !s.isBot);
     const trickOrder = ['N', 'S', 'E', 'W'];
     const hostSeated = !!myPos;
     const isBotAt = (pos) => {
@@ -437,25 +439,43 @@ function App() {
                 )}
               </div>
             </div>
-            <h3 style={{ marginTop: 12 }}>Gallery ({unseated.length})</h3>
-            {unseated.length === 0 ? (
+            <h3 style={{ marginTop: 12 }}>Gallery ({unseated.length + botSpectators.length})</h3>
+            {unseated.length === 0 && botSpectators.length === 0 ? (
               <div className="ac-empty">No waiting players</div>
-            ) : unseated.map(p => (
-              <div key={p.id} className="ac-player-row">
-                <span className="ac-name">{p.name}{p.isBot ? <span className="bot-tag">BOT</span> : null}</span>
-                <div className="ac-actions">
-                  {['N','S','E','W'].filter(seatOpenFor).map(pos => (
-                    <button key={pos} className="ac-btn green pos"
-                      onClick={() => socket.emit('assign_position', { playerId: p.id, position: pos })}>
-                      {pos}
-                    </button>
-                  ))}
-                  {p.id !== playerId && (
-                    <button className="ac-btn red pos" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
-                  )}
-                </div>
-              </div>
-            ))}
+            ) : (
+              <>
+                {unseated.map(p => (
+                  <div key={p.id} className="ac-player-row">
+                    <span className="ac-name">{p.name}{p.isBot ? <span className="bot-tag">BOT</span> : null}</span>
+                    <div className="ac-actions">
+                      {['N','S','E','W'].filter(seatOpenFor).map(pos => (
+                        <button key={pos} className="ac-btn green pos"
+                          onClick={() => socket.emit('assign_position', { playerId: p.id, position: pos })}>
+                          {pos}
+                        </button>
+                      ))}
+                      {p.id !== playerId && (
+                        <button className="ac-btn red pos" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {botSpectators.map(s => (
+                  <div key={s.id} className="ac-player-row">
+                    <span className="ac-name">{s.name}<span className="bot-tag">BOT</span></span>
+                    <div className="ac-actions">
+                      {['N','S','E','W'].filter(seatOpenFor).map(pos => (
+                        <button key={pos} className="ac-btn green pos"
+                          onClick={() => sendOnce('promote_to_player', { spectatorId: s.id, position: pos })}>
+                          {pos}
+                        </button>
+                      ))}
+                      <button className="ac-btn red pos" onClick={() => sendOnce('remove_bot', { botId: s.id })}>✕</button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
             <h3 style={{ marginTop: 12 }}>Table</h3>
             {['N','S','E','W'].map(pos => {
               const pid = gameState.positions?.[pos];
@@ -479,10 +499,10 @@ function App() {
                 </div>
               );
             })}
-            {gameState.spectators?.length > 0 && (
+            {humanSpectators.length > 0 && (
               <>
                 <h3 style={{ marginTop: 12 }}>Spectators</h3>
-                {gameState.spectators.filter(s => !s.isBot).map(s => (
+                {humanSpectators.map(s => (
                   <div key={s.id} className="ac-player-row">
                     <span className="ac-name">{s.name}</span>
                     <div className="ac-actions">
@@ -501,29 +521,15 @@ function App() {
                     </div>
                   </div>
                 ))}
-                <h3 style={{ marginTop: 12 }}>Bots ({botCount}/3)</h3>
-                <div className="ac-player-row">
-                  <button className="ac-btn green add-bot" disabled={botCount >= 3}
-                    onClick={() => sendOnce('add_bot')}>
-                    Add Bot
-                  </button>
-                </div>
-                {gameState.spectators.filter(s => s.isBot).map(s => (
-                  <div key={s.id} className="ac-player-row">
-                    <span className="ac-name">{s.name}<span className="bot-tag">BOT</span></span>
-                    <div className="ac-actions">
-                      {['N','S','E','W'].filter(seatOpenFor).map(pos => (
-                        <button key={pos} className="ac-btn green pos"
-                          onClick={() => sendOnce('promote_to_player', { spectatorId: s.id, position: pos })}>
-                          {pos}
-                        </button>
-                      ))}
-                      <button className="ac-btn red pos" onClick={() => sendOnce('remove_bot', { botId: s.id })}>✕</button>
-                    </div>
-                  </div>
-                ))}
               </>
             )}
+            <h3 style={{ marginTop: 12 }}>Bots ({botCount}/3)</h3>
+            <div className="ac-player-row">
+              <button className="ac-btn green add-bot" disabled={botCount >= 3}
+                onClick={() => sendOnce('add_bot')}>
+                Add Bot
+              </button>
+            </div>
           </div>
 
           {/* Center: Game State + Bids + Current Trick */}
