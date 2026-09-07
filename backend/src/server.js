@@ -6,6 +6,7 @@ const socketIo = require('socket.io');
 const fs = require('fs');
 const path = require('path');
 const { Game } = require('./gameLogic.js');
+const { botAction } = require('./bot.js');
 const { renderInstructions } = require('./instructions.js');
 
 const app = express();
@@ -18,6 +19,8 @@ const TIMEOUT_MS = 300000;
 const ADMIN_TIMEOUT_MS = 600000;
 const ADMIN_GRACE_MS = 60000;
 const SAVE_INTERVAL = 30000;
+const BOT_MIN_DELAY_MS = 800;
+const BOT_MAX_DELAY_MS = 1500;
 const ROOMS = {};
 const PLAYER_SOCKETS = {}; // playerId -> Set<socketId>
 const ADMIN_GRACE_TIMERS = {}; // adminId -> timeout (deferred admin promotion on disconnect)
@@ -105,6 +108,112 @@ function broadcastState(g) {
   for (const s of g.spectators) emitToPlayer(s.id, 'state', g.getGameState(s.id));
 }
 
+// --- Bot driver ---
+// Bots are headless computer players. Whenever a bot seat gets the turn, schedule its
+// action shortly (0.8-1.5s) instead of arming a human turn timeout. `scheduleBots` is
+// called after every state-changing action so the turn reliably passes bot-to-bot.
+
+function clearBotTimer(g) {
+  if (g && g._botTimer) {
+    clearTimeout(g._botTimer);
+    g._botTimer = null;
+  }
+}
+
+function startTurnTimeout(g) {
+  if (!g || !ROOMS[g.id]) return;
+  clearTimeout(g._timeout);
+  if (g.state !== 'playing' && g.state !== 'bidding') return;
+  const cp = g.currentPlayer;
+  // Bots never time out — their action is scheduled by scheduleBots instead.
+  if (cp && cp.id !== null) {
+    const cpObj = g.getPlayer(cp.id);
+    if (cpObj && cpObj.isBot) return;
+  }
+  const isAdminTurn = !cp || cp.id === null || (g.admin && cp.id === g.admin.id);
+  g._timeout = setTimeout(() => {
+    const isAdminGame = !!g.admin;
+    const tViewer = cp ? g.getViewer(cp.id) : null;
+    const offline = cp && cp.id && tViewer && tViewer.online === false;
+    // Reconnect window closed for an offline player: vacate the seat and revoke the token.
+    if (offline) {
+      g.vacateTimedOutPlayer(cp.id);
+      g._timedOutPlayerId = null;
+      io.emit('room_list', getPublicList());
+      broadcastState(g);
+    } else {
+      g._timedOutPlayerId = cp ? cp.id : null;
+    }
+    if (isAdminGame && g.admin) {
+      emitToPlayer(g.admin.id, 'player_timed_out', {
+        playerId: offline ? null : (cp ? cp.id : null),
+        playerName: cp ? cp.name : 'Unknown (vacant seat)'
+      });
+    }
+  }, isAdminTurn ? ADMIN_TIMEOUT_MS : TIMEOUT_MS);
+}
+
+// Complete a bot's card play (or Ask-Then-Play) and pass the turn on.
+function finishBotTurn(g) {
+  clearTimeout(g._timeout);
+  if (g.state === 'hand_review') {
+    io.to(g.id).emit('hand_end', { handNumber: g.handNumber, scores: g.scores });
+  }
+  startTurnTimeout(g);
+  broadcastState(g);
+  scheduleBots(g);
+}
+
+function runBotTurn(g) {
+  if (!g || !ROOMS[g.id]) return;
+  const cp = g.currentPlayer;
+  const bot = cp && cp.id !== null ? g.getPlayer(cp.id) : null;
+  if (!bot || !bot.isBot) return;
+  const action = botAction(g, bot);
+  if (!action) return;
+  if (action.type === 'bid' || action.type === 'pass') {
+    if (!g.placeBid(bot.id, action.type === 'pass' ? 'pass' : action.amount)) return;
+    clearTimeout(g._timeout);
+    if (g.state === 'trump_selection') io.to(g.id).emit('trump_selection', { playerId: g.declarer.id, playerName: g.declarer.name });
+    broadcastState(g);
+    scheduleBots(g);
+  } else if (action.type === 'trump') {
+    if (!g.selectTrump(bot.id, action.card)) return;
+    clearTimeout(g._timeout);
+    if (g.state === 'redeal_pending') {
+      io.to(g.id).emit('redeal_pending', {
+        message: g.redealPending ? g.redealPending.reason : 'Redeal needed',
+        redealCount: g.redealCount
+      });
+    } else {
+      io.to(g.id).emit('game_playing', { trump: g.trumpSuit });
+    }
+    broadcastState(g);
+    scheduleBots(g);
+  } else if (action.type === 'play' || action.type === 'play_trump') {
+    const played = action.type === 'play_trump' ? g.playTrumpCard(bot.id) : g.playCard(bot.id, action.card);
+    if (!played) return;
+    finishBotTurn(g);
+  } else if (action.type === 'ask_then_play') {
+    const asked = g.askTrump(bot.id);
+    const played = g.playCard(bot.id, action.card);
+    if (!asked && !played) return;
+    if (asked) io.to(g.id).emit('trump_revealed', { trumpSuit: g.trumpSuit });
+    finishBotTurn(g);
+  }
+}
+
+function scheduleBots(g) {
+  if (!g || !ROOMS[g.id]) return;
+  clearBotTimer(g);
+  const cp = g.currentPlayer;
+  if (!cp) return;
+  const bot = cp.id !== null ? g.getPlayer(cp.id) : null;
+  if (!bot || !bot.isBot) return;
+  const delay = BOT_MIN_DELAY_MS + Math.random() * (BOT_MAX_DELAY_MS - BOT_MIN_DELAY_MS);
+  g._botTimer = setTimeout(() => { g._botTimer = null; runBotTurn(g); }, delay);
+}
+
 // SPA catch-all — must be after all API routes
 if (hasFrontendBuild) {
   app.get('*', (req, res) => {
@@ -146,14 +255,17 @@ function clearAdminGrace(adminId) {
   }
 }
 
-// True when nobody can play anymore: every seated player is offline (or the seats
-// are all vacated) and no spectator is online — only the admin is left, so the room
-// should close so a fresh join starts a brand-new table.
+// True when nobody can play anymore: every seated human player is offline (or the seats
+// are all vacated) and no human spectator is online — only bots and/or the admin are
+// left, so the room should close so a fresh join starts a brand-new table. Bots are
+// headless and never count as "someone online".
 function allPlayersOffline(g) {
-  return !g.players.some(p => p.online !== false) && !g.spectators.some(s => s.online !== false);
+  return !g.players.some(p => !p.isBot && p.online !== false) &&
+         !g.spectators.some(s => !s.isBot && s.online !== false);
 }
 
 function closeRoom(g) {
+  clearBotTimer(g);
   delete ROOMS[g.id];
   if (GLOBAL_TABLE === g) GLOBAL_TABLE = null;
   io.to(g.id).emit('room_closed', { message: 'Game room closed' });
@@ -210,35 +322,11 @@ io.on('connection', (socket) => {
       io.to(g.id).emit('hand_end', { handNumber: g.handNumber, scores: g.scores });
     } else { timeoutStart(); }
     updateAll();
+    scheduleBots(g);
   }
 
   function timeoutStart() {
-    const g = game();
-    if (!g) return;
-    clearTimeout(g._timeout);
-    if (g.state !== 'playing' && g.state !== 'bidding') return;
-    const cp = g.currentPlayer;
-    const isAdminTurn = !cp || cp.id === null || (g.admin && cp.id === g.admin.id);
-    g._timeout = setTimeout(() => {
-      const isAdminGame = !!g.admin;
-      const tViewer = cp ? g.getViewer(cp.id) : null;
-      const offline = cp && cp.id && tViewer && tViewer.online === false;
-      // Reconnect window closed for an offline player: vacate the seat and revoke the token.
-      if (offline) {
-        g.vacateTimedOutPlayer(cp.id);
-        g._timedOutPlayerId = null;
-        io.emit('room_list', getPublicList());
-        updateAll();
-      } else {
-        g._timedOutPlayerId = cp ? cp.id : null;
-      }
-      if (isAdminGame && g.admin) {
-        emitToPlayer(g.admin.id, 'player_timed_out', {
-          playerId: offline ? null : (cp ? cp.id : null),
-          playerName: cp ? cp.name : 'Unknown (vacant seat)'
-        });
-      }
-    }, isAdminTurn ? ADMIN_TIMEOUT_MS : TIMEOUT_MS);
+    startTurnTimeout(game());
   }
 
   function autoJoin(g, playerName) {
@@ -323,6 +411,48 @@ io.on('connection', (socket) => {
     updateAll();
   });
 
+  socket.on('add_bot', () => {
+    const g = game(); if (!g) return;
+    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    const bot = g.addBot();
+    if (!bot) return error('Cannot add bot (max 3)');
+    io.to(g.id).emit('spectator_joined', { playerId: bot.id, playerName: bot.name });
+    io.emit('room_list', getPublicList());
+    updateAll();
+  });
+
+  socket.on('remove_bot', ({ botId }) => {
+    const g = game(); if (!g) return;
+    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    const bot = g.removeBot(botId);
+    if (!bot) return error('Bot not found');
+    io.to(g.id).emit('spectator_left', { playerId: botId, playerName: bot.name });
+    io.emit('room_list', getPublicList());
+    updateAll();
+    scheduleBots(game());
+  });
+
+  socket.on('admin_sit', ({ position }) => {
+    const g = game(); if (!g) return;
+    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    const a = g.adminSit(position);
+    if (!a) return error('Cannot sit at that position');
+    io.to(g.id).emit('player_joined', { playerId: a.id, playerName: a.name, isAdmin: true, playerCount: g.players.length });
+    io.emit('room_list', getPublicList());
+    updateAll();
+    scheduleBots(game());
+  });
+
+  socket.on('admin_stand', () => {
+    const g = game(); if (!g) return;
+    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    if (!g.adminLeaveSeat()) return error('You are not seated');
+    io.to(g.id).emit('player_left', { playerId: admin.id, playerName: admin.name, playerCount: g.players.length });
+    io.emit('room_list', getPublicList());
+    updateAll();
+    scheduleBots(game());
+  });
+
   socket.on('start_game', () => {
     const g = game(); if (!g) return error('Not in a game');
     const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
@@ -340,6 +470,7 @@ io.on('connection', (socket) => {
     io.emit('room_list', getPublicList());
     updateAll();
     timeoutStart();
+    scheduleBots(game());
   });
 
   socket.on('bid', ({ bid }) => {
@@ -350,6 +481,7 @@ io.on('connection', (socket) => {
       io.to(g.id).emit('trump_selection', { playerId: g.declarer.id, playerName: g.declarer.name });
     } else { timeoutStart(); }
     updateAll();
+    scheduleBots(game());
   });
 
   socket.on('choose_trump', ({ card }) => {
@@ -366,6 +498,7 @@ io.on('connection', (socket) => {
       io.to(g.id).emit('game_playing', { trump: g.trumpSuit });
       timeoutStart();
       updateAll();
+      scheduleBots(game());
     }
   });
 
@@ -378,6 +511,7 @@ io.on('connection', (socket) => {
     io.to(g.id).emit('game_started', { dealer: g.dealer ? g.dealer.name : null });
     timeoutStart();
     updateAll();
+    scheduleBots(game());
   });
 
   socket.on('play', ({ card }) => {
@@ -409,6 +543,7 @@ io.on('connection', (socket) => {
     } else {
       io.to(g.id).emit('next_hand', { handNumber: g.handNumber, dealer: g.dealer.name });
       timeoutStart();
+      scheduleBots(game());
     }
     updateAll();
   });

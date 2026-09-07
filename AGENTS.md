@@ -66,6 +66,17 @@ Embedded below the game table as a collapsible section (toggle at bottom of acti
 
 On mobile (< 768px) the 3-column grid stacks to single column; button sizes increase for touch targets. All admin buttons have `touch-action: manipulation` for reliable Android tap handling.
 
+## Bots & Host (computer players)
+
+- **Bots** are spectators with `isBot: true` in `gameLogic.js`. Max 3 total (`MAX_BOTS`); names are the reserved `BOT_NAMES` (`Bot 1`..`Bot 3`). The admin adds them from the admin panel **Bots** section (`add_bot`) and removes unseated ones with the ✕ button (`remove_bot`). Bot names block human reuse; bots are exempt from the 25-viewer cap (`countViewers` excludes them; `countBots` counts seated + unseated).
+- A seated bot fills a real seat and plays automatically — bots never time out. The server drives them 0.8–1.5s after each human turn via `scheduleBots`/`runBotTurn`/`finishBotTurn` (server.js bot-driver block, right after `broadcastState`); the module-level `startTurnTimeout(g)` skips bot seats. Strategy lives in `backend/src/bot.js`: `botAction(g, bot)` inspects state and returns one of `bid`/`pass`/`trump`/`play`/`play_trump`/`ask_then_play`, which the driver applies with the same methods human sockets use.
+- Bidding uses 4-card hands (~50 HCP average, max 90), so `decideBid` scales from own strength instead of the 6-card requirement: `target = floor((2*ownHCP − 90)/10)*10`, bid only when `target >= 50` and `> highestBid` (cap 200). `decideTrump` picks the highest-HCP suit and reserves its weakest card. `decidePlay`: lead the strongest card; follow with the lowest winning card else cheapest of the led suit; a non-declarer who can't follow and sees the trump hidden returns `ask_then_play` (reveals, then plays); the declarer returns `play_trump` on the last trick or when they can't follow.
+- **Host dual role**: `adminSit('N'|'S'|'E'|'W')`/`adminLeaveSeat()` sit the host as a normal player (admin pushed into `players`, position/team set) or step back off (mid-game the seat is saved via `vacateSeat`). A host-only admin sees no hands; a seated host is a normal player who sees their own hand (`myPos` in the frontend, not `isAdmin`).
+- Humans/host can displace a seated bot even on a full table (net count unchanged). `promoteSpectator`/`setPosition`/`adminSit` refuse a bot displacement of a human but allow a human to take a bot-held seat: `_unseatBot` vacates the seat mid-game (hand/turn saved into `vacatedHands`) and the incoming player inherits the seat state via `restoreSavedState`.
+- Bots are never promoted to admin (`promoteToAdmin` skips `isBot`). Kicking a seated bot (`kick_player`/`demoteToSpectator`) returns it to the spectators and leaves the seat vacated.
+- `isBot` rides `getGameState` (players/spectators/me) and `toJSON`/`fromJSON`; persistence also stores the admin's position/team/isBot and re-pushes a seated admin into `players` on restore.
+- Room liveness ignores bots: `allPlayersOffline` only considers humans, so ≥1 human online keeps the room alive.
+
 ## Player timeout
 
 Timeout is 300 seconds (5 minutes) for a player's turn and 600 seconds (10 minutes) when the admin must act (vacated seat or the admin's own turn) in bidding and playing states. When a player times out, a banner appears allowing the admin to take over their turn via `admin_play`. The timed-out player's hand is exposed to the admin (as `state.timedOutHand`) while it is their turn, so the admin can click their cards, bid for them, or choose trump for a timed-out declarer. `g._timedOutPlayerId` is cleared when that player resumes (bids/plays) or when a new hand starts.
@@ -75,7 +86,7 @@ Timeout is 300 seconds (5 minutes) for a player's turn and 600 seconds (10 minut
 When a player disconnects mid-game, their hand, bid, played card, and role (currentPlayer/declarer/dummy) are saved in `vacatedHands` keyed by position. The turn becomes a vacated pseudo-player (`id: null`) at that position, and the admin plays that seat — bidding via `admin_play` with a `position` + `card` (bid number), choosing trump for a vacated declarer, or clicking the seat's saved cards in the table. The game never freezes while the seat stays vacant; vacated seats are re-dealt fresh hands on the next hand. When the admin promotes a spectator to fill the seat, the saved state is restored — cards remain unchanged for other players, and turn/declarer/dummy references are reassigned to the new player object.
 
 - Names held by a vacated seat count as "in use" (`getViewerName` checks `vacatedHands`), so a new join can't reuse a held name — except the vacated player themselves, who may rejoin as a spectator with their old name (revoked-token path).
-- When every seated player is offline and no spectators remain (`allPlayersOffline`), the room is closed on the last player's disconnect — so a dead game ends instead of lingering; the same check applies in the admin-grace timer.
+- When every seated player is offline and no spectators remain (`allPlayersOffline`), the room is closed on the last player's disconnect — so a dead game ends instead of lingering; the same check applies in the admin-grace timer. Bots are ignored by the liveness check — only humans keep the room alive.
 
 ## Trump visibility
 
@@ -85,7 +96,7 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 - Admin take-over for a vacated/timed-out declarer uses `playVacatedTrump(position)` (or `playTrumpCard(targetId)`) via `admin_play` with `{ trump: true }`; the admin sees the reserved trump card in state only when acting as the declarer (vacated/timed-out declarer) — `trumpCard` in `getGameState` gates on `adminActsDeclarer` (`vacatedHands[declarer.position]` set or `_timedOutPlayerId === declarer.id`), never on `isAdmin` alone.
 - `cardCount` for the declarer includes +1 for the reserved unplayed trump card (`getGameState`).
 - Until the trump is revealed, cards of the trump suit count as regular cards for trick resolution in `endTrick` (`trumpActive = trumpRevealed && trumpSuit` in `gameLogic.js`) — only the led suit can win. Once revealed, the highest trump card in a trick wins.
-- The **Ask Trump** and **Play Trump** buttons are hidden by default. Ask Trump shows for a non-declarer on their turn when they can't follow the led suit and the trump isn't revealed (`isPlaying && !isDeclarer && !isAdmin && !gameState.trumpRevealed && canTrumpAction`). Play Trump shows for the declarer on their turn, card unplayed, trump unrevealed, when `isLastTrick (trickNumber === 5) || canTrumpAction` (i.e. following and holding no led-suit card) — the reserved card is displayed as a face-down `TRUMP` slot next to the hand.
+- The **Ask Trump** and **Play Trump** buttons are hidden by default. Ask Trump shows for a non-declarer on their turn when they can't follow the led suit and the trump isn't revealed (`isPlaying && !isDeclarer && myPos && !gameState.trumpRevealed && canTrumpAction`, where `myPos` means the viewer holds a seat). Play Trump shows for the declarer on their turn, card unplayed, trump unrevealed, when `isLastTrick (trickNumber === 5) || canTrumpAction` (i.e. following and holding no led-suit card) — the reserved card is displayed as a face-down `TRUMP` slot next to the hand.
 - When the trump is visible during play, the state bar shows **who set it** (`Trump: ♥ · set by <declarer name>`) and the declarer's contract progress: `Need <handHCPRequirement(bid)> HCP · made <teamPoints[declarerTeam]>` (`.contract-progress`). Public info — shown to players, admin, and spectators alike. Before the reveal, the setter is still shown — suit-less (`Trump set by <declarer name>`) — on all screens; only the declarer (or admin acting as them) sees the suit form early, since `trumpSuit` stays null for everyone else until revealed.
 
 ## Trick display
@@ -98,14 +109,14 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 
 ## WebSocket events (client → server)
 
-`create_room`, `assign_position`, `start_game`, `cut_done`, `bid`, `choose_trump`, `play`, `play_trump`, `ask_trump`, `confirm_hand`, `kick_player`, `rotate_dealer`, `reset_game`, `admin_play`, `promote_to_player`, `redeal`
+`create_room`, `assign_position`, `start_game`, `cut_done`, `bid`, `choose_trump`, `play`, `play_trump`, `ask_trump`, `confirm_hand`, `kick_player`, `rotate_dealer`, `reset_game`, `admin_play`, `promote_to_player`, `redeal`, `add_bot`, `remove_bot`, `admin_sit`, `admin_stand`
 
 ## Key conventions
 
 - Card display format: `rank + suit` (e.g. `J♠`). Red suits (♥♦) render with red color. Cards render with a larger rank/suit (`.card-face`), scaled down responsively.
 - Bidding UI is a fixed overlay in the top-left (`bidding-top`) with Pass and a value stepper: ▲/▼ adjust the bid in increments of 10 (cap 200), floored at `max(50, highestBid + 10)` so the bid always exceeds the current high bid; the value button submits.
 - `getGameState(playerId)` shows each player only their own hand. The declarer's partner (dummy) is an independent player — their hand is hidden from everyone like any other player's. Each player's seat is rendered as a single dummy-card image showing the card count, not individual cards.
-- Admin (host-only, not a seated player) sees **no** players' cards normally — only card counts. The admin sees a player's hand only when that seat is vacated (`vacatedHands`) or that player has timed out (`timedOutHand`). Admin sees the trump suit and reserved trump card only when revealed or when acting as a vacated/timed-out declarer; all played trick cards are always visible.
+- Admin (host-only, not a seated player) sees **no** players' cards normally — only card counts. The admin sees a player's hand only when that seat is vacated (`vacatedHands`) or that player has timed out (`timedOutHand`). Admin sees the trump suit and reserved trump card only when revealed or when acting as a vacated/timed-out declarer; all played trick cards are always visible. A seated host (`myPos`) is a normal player and sees their own hand.
 - Spectators see **no** hands either (not even the dummy's) — only the cards played on the table during a trick (`currentTrick`) and each player's card count (`cardCount`). Trump stays hidden from them until revealed.
 - Table view rotates so each player sees themselves at South (bottom).
 

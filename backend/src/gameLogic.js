@@ -6,6 +6,8 @@ const RANKS = ['J', '9', 'A', '10', 'K', 'Q'];
 const RANK_ORDER = { J: 6, 9: 5, A: 4, 10: 3, K: 2, Q: 1 };
 const HCP_VALUES = { J: 30, 9: 18, A: 12, 10: 10, K: 3, Q: 2 };
 const WINNING_SCORE = 12;
+const BOT_NAMES = ['Bot 1', 'Bot 2', 'Bot 3'];
+const MAX_BOTS = 3;
 function bidRequirement(bid) {
   return bid + 100;
 }
@@ -33,6 +35,7 @@ class Player {
     this.cutCard = null;
     this.team = null;
     this.online = true;
+    this.isBot = false;
   }
 }
 
@@ -158,16 +161,21 @@ class Game {
 
   promoteToAdmin() {
     let candidate = null;
-    if (this.spectators.length) {
-      candidate = this.spectators.shift();
-    } else if (this.players.length) {
-      const player = this.players[0];
-      if (this.state !== 'waiting' && this.state !== 'cut' && player.position) {
-        this.vacateSeat(player);
+    // Bots are never promoted to admin — only humans can host.
+    const spectatorIdx = this.spectators.findIndex(s => !s.isBot);
+    if (spectatorIdx !== -1) {
+      candidate = this.spectators.splice(spectatorIdx, 1)[0];
+    } else {
+      const playerIdx = this.players.findIndex(p => !p.isBot);
+      if (playerIdx !== -1) {
+        const player = this.players[playerIdx];
+        if (this.state !== 'waiting' && this.state !== 'cut' && player.position) {
+          this.vacateSeat(player);
+        }
+        for (const [pos, id] of Object.entries(this.positions)) if (id === player.id) delete this.positions[pos];
+        this.players.splice(playerIdx, 1);
+        candidate = player;
       }
-      for (const [pos, id] of Object.entries(this.positions)) if (id === player.id) delete this.positions[pos];
-      this.players.splice(0, 1);
-      candidate = player;
     }
     if (!candidate) return null;
     candidate.isAdmin = true;
@@ -197,7 +205,13 @@ class Game {
   }
 
   countViewers() {
-    return (this.admin ? 1 : 0) + this.players.length + this.spectators.length;
+    // Bots are headless computer players, not human viewers, so they never count
+    // against the 25-viewer cap. A host who sits as a player is in this.players,
+    // so avoid double-counting the admin.
+    const humans = this.players.filter(p => !p.isBot).length +
+      this.spectators.filter(s => !s.isBot).length;
+    if (this.admin && !this.players.includes(this.admin)) return humans + 1;
+    return humans;
   }
 
   addSpectator(name) {
@@ -217,6 +231,41 @@ class Game {
     this.spectators.splice(idx, 1);
     this.lastActivity = Date.now();
     return true;
+  }
+
+  countBots() {
+    return this.players.filter(p => p.isBot).length + this.spectators.filter(s => s.isBot).length;
+  }
+
+  addBot() {
+    if (this.countBots() >= MAX_BOTS) return null;
+    const name = BOT_NAMES.find(n => !this.getViewerName(n));
+    if (!name) return null;
+    const bot = new Player(uuidv4(), name);
+    bot.isBot = true;
+    this.spectators.push(bot);
+    this.lastActivity = Date.now();
+    return bot;
+  }
+
+  // Removes a bot anywhere (unseated spectator or seated player). Seated bots are
+  // vacated first so their seat's saved hand is preserved for the next human.
+  removeBot(botId) {
+    const target = this.getPlayer(botId) || this.spectators.find(s => s.id === botId);
+    if (!target || !target.isBot) return null;
+    this.removePlayer(botId);
+    return target;
+  }
+
+  // Un-seat a seated bot, saving its hand mid-game and returning it to the spectator
+  // list. A bot never blocks a human seat, but a human is never displaced this way.
+  _unseatBot(bot) {
+    if (this.state !== 'waiting' && this.state !== 'cut' && bot.position) this.vacateSeat(bot);
+    for (const [p, id] of Object.entries(this.positions)) if (id === bot.id) delete this.positions[p];
+    bot.position = null; bot.team = null; bot.hand = []; bot.bid = null;
+    bot.playedCard = null; bot.cutCard = null;
+    if (!this.spectators.includes(bot)) this.spectators.push(bot);
+    this.lastActivity = Date.now();
   }
 
   getViewer(playerId) {
@@ -253,7 +302,11 @@ class Game {
   promoteSpectator(adminId, spectatorId, position) {
     const admin = this.getPlayer(adminId);
     if (!admin || !admin.isAdmin) return null;
-    if (this.players.length >= 4) return null;
+    if (this.players.length >= 4) {
+      // A full table only opens for a human replacing a seated bot (net count unchanged).
+      const occupant = this.positions[position] ? this.getPlayer(this.positions[position]) : null;
+      if (!position || !occupant || !occupant.isBot) return null;
+    }
     const idx = this.spectators.findIndex(s => s.id === spectatorId);
     if (idx === -1) return null;
     const [s] = this.spectators.splice(idx, 1);
@@ -262,8 +315,23 @@ class Game {
       s.team = (position === 'N' || position === 'S') ? 'N-S' : 'E-W';
       this.positions[position] = s.id;
     } else {
-      s.position = null;
-      s.team = null;
+      // Seat taken by a bot: displace the bot (saving its hand mid-game) and seat
+      // the incoming human — the admin's panel promotes into free or bot-held seats.
+      if (position && this.positions[position]) {
+        const occupant = this.getPlayer(this.positions[position]);
+        if (occupant && occupant.isBot) this._unseatBot(occupant);
+        if (['N','S','E','W'].includes(position) && !this.positions[position]) {
+          s.position = position;
+          s.team = (position === 'N' || position === 'S') ? 'N-S' : 'E-W';
+          this.positions[position] = s.id;
+        } else {
+          s.position = null;
+          s.team = null;
+        }
+      } else {
+        s.position = null;
+        s.team = null;
+      }
     }
     this.players.push(s);
     if (this.state !== 'waiting' && this.state !== 'cut') this.restoreSavedState(s, s.position);
@@ -275,6 +343,10 @@ class Game {
     if (!['N', 'S', 'E', 'W'].includes(pos)) return false;
     const player = this.getPlayer(playerId);
     if (!player) return false;
+    if (this.positions[pos]) {
+      const occupant = this.getPlayer(this.positions[pos]);
+      if (occupant && occupant.isBot && occupant.id !== playerId) this._unseatBot(occupant);
+    }
     for (const [p, id] of Object.entries(this.positions)) {
       if (id === playerId) delete this.positions[p];
     }
@@ -284,6 +356,45 @@ class Game {
     if (this.state !== 'waiting' && this.state !== 'cut') this.restoreSavedState(player, pos);
     this.lastActivity = Date.now();
     return true;
+  }
+
+  // The host may sit as a player on the table (dual role). A bot holding the seat
+  // is displaced; a human holding it cannot be displaced this way.
+  adminSit(position) {
+    const admin = this.admin;
+    if (!admin || admin.position) return null;
+    if (!['N', 'S', 'E', 'W'].includes(position)) return null;
+    const occupant = this.positions[position] ? this.getPlayer(this.positions[position]) : null;
+    if (this.players.length >= 4) {
+      // A full table only opens for the host replacing a seated bot.
+      if (!occupant || !occupant.isBot) return null;
+    }
+    if (this.positions[position]) {
+      if (occupant && occupant.isBot) this._unseatBot(occupant);
+      else if (occupant && occupant.id !== admin.id) return null;
+    }
+    if (!this.players.includes(admin)) this.players.push(admin);
+    this.positions[position] = admin.id;
+    admin.position = position;
+    admin.team = (position === 'N' || position === 'S') ? 'N-S' : 'E-W';
+    if (this.state !== 'waiting' && this.state !== 'cut') this.restoreSavedState(admin, position);
+    this.lastActivity = Date.now();
+    return admin;
+  }
+
+  // The host steps off the table back to spectator-style hosting. Mid-game the seat
+  // is vacated (hand saved) so it can be filled or re-sat by the admin.
+  adminLeaveSeat() {
+    const admin = this.admin;
+    if (!admin || !admin.position) return null;
+    if (this.state !== 'waiting' && this.state !== 'cut') this.vacateSeat(admin);
+    for (const [p, id] of Object.entries(this.positions)) if (id === admin.id) delete this.positions[p];
+    admin.position = null; admin.team = null; admin.hand = []; admin.bid = null;
+    admin.playedCard = null; admin.cutCard = null;
+    const idx = this.players.indexOf(admin);
+    if (idx !== -1) this.players.splice(idx, 1);
+    this.lastActivity = Date.now();
+    return admin;
   }
 
   seatedPlayers() {
@@ -809,7 +920,7 @@ class Game {
         card: { suit: e.card.suit, rank: e.card.rank }
       })),
       trickHistory: this.trickHistory,
-      spectators: this.spectators.map(s => ({ id: s.id, name: s.name })),
+      spectators: this.spectators.map(s => ({ id: s.id, name: s.name, isBot: s.isBot })),
       redealCount: this.redealCount,
       redealPending: this.redealPending ? { ...this.redealPending } : null
     };
@@ -827,7 +938,7 @@ if (viewer) {
         state.me = {
           id: viewer.id, name: viewer.name, position: viewer.position,
           hand: isSpectator ? [] : this.checkMemo('me:' + viewer.id, viewer.hand).map(c => ({ suit: c.suit, rank: c.rank })),
-          isAdmin: viewer.isAdmin, isSpectator: !!isSpectator, team: viewer.team,
+          isAdmin: viewer.isAdmin, isSpectator: !!isSpectator, isBot: viewer.isBot, team: viewer.team,
           bid: viewer.bid, score: viewer.score,
           cutCard: viewer.cutCard ? { suit: viewer.cutCard.suit, rank: viewer.cutCard.rank } : null
         };
@@ -836,7 +947,7 @@ if (viewer) {
         state.players = this.players.map(p => {
           const hand = showHand(p) ? this.checkMemo('p:' + p.id, p.hand).map(c => ({ suit: c.suit, rank: c.rank })) : undefined;
           return { id: p.id, name: p.name, position: p.position, team: p.team,
-            isAdmin: p.isAdmin, bid: p.bid, score: p.score,
+            isAdmin: p.isAdmin, isBot: p.isBot, bid: p.bid, score: p.score,
             online: p.online !== false,
             hand, cardCount: hand ? undefined : p.hand.length + reservedTrumpCount(p) };
         });
@@ -873,10 +984,10 @@ if (viewer) {
       id: this.id, roomId: this.roomId, state: this.state,
       players: this.players.map(p => ({
         id: p.id, name: p.name, position: p.position, team: p.team,
-        isAdmin: false, bid: p.bid, score: p.score, online: p.online
+        isAdmin: false, isBot: p.isBot, bid: p.bid, score: p.score, online: p.online
       })),
-      spectators: this.spectators.map(s => ({ id: s.id, name: s.name, online: s.online })),
-      admin: this.admin ? { id: this.admin.id, name: this.admin.name } : null,
+      spectators: this.spectators.map(s => ({ id: s.id, name: s.name, isBot: s.isBot, online: s.online })),
+      admin: this.admin ? { id: this.admin.id, name: this.admin.name, position: this.admin.position, team: this.admin.team, isBot: this.admin.isBot, online: this.admin.online } : null,
       dealer: this.dealer ? this.dealer.id : null,
       scores: this.scores, winner: this.winner,
       teamTricks: this.teamTricks, teamPoints: this.teamPoints,
@@ -901,7 +1012,7 @@ if (viewer) {
     for (const pd of data.players) {
       const p = new Player(pd.id, pd.name);
       p.position = pd.position; p.team = pd.team;
-      p.isAdmin = false; p.bid = pd.bid;
+      p.isAdmin = false; p.isBot = !!pd.isBot; p.bid = pd.bid;
       p.score = pd.score || 0;
       p.online = pd.online !== false;
       g.players.push(p);
@@ -910,6 +1021,7 @@ if (viewer) {
     if (data.spectators) {
       for (const sd of data.spectators) {
         const s = new Player(sd.id, sd.name);
+        s.isBot = !!sd.isBot;
         s.online = sd.online !== false;
         g.spectators.push(s);
       }
@@ -918,7 +1030,12 @@ if (viewer) {
     if (data.admin) {
       const a = new Player(data.admin.id, data.admin.name);
       a.isAdmin = true;
+      a.isBot = !!data.admin.isBot;
+      a.position = data.admin.position || null;
+      a.team = data.admin.team || null;
       g.admin = a;
+      // A seated host is part of the player pool at runtime — mirror that on restore.
+      if (a.position) g.players.push(a);
     }
     return g;
   }
@@ -945,4 +1062,4 @@ if (viewer) {
   }
 }
 
-module.exports = { Game, Player, Card, SUITS, RANKS, RANK_ORDER, HCP_VALUES, WINNING_SCORE, bidRequirement };
+module.exports = { Game, Player, Card, SUITS, RANKS, RANK_ORDER, HCP_VALUES, WINNING_SCORE, bidRequirement, BOT_NAMES, MAX_BOTS };

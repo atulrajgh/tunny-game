@@ -272,6 +272,39 @@ export default function UIViewer() {
         </div>
       </Section>
 
+      <Section title="Bots & Host">
+        <Row title="Badges">
+          <span>Alice<span className="bot-tag">BOT</span></span>
+          <span>Bob<span className="host-tag">HOST</span></span>
+          <span className="offline-tag">reconnecting</span>
+        </Row>
+        <Row title="Host seat controls">
+          <div className="ac-player-row" style={{ maxWidth: 420 }}>
+            <span className="ac-name">You <span className="host-tag">HOST</span></span>
+            <span className="ac-team">—</span>
+            <span className="ac-actions">
+              <button className="ac-btn green pos">N</button>
+              <button className="ac-btn green pos">S</button>
+              <button className="ac-btn gray pos">E</button>
+              <button className="ac-btn gray pos">W</button>
+            </span>
+          </div>
+        </Row>
+        <Row title="Bot controls">
+          <div className="ac-player-row" style={{ maxWidth: 420 }}>
+            <span className="ac-name">Bot 1<span className="bot-tag">BOT</span></span>
+            <span className="ac-actions">
+              <button className="ac-btn green pos">N</button>
+              <button className="ac-btn green pos">S</button>
+              <button className="ac-btn red pos">✕</button>
+            </span>
+          </div>
+          <div className="ac-player-row" style={{ maxWidth: 420 }}>
+            <button className="ac-btn green add-bot">Add Bot</button>
+          </div>
+        </Row>
+      </Section>
+
       <Section title="Admin panel preview">
         <div className="admin-panel">
           <div className="ac-header">

@@ -62,6 +62,10 @@ td{font-size:13px}
 </ul>
 <p>Until the trump is revealed, trump-suit cards count as ordinary cards and cannot beat the led suit; once revealed, the highest trump in a trick wins.</p>
 
+<h3>Playing with Bots</h3>
+<p>Short-handed? The admin can add up to <strong>3 computer players (Bots)</strong> from the <strong>Bots</strong> section of the admin panel. Bots fill real seats and play automatically — they never time out. Press <strong>✕</strong> next to an unseated bot to remove it. A human (or you yourself) can take over a bot's seat at any time, even on a full table.</p>
+<p>The admin can also sit <strong>as a player</strong> on the table (<strong>Sit as Player</strong>) while keeping full admin powers, and step back off with <strong>Leave Seat</strong>.</p>
+
 <h3>6. Scoring</h3>
 <p>When all tricks are done, the admin reviews the hand and confirms it. The outcome is decided by <strong>HCP</strong>, not the trick count.</p>
 <ul>
@@ -92,6 +96,8 @@ td{font-size:13px}
 <li><strong>Gallery</strong> — unseated players, with position assign and kick</li>
 <li><strong>Table</strong> — seated players with team badges and kick</li>
 <li><strong>Spectators</strong> — promote a spectator to a seat</li>
+<li><strong>Bots</strong> — add up to 3 computer players, or remove an unseated bot</li>
+<li><strong>Host</strong> — sit yourself as a player (N/S/E/W), or leave your seat</li>
 <li><strong>Game State</strong> — hand/trick, state, declarer, bid, trump</li>
 <li><strong>Bids</strong> — each player's bid</li>
 <li><strong>Current Trick</strong> — cards played</li>

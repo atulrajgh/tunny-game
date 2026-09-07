@@ -852,3 +852,227 @@ describe('WINNING_SCORE', () => {
     assert.equal(WINNING_SCORE, 12);
   });
 });
+
+function botAt(g, pos) {
+  return g.getPlayer(g.positions[pos]);
+}
+
+// Host admin + a given mix of seated humans and bots (keyed by position).
+function makeBotGame({ humanSeats = [], botSeats = [], spectatorBots = 0 }) {
+  const g = new Game('bot-test');
+  g.addPlayer('Host', true);
+  const humans = {};
+  const placed = {};
+  humanSeats.forEach((pos, i) => {
+    const h = g.addPlayer('Human' + i);
+    humans[pos] = h;
+    g.setPosition(h.id, pos);
+    placed[pos] = h;
+  });
+  botSeats.forEach(pos => {
+    const b = g.addBot();
+    g.promoteSpectator(g.admin.id, b.id, pos);
+    placed[pos] = b;
+  });
+  for (let i = 0; i < spectatorBots; i++) g.addBot();
+  return { g, humans, placed };
+}
+
+describe('bots & host (computer players)', () => {
+  it('addBot creates bot spectators with reserved names, capped at 3', () => {
+    const g = new Game();
+    g.addPlayer('Admin', true);
+    const b1 = g.addBot(); const b2 = g.addBot(); const b3 = g.addBot();
+    assert.ok(b1 && b1.isBot); assert.ok(b2 && b2.isBot); assert.ok(b3 && b3.isBot);
+    assert.equal(b1.name, 'Bot 1');
+    assert.equal(b2.name, 'Bot 2');
+    assert.equal(b3.name, 'Bot 3');
+    assert.equal(g.countBots(), 3);
+    assert.equal(g.addBot(), null, 'no more than 3 bots total');
+  });
+
+  it('bots are exempt from the 25-viewer cap', () => {
+    const g = new Game();
+    g.addPlayer('Admin', true);
+    for (let i = 0; i < 24; i++) g.addPlayer('P' + i);
+    assert.equal(g.countViewers(), 25);
+    assert.equal(g.addPlayer('Overflow'), null);
+    const b = g.addBot();
+    assert.ok(b, 'a bot still fits while 25 humans are seated');
+    assert.equal(g.countViewers(), 25, 'bots never count toward the viewer cap');
+  });
+
+  it('bot names block human reuse', () => {
+    const g = new Game();
+    g.addPlayer('Admin', true);
+    g.addBot();
+    assert.equal(g.addPlayer('Bot 1'), null);
+    assert.equal(g.addSpectator('bot 1'), null, 'case-insensitive reuse blocked');
+  });
+
+  it('countBots counts seated and unseated bots together', () => {
+    const { g } = makeBotGame({ humanSeats: ['N', 'S'], botSeats: ['E'], spectatorBots: 1 });
+    assert.equal(g.countBots(), 2);
+    assert.equal(g.players.filter(p => p.isBot).length, 1);
+    assert.equal(g.spectators.filter(s => s.isBot).length, 1);
+  });
+
+  it('promoteToAdmin never promotes a bot (falls through to humans)', () => {
+    const g = new Game();
+    g.addPlayer('Admin', true);
+    g.addBot(); g.addBot(); g.addBot();
+    g.removePlayer(g.admin.id); // host leaves
+    assert.equal(g.promoteToAdmin(), null, 'bots alone cannot become admin');
+    // Now a human spectator joins: the human gets promoted, not the bots.
+    const human = g.addSpectator('Watcher');
+    const a = g.promoteToAdmin();
+    assert.equal(a.id, human.id);
+    assert.equal(g.countBots(), 3, 'bots stay spectators');
+  });
+
+  it('promoting a human over a seated bot mid-game preserves the seat hand and turn', () => {
+    const { g } = makeBotGame({ humanSeats: ['N', 'S', 'E'], botSeats: ['W'] });
+    // Declare W (the bot) with trump ♥; after trump the bot holds 3 cards.
+    setupPlaying(g, { declarer: 'W', dealer: 'N', trumpSuit: '♥', bid: 60, hands: {
+      W: [C('♥', 'J'), C('♠', '9'), C('♣', 'A'), C('♦', 'K')],
+      N: [C('♠', 'A'), C('♠', 'Q'), C('♥', '10'), C('♦', 'J')],
+      E: [C('♠', 'K'), C('♥', '9'), C('♣', 'Q'), C('♦', '10')],
+      S: [C('♠', '10'), C('♥', 'A'), C('♣', 'K'), C('♦', 'Q')]
+    } });
+    const bot = botAt(g, 'W');
+    g.currentPlayer = bot; // make the bot mid-turn — the admin replaces that seat
+    const before = bot.hand.map(c => c.toString()).sort();
+    const watcher = g.addSpectator('Watcher');
+    const promoted = g.promoteSpectator(g.admin.id, watcher.id, 'W');
+    assert.equal(promoted.id, watcher.id);
+    assert.equal(watcher.position, 'W');
+    assert.deepEqual(watcher.hand.map(c => c.toString()).sort(), before, 'saved hand restored');
+    assert.equal(g.currentPlayer.id, watcher.id, 'the saved turn passed to the promoted human');
+    assert.ok(g.spectators.includes(bot), 'bot is back in the spectator list');
+    assert.equal(bot.position, null);
+    assert.equal(g.vacatedHands.W, undefined, 'saved hand consumed by the promotion');
+  });
+
+  it('a human-held seat is never displaced by promotion', () => {
+    const { g } = makeGame();
+    const watcher = g.addSpectator('Watcher');
+    // Full table: promoting onto a human-held seat is refused outright.
+    assert.equal(g.promoteSpectator(g.admin.id, watcher.id, 'S'), null);
+    // With a seat free, promotion onto a human-held seat still seats nobody (gallery).
+    g.removePlayer(playerAt(g, 'S').id);
+    const second = g.addSpectator('Viewer2');
+    const p = g.promoteSpectator(g.admin.id, second.id, 'N');
+    assert.equal(p.id, second.id);
+    assert.equal(p.position, null, 'a seated human is never displaced');
+    assert.equal(playerAt(g, 'N').name, 'North');
+  });
+
+  it('promoting a bot to a free seat seats it', () => {
+    const { g } = makeBotGame({ humanSeats: ['N', 'S'], botSeats: [], spectatorBots: 1 });
+    const b = g.spectators.find(s => s.isBot);
+    const p = g.promoteSpectator(g.admin.id, b.id, 'E');
+    assert.equal(p.position, 'E');
+    assert.equal(botAt(g, 'E').isBot, true);
+  });
+
+  it('setPosition displaces a seated bot (the incoming human inherits the seat)', () => {
+    const { g } = makeBotGame({ humanSeats: ['N', 'S', 'E'], botSeats: ['W'] });
+    g.state = 'playing';
+    const mover = botAt(g, 'E'); // E holds a human now; move them to W
+    assert.ok(g.setPosition(mover.id, 'W'));
+    assert.equal(g.positions.W, mover.id);
+    const displaced = g.spectators.find(s => s.isBot);
+    assert.ok(displaced && displaced.position === null);
+    assert.equal(g.vacatedHands.W, undefined,
+      'the saved seat state is transferred to the incoming human, not left vacant');
+  });
+
+  it('adminSit seats the host; adminLeaveSeat steps back off', () => {
+    const { g } = makeBotGame({ humanSeats: ['S', 'E'], botSeats: ['N'], spectatorBots: 0 });
+    g.removeBot(botAt(g, 'N').id); // free N so the host can sit there
+    const a = g.adminSit('N');
+    assert.ok(a);
+    assert.equal(g.admin.position, 'N');
+    assert.equal(a.team, 'N-S');
+    assert.equal(g.players.includes(g.admin), true);
+
+    const left = g.adminLeaveSeat();
+    assert.equal(left.position, null);
+    assert.equal(g.positions.N, undefined);
+    assert.equal(g.players.includes(g.admin), false);
+  });
+
+  it('the seated host bids and plays as a normal player', () => {
+    const { g } = makeBotGame({ humanSeats: ['S', 'E'], botSeats: [] });
+    g.adminSit('N');
+    g.state = 'bidding';
+    g.currentPlayer = g.admin;
+    assert.ok(g.placeBid(g.admin.id, 50), 'seated host bids via the normal path');
+    assert.equal(g.highestBid, 50);
+
+    g.state = 'playing';
+    g.admin.hand = [C('♠', 'J'), C('♦', 'Q')];
+    g.currentPlayer = g.admin;
+    g.currentTrick = [];
+    g.leadSuit = null;
+    g.trickNumber = 0;
+    assert.ok(g.playCard(g.admin.id, { suit: '♠', rank: 'J' }), 'seated host plays as a normal player');
+    assert.equal(g.admin.playedCard.rank, 'J');
+  });
+
+  it('the host stepping off mid-game keeps their saved hand; re-sitting restores it', () => {
+    const { g } = makeBotGame({ humanSeats: ['E'], botSeats: [] });
+    g.adminSit('S');
+    g.state = 'playing';
+    g.admin.hand = [C('♥', 'J'), C('♣', 'A')];
+    g.currentPlayer = g.admin;
+    g.trickNumber = 0; g.currentTrick = []; g.leadSuit = null;
+    g.adminLeaveSeat();                      // mid-game: hand goes to vacatedHands.S
+    assert.ok(g.vacatedHands.S, 'seat saved');
+    assert.equal(g.admin.position, null);
+    g.adminSit('S');
+    assert.deepEqual(g.admin.hand.map(c => c.toString()), ['J♥', 'A♣'], 'hand restored');
+    assert.equal(g.currentPlayer.id, g.admin.id, 'the saved turn came back with it');
+  });
+
+  it('kicking a seated bot returns it to spectators and vacates the seat', () => {
+    const { g } = makeBotGame({ humanSeats: ['N', 'S', 'E'], botSeats: ['W'] });
+    g.state = 'playing';
+    const bot = botAt(g, 'W');
+    g.currentPlayer = bot;
+    bot.hand = [C('♠', 'J')];
+    const p = g.demoteToSpectator(g.admin.id, bot.id);
+    assert.equal(p.isBot, true);
+    assert.equal(g.positions.W, undefined);
+    assert.ok(g.vacatedHands.W, 'seat is vacant for the admin');
+    assert.equal(g.currentPlayer.id, null, 'turn became a vacated seat');
+  });
+
+  it('removeBot removes an unseated bot', () => {
+    const { g } = makeBotGame({ humanSeats: ['N', 'S'], botSeats: [], spectatorBots: 1 });
+    const b = g.spectators.find(s => s.isBot);
+    const removed = g.removeBot(b.id);
+    assert.equal(removed.id, b.id);
+    assert.equal(g.countBots(), 0);
+  });
+
+  it('countViewers excludes bots and dedupes a seated host', () => {
+    const g = new Game();
+    g.addPlayer('Admin', true);
+    for (let i = 0; i < 3; i++) g.addBot();
+    g.adminSit('N');
+    assert.equal(g.countViewers(), 1, 'one host counts once even while seated');
+  });
+
+  it('bots persist through toJSON/fromJSON', () => {
+    const { g } = makeBotGame({ humanSeats: ['N'], botSeats: ['E'], spectatorBots: 1 });
+    g.adminSit('S'); // seated host must round-trip too
+    const rt = Game.fromJSON(g.toJSON());
+    assert.equal(rt.admin.isBot, false);
+    assert.equal(rt.admin.position, 'S');
+    assert.ok(botAt(rt, 'E') && botAt(rt, 'E').isBot, 'seated bot persisted');
+    assert.ok(rt.spectators.some(s => s.isBot), 'unseated bot persisted');
+    assert.equal(rt.players.filter(p => p.isBot).length, 1);
+    assert.equal(rt.countBots(), 2);
+  });
+});
