@@ -536,7 +536,7 @@ function App() {
           <div className="ac-panel">
             <h3>Game State</h3>
             <div className="ac-state">
-              <div className="ac-state-item"><span className="ac-label">Hand</span><span className="ac-value">{gameState.handNumber}/6</span></div>
+              <div className="ac-state-item"><span className="ac-label">Hand</span><span className="ac-value">{gameState.handNumber}</span></div>
               <div className="ac-state-item"><span className="ac-label">Trick</span><span className="ac-value">{gameState.trickNumber + 1}/6</span></div>
               <div className="ac-state-item"><span className="ac-label">State</span><span className="ac-value" style={{ fontSize: 11 }}>{gameState.state}</span></div>
               {gameState.dealer && <div className="ac-state-item"><span className="ac-label">Dealer</span><span className="ac-value" style={{ fontSize: 11 }}>{players.find(p => p.id === gameState.dealer.id)?.name || gameState.dealer.position}</span></div>}

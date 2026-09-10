@@ -122,6 +122,86 @@ describe('bot strategy', () => {
     assert.equal(d.type, 'play_trump');
   });
 
+  it('plays the highest led-suit card when a partner is winning the trick', () => {
+    const { g, bot } = mkGame();
+    g.state = 'playing';
+    g.trumpRevealed = false; g.trumpSuit = '♥';
+    g.trickNumber = 2;
+    g.declarer = { id: 'someone-else' };
+    bot.team = 'N-S';
+    g.currentTrick = [{ player: { id: 'p1', team: 'N-S' }, card: C('♠', 'K') }]; // partner winning
+    g.leadSuit = '♠';
+    bot.hand = [C('♠', 'A'), C('♠', 'Q'), C('♦', 'J')];
+    const d = decidePlay(g, bot);
+    assert.equal(d.type, 'play');
+    assert.equal(d.card.toString(), 'A♠', 'highest card of the led suit, not the cheapest');
+  });
+
+  it('never burns a trump toward a partner-winning trick (no ask, strongest other card)', () => {
+    const { g, bot } = mkGame();
+    g.state = 'playing';
+    g.trumpRevealed = false; g.trumpSuit = '♥';
+    g.trickNumber = 2;
+    g.declarer = { id: 'someone-else' };
+    bot.team = 'N-S';
+    g.currentTrick = [{ player: { id: 'p1', team: 'N-S' }, card: C('♠', 'K') }];
+    g.leadSuit = '♠';
+    bot.hand = [C('♥', 'J'), C('♦', '10')]; // no spade; ♥J is the hidden trump
+    const d = decidePlay(g, bot);
+    assert.equal(d.type, 'play');
+    assert.equal(d.card.toString(), '10♦', 'strongest non-trump card, no reveal');
+  });
+
+  it('plays the strongest trump-suit card when only trumps remain in hand', () => {
+    const { g, bot } = mkGame();
+    g.state = 'playing';
+    g.trumpRevealed = true; g.trumpSuit = '♥';
+    g.trickNumber = 2;
+    g.declarer = { id: 'someone-else' };
+    bot.team = 'N-S';
+    g.currentTrick = [{ player: { id: 'p1', team: 'N-S' }, card: C('♠', 'K') }];
+    g.leadSuit = '♠';
+    bot.hand = [C('♥', 'J'), C('♥', '9')]; // only trump-suit cards left
+    const d = decidePlay(g, bot);
+    assert.equal(d.type, 'play');
+    assert.equal(d.card.toString(), 'J♥');
+  });
+
+  it('the declarer holds off the reserved trump while a partner is winning', () => {
+    const { g, bot } = mkGame();
+    g.state = 'playing';
+    g.trickNumber = 0;
+    g.declarer = bot;
+    g.trumpSuit = '♥';
+    g.trumpRevealed = false;
+    g.trumpCard = C('♥', 'A');
+    g.trumpCardPlayed = false;
+    bot.team = 'N-S';
+    g.currentTrick = [{ player: { id: 'p1', team: 'N-S' }, card: C('♠', 'K') }];
+    g.leadSuit = '♠';
+    bot.hand = [C('♥', 'J'), C('♦', '10')];
+    const d = decidePlay(g, bot);
+    assert.equal(d.type, 'play');
+    assert.equal(d.card.toString(), '10♦', 'reserved trump saved for later');
+  });
+
+  it('plays the reserved trump when it is the only card left', () => {
+    const { g, bot } = mkGame();
+    g.state = 'playing';
+    g.trickNumber = 2;
+    g.declarer = bot;
+    g.trumpSuit = '♥';
+    g.trumpRevealed = false;
+    g.trumpCard = C('♥', 'A');
+    g.trumpCardPlayed = false;
+    bot.team = 'N-S';
+    g.currentTrick = [{ player: { id: 'p1', team: 'N-S' }, card: C('♠', 'K') }];
+    g.leadSuit = '♠';
+    bot.hand = []; // reserved trump is all that is left
+    const d = decidePlay(g, bot);
+    assert.equal(d.type, 'play_trump');
+  });
+
   it('dumps the cheapest card once the trump is already revealed', () => {
     const { g, bot } = mkGame();
     g.state = 'playing';

@@ -102,6 +102,17 @@ function decideTrump(g, bot) {
   return { type: 'trump', card: reserve };
 }
 
+// True when the card currently winning the trick was played by the bot's partner
+// (any player on the same team — including a vacated seat). The bot itself cannot
+// be in the trick yet as it is the current player.
+function partnerWinning(g, bot) {
+  if (!g.currentTrick.length) return false;
+  const best = currentBest(g);
+  const entry = g.currentTrick.find(e => e.card === best);
+  return !!(entry && entry.player && entry.player.team &&
+            entry.player.team === bot.team && entry.player.id !== bot.id);
+}
+
 function decidePlay(g, bot) {
   const hand = bot.hand;
   const leading = g.currentTrick.length === 0;
@@ -109,6 +120,18 @@ function decidePlay(g, bot) {
   const hasLeadSuit = !!leadSuit && hand.some(c => c.suit === leadSuit);
   const isDeclarer = g.declarer && g.declarer.id === bot.id;
   const canPlayTrump = isDeclarer && g.trumpCard && !g.trumpCardPlayed;
+
+  // When a partner is already winning the trick, do not fight for it: follow with the
+  // highest led-suit card, or the strongest card of another suit. Never burn a trump
+  // (the reserved trump or a trump-suit card) unless that is all that is left in hand.
+  if (!leading && partnerWinning(g, bot)) {
+    if (hasLeadSuit) return { type: 'play', card: highestHcp(hand.filter(c => c.suit === leadSuit)) };
+    const others = hand.filter(c => c.suit !== g.trumpSuit);
+    if (others.length) return { type: 'play', card: highestHcp(others) };
+    if (hand.length) return { type: 'play', card: highestHcp(hand) };
+    if (canPlayTrump) return { type: 'play_trump' }; // the reserved trump is the only card
+    return null;
+  }
 
   // Declarer: the reserved trump card wins on the last trick, or any trick where the
   // led suit can't be followed.
