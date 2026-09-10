@@ -402,6 +402,9 @@ io.on('connection', (socket) => {
     io.to(g.id).emit('spectator_promoted', { playerId: p.id, playerName: p.name });
     io.emit('room_list', getPublicList());
     updateAll();
+    clearTimeout(g._timeout);
+    timeoutStart();
+    scheduleBots(game());
   });
 
   socket.on('assign_position', ({ playerId: pid, position }) => {
@@ -409,6 +412,9 @@ io.on('connection', (socket) => {
     const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
     g.setPosition(pid, position);
     updateAll();
+    clearTimeout(g._timeout);
+    timeoutStart();
+    scheduleBots(game());
   });
 
   socket.on('add_bot', () => {
@@ -561,6 +567,9 @@ io.on('connection', (socket) => {
     io.to(g.id).emit('player_demoted', { playerId: targetId, playerName: p.name, playerCount: g.players.length });
     io.emit('room_list', getPublicList());
     updateAll();
+    clearTimeout(g._timeout);
+    timeoutStart();
+    scheduleBots(game());
   });
 
   socket.on('rotate_dealer', () => {
