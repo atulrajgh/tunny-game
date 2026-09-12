@@ -233,12 +233,12 @@ input, button { font-family: inherit; }
 .review-table .ac-tt-win { font-size: 13px; font-weight: 700; color: #f0c040; }
 .review-table .ac-tt-pts { font-size: 13px; text-align: center; }
 .review-table .team-totals { display: inline-flex; flex-direction: column; gap: 2px; align-items: center; line-height: 1.2; }
-.review-table .team-total { font-size: 11px; color: #7da77d; font-weight: 400; white-space: nowrap; }
+.review-table .team-total { font-size: 1em; color: #f0c040; font-weight: 700; white-space: nowrap; }
 .review-table .team-total.won { color: #f0c040; font-weight: 700; }
 
 @media (max-width: 500px) {
   .review-table .team-totals { flex-direction: column; }
-  .review-table .team-total { font-size: 10px; }
+  .review-table .team-total { font-size: 0.9em; }
 }
 .review-table .mini-card { font-size: 20px; }
 .review-hands { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin: 16px 0; }

@@ -218,7 +218,7 @@ export default function UIViewer() {
               <div key={i} className={`ac-trick-table-row${t.winner === 'N-S' ? ' win-ns' : ' win-ew'}`}>
                 <span className="ac-tt-trick">{i + 1}</span>
                 <span className="ac-tt-pts team-totals">
-                  <span className="team-total won">{t.winner === 'N-S' ? `N-S +${t.ns}` : `E-W +${t.ew}`}</span>
+                  <span className="team-total won">{t.winner === 'N-S' ? `+${t.ns}` : `+${t.ew}`}</span>
                 </span>
                 {['N', 'S', 'E', 'W'].map(pos => {
                   const c = t.cards[i % 4];
@@ -307,6 +307,13 @@ export default function UIViewer() {
           </div>
           <div className="ac-grid">
             <div className="ac-panel">
+              <h3>Table</h3>
+              <div className="ac-player-row">
+                <span><span className="ac-name">Bob</span> <span className="ac-team">N (NS)</span></span>
+                <span className="ac-actions"><button className="ac-btn red">Kick</button></span>
+              </div>
+            </div>
+            <div className="ac-panel">
               <h3>Gallery</h3>
               <div className="ac-player-row">
                 <span className="ac-name">Alice</span>
@@ -317,13 +324,6 @@ export default function UIViewer() {
                   <button className="ac-btn pos">W</button>
                   <button className="ac-btn red">Kick</button>
                 </span>
-              </div>
-            </div>
-            <div className="ac-panel">
-              <h3>Table</h3>
-              <div className="ac-player-row">
-                <span><span className="ac-name">Bob</span> <span className="ac-team">N (NS)</span></span>
-                <span className="ac-actions"><button className="ac-btn red">Kick</button></span>
               </div>
             </div>
             <div className="ac-panel">

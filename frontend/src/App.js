@@ -226,7 +226,7 @@ function App() {
             <div key={i} className={`ac-trick-table-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
               <span className="ac-tt-trick">{i + 1}</span>
               <span className="ac-tt-pts team-totals">
-                <span className="team-total won">{r.winner === 'N-S' ? `N-S +${r.ns}` : `E-W +${r.ew}`}</span>
+                <span className="team-total won">{r.winner === 'N-S' ? `+${r.ns}` : `+${r.ew}`}</span>
               </span>
               {posOrder.map(pos => {
                 const isWinner = r.winnerPosition === pos;
@@ -463,6 +463,29 @@ function App() {
                 )}
               </div>
             </div>
+            <h3 style={{ marginTop: 12 }}>Table</h3>
+            {['N','S','E','W'].map(pos => {
+              const pid = gameState.positions?.[pos];
+              const p = players.find(x => x.id === pid);
+              return (
+                <div key={pos} className="ac-player-row">
+                  <span style={{ fontWeight: 700, width: 20 }}>{pos}</span>
+                  {p ? (
+                    <>
+                      <span className="ac-name">{p.name}{p.isBot ? <span className="bot-tag">BOT</span> : null}{p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
+                      <span className="ac-team">{p.team || '—'}</span>
+                      <div className="ac-actions">
+                        {isAdmin && p.id !== playerId && (
+                          <button className="ac-btn red" onClick={() => sendOnce('kick_player', { targetId: p.id })}>✕</button>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <span className="ac-empty">— empty —</span>
+                  )}
+                </div>
+              );
+            })}
             <h3 style={{ marginTop: 12 }}>Gallery ({unseated.length + botSpectators.length})</h3>
             {unseated.length === 0 && botSpectators.length === 0 ? (
               <div className="ac-empty">No waiting players</div>
@@ -500,29 +523,6 @@ function App() {
                 ))}
               </>
             )}
-            <h3 style={{ marginTop: 12 }}>Table</h3>
-            {['N','S','E','W'].map(pos => {
-              const pid = gameState.positions?.[pos];
-              const p = players.find(x => x.id === pid);
-              return (
-                <div key={pos} className="ac-player-row">
-                  <span style={{ fontWeight: 700, width: 20 }}>{pos}</span>
-                  {p ? (
-                    <>
-                      <span className="ac-name">{p.name}{p.isBot ? <span className="bot-tag">BOT</span> : null}{p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
-                      <span className="ac-team">{p.team || '—'}</span>
-                      <div className="ac-actions">
-                        {isAdmin && p.id !== playerId && (
-                          <button className="ac-btn red" onClick={() => sendOnce('kick_player', { targetId: p.id })}>✕</button>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <span className="ac-empty">— empty —</span>
-                  )}
-                </div>
-              );
-            })}
             {humanSpectators.length > 0 && (
               <>
                 <h3 style={{ marginTop: 12 }}>Spectators</h3>
