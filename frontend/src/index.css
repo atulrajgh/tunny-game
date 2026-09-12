@@ -218,6 +218,13 @@ input, button { font-family: inherit; }
 /* ---- Turn indicator ---- */
 .turn-indicator { text-align: center; padding: 8px; background: #f0c040; color: #2d4a2d; font-weight: 700; border-radius: 8px; animation: pulse 1s infinite; }
 
+/* ---- Unified message bar ---- */
+.message-bar { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; text-align: center; padding: 8px 12px; background: #f0c040; color: #2d4a2d; font-weight: 700; border-radius: 8px; }
+.message-bar .redeal-count { font-weight: 400; opacity: 0.85; }
+.message-bar button { padding: 4px 12px; border: none; border-radius: 4px; background: #fff; color: #8e44ad; cursor: pointer; font-weight: 600; touch-action: manipulation; }
+.message-bar .your-turn-msg { animation: pulse 1s infinite; }
+.review-screen .message-bar { max-width: 620px; margin: 12px auto; }
+
 /* ---- Waiting banner (player awaiting seat) ---- */
 .waiting-banner { text-align: center; padding: 14px; background: #f0c040; color: #2d4a2d; font-weight: 700; border-radius: 8px; font-size: 18px; margin-bottom: 12px; }
 
@@ -239,7 +246,7 @@ input, button { font-family: inherit; }
 .version { font-family: 'Dancing Script', cursive; color: #f0c040; font-size: 14px; text-align: center; padding: 6px 0 16px; }
 .version a { color: #f0c040; text-decoration: none; }
 .review-screen .review-table { max-height: none; overflow-y: visible; margin: 16px auto; max-width: 760px; }
-.review-table .ac-trick-table-header, .review-table .ac-trick-table-row { font-size: 14px; }
+.review-table .ac-trick-table-header, .review-table .ac-trick-table-row { font-size: 14px; grid-template-columns: 48px 56px repeat(4, 1fr); }
 .review-table .ac-tt-win { font-size: 13px; font-weight: 700; color: #f0c040; }
 .review-table .ac-tt-pts { font-size: 13px; text-align: center; }
 .review-table .mini-card { font-size: 20px; }

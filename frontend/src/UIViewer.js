@@ -175,7 +175,6 @@ export default function UIViewer() {
           <div className="state-bar" style={{ flex: 1 }}>
             <div className="state-info">
               <div className="round-info">Hand 3 • Trick 2</div>
-              <div className="current-action">Waiting for South to play</div>
             </div>
             <div className="trump-indicator"><span className="trump-revealed">♥ Trump</span></div>
           </div>
@@ -183,19 +182,16 @@ export default function UIViewer() {
       </Section>
 
       <Section title="Notifications">
-        <Row title="Toast">
-          <div className="toast error">Something went wrong</div>
-        </Row>
-        <Row title="Timeout banner">
-          <div className="timeout-banner">
-            Player timed out <button>Take Over</button>
+        <Row title="Message bar">
+          <div className="message-bar">
+            <span className="current-action-msg">Alice is bidding</span>
+            <span className="your-turn-msg">Your turn!</span>
           </div>
         </Row>
-        <Row title="Turn indicator">
-          <div className="turn-indicator">Your turn!</div>
-        </Row>
-        <Row title="Waiting banner">
-          <div className="waiting-banner">Waiting for a seat...</div>
+        <Row title="Message bar (admin)">
+          <div className="message-bar">
+            <span className="redeal-msg">Reduced trump: N-S holds 6 trumps<span className="redeal-count"> (2 redeals so far)</span><button>Redeal</button></span>
+          </div>
         </Row>
       </Section>
 
@@ -205,24 +201,23 @@ export default function UIViewer() {
           <div className="ac-trick-table review-table" style={{ margin: '16px auto', maxWidth: 760 }}>
             <div className="ac-trick-table-header">
               <span className="ac-tt-trick">Trick</span>
+              <span className="ac-tt-pts">Total</span>
               <span className="ac-tt-card">Alice<span className="trump-suit">♥</span></span>
               <span className="ac-tt-card">Bob</span>
               <span className="ac-tt-card">Carol</span>
               <span className="ac-tt-card">Dan</span>
-              <span className="ac-tt-win">Winner</span>
-              <span className="ac-tt-pts">N-S</span>
-              <span className="ac-tt-pts">E-W</span>
             </div>
             {[
-              { cards: [card('♥', 'A'), card('♠', '10'), card('♥', 'J'), card('♠', 'K')], winner: 'N-S', winnerPosition: 'N', ns: 20, ew: null },
-              { cards: [card('♣', 'Q'), card('♦', '9'), card('♣', 'K'), card('♠', 'J')], winner: 'E-W', winnerPosition: 'E', ns: null, ew: 15 },
-              { cards: [card('♠', 'A'), card('♥', 'K'), card('♦', 'J'), card('♠', 'Q')], winner: 'N-S', winnerPosition: 'S', ns: 45, ew: null },
-              { cards: [card('♣', 'J'), card('♦', '10'), card('♥', 'Q'), card('♦', 'K')], winner: 'E-W', winnerPosition: 'W', ns: null, ew: 40 },
-              { cards: [card('♠', '9'), card('♣', '10'), card('♦', 'A'), card('♥', '10')], winner: 'N-S', winnerPosition: 'N', ns: 65, ew: null },
-              { cards: [card('♣', 'A'), card('♦', 'Q'), card('♣', '9'), card('♠', '10')], winner: 'E-W', winnerPosition: 'E', ns: null, ew: 70 }
+              { cards: [card('♥', 'A'), card('♠', '10'), card('♥', 'J'), card('♠', 'K')], winner: 'N-S', winnerPosition: 'N', total: 20 },
+              { cards: [card('♣', 'Q'), card('♦', '9'), card('♣', 'K'), card('♠', 'J')], winner: 'E-W', winnerPosition: 'E', total: 35 },
+              { cards: [card('♠', 'A'), card('♥', 'K'), card('♦', 'J'), card('♠', 'Q')], winner: 'N-S', winnerPosition: 'S', total: 80 },
+              { cards: [card('♣', 'J'), card('♦', '10'), card('♥', 'Q'), card('♦', 'K')], winner: 'E-W', winnerPosition: 'W', total: 130 },
+              { cards: [card('♠', '9'), card('♣', '10'), card('♦', 'A'), card('♥', '10')], winner: 'N-S', winnerPosition: 'N', total: 145 },
+              { cards: [card('♣', 'A'), card('♦', 'Q'), card('♣', '9'), card('♠', '10')], winner: 'E-W', winnerPosition: 'E', total: 220 }
             ].map((t, i) => (
               <div key={i} className={`ac-trick-table-row${t.winner === 'N-S' ? ' win-ns' : ' win-ew'}`}>
                 <span className="ac-tt-trick">{i + 1}</span>
+                <span className="ac-tt-pts">+{t.total}</span>
                 {['N', 'S', 'E', 'W'].map(pos => {
                   const c = t.cards[i % 4];
                   const isWinner = t.winnerPosition === pos;
@@ -232,9 +227,6 @@ export default function UIViewer() {
                     </span>
                   );
                 })}
-                <span className="ac-tt-win">{t.winner}</span>
-                <span className="ac-tt-pts">{t.ns != null ? `+${t.ns}` : '·'}</span>
-                <span className="ac-tt-pts">{t.ew != null ? `+${t.ew}` : '·'}</span>
               </div>
             ))}
           </div>

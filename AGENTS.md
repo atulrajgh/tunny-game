@@ -62,7 +62,7 @@ Embedded below the game table as a collapsible section (toggle at bottom of acti
 - **Bids** — each player's current bid
 - **Current Trick** — cards played this trick
 - **Scores** — running scores, HCP this hand, tricks this hand
-- **Controls** — Move Dealer, Reset Scores, Reset Game, Take Over (timed-out player), Confirm & Next Hand
+- **Controls** — Move Dealer, Reset Scores, Reset Game, Take Over (timed-out player), Confirm & Next Hand. During `waiting` it shows **Start Game** (`start_game` → `startCut()`) and during `cut` it shows **Determine Dealer** (`cut_done` → `determineDealer()`) — the cut-phase button was renamed from "Start Bidding" so the two start phases don't read as redundant (no logic change).
 
 On mobile (< 768px) the 3-column grid stacks to single column; button sizes increase for touch targets. All admin buttons have `touch-action: manipulation` for reliable Android tap handling.
 
@@ -102,6 +102,11 @@ When a player disconnects mid-game, their hand, bid, played card, and role (curr
 ## Trick display
 
 - The state bar's trick area falls back to the last completed trick when `currentTrick` is empty during `playing` (frontend maps the last `trickHistory` entry to the same shape as `currentTrick`). So a finished trick stays visible until the first card of the next trick replaces it; the winner's entry gets a `.won` gold highlight. Hidden outside `playing` (e.g. hand review has its own table).
+
+## Review screen table & messages
+
+- The hand-review table (`.review-table`, 6 columns) is `Trick | Total | N | S | E | W` — the old `Winner`, `N-S`, and `E-W` columns are gone. One `Total` column sits in **position 2** (right after Trick, before the card columns) and shows the running cumulative HCP points of the hand across all tricks (`runningTotal += winValue`). Winning per-trick value is `t.winnerPoints` (fallback: `teamPoints['N-S'] + teamPoints['E-W']`). Row color coding is unchanged: `.win-ns` (blue) / `.win-ew` (red) backgrounds plus the gold `trick-winner` ✓ on the winning card. The admin-panel "Current Trick" table (`.ac-trick-table` base, 8 columns) keeps its `Winner`/`N-S`/`E-W` layout with its own grid template; only `.review-table` overrides `grid-template-columns: 48px 56px repeat(4, 1fr)`.
+- **All in-game messages live in ONE placeholder `.message-bar`** (amber bar, flex, wrapped) rendered where the old `turn-indicator` sat (between the table and the viewer's hand) and on the review screen. Segments concatenate inside it: connection-loss, error/status toast text, redeal (reason + count + admin **Redeal** button), timeout (**Take Over** button), the current-action line (who is bidding/selecting trump/whose turn, folded in from the removed `.current-action`), and **Your turn!**. The bar renders `null` when no message applies. The standalone fixed `.reconnect-banner`, `.toast.error`, `.redeal-banner`, `.timeout-banner`, `.waiting-banner`, and `.turn-indicator` elements are no longer used on the game/review screens (login screen keeps its own `.toast.error`/`.reconnect-banner`). Old banner CSS classes are retained for other/legacy styling; `UIViewer.js` previews the consolidated bar and the 6-column review table.
 
 ## WebSocket events (server → client)
 

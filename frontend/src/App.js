@@ -184,44 +184,45 @@ function App() {
   if (gameState.state === 'hand_review' && screen === 'review') {
     const tricks = gameState.trickHistory || [];
     const posOrder = ['N', 'S', 'E', 'W'];
-    let nsRunning = 0;
-    let ewRunning = 0;
+    let runningTotal = 0;
     const rows = tricks.map(t => {
       const cardAt = {};
       for (const c of t.cards) cardAt[c.position] = c.card;
       const winValue = t.winnerPoints != null
         ? t.winnerPoints
         : (t.teamPoints?.['N-S'] || 0) + (t.teamPoints?.['E-W'] || 0);
-      if (t.winnerTeam === 'N-S') nsRunning += winValue;
-      else ewRunning += winValue;
+      runningTotal += winValue;
       return {
         cards: cardAt,
         winner: t.winnerTeam,
         winnerPosition: t.winnerPosition,
-        nsTotal: t.winnerTeam === 'N-S' ? nsRunning : null,
-        ewTotal: t.winnerTeam === 'E-W' ? ewRunning : null
+        total: runningTotal
       };
     });
     return (
       <div className="app review-screen">
         <h2 className="review-title">Hand {gameState.handNumber} Review{gameState.highestBid ? <> · Highest Bid: {gameState.highestBid} ({handHCPRequirement(gameState.highestBid)} HCP)</> : ''}</h2>
-        {error && <div className="toast error">{error}</div>}
+        {(error || !isAdmin) && (
+          <div className="message-bar">
+            {error && <span>{error}</span>}
+            {!isAdmin && <span>Waiting for admin to confirm...</span>}
+          </div>
+        )}
         <div className="ac-trick-table review-table">
           <div className="ac-trick-table-header">
             <span className="ac-tt-trick">Trick</span>
+            <span className="ac-tt-pts">Total</span>
             {posOrder.map(pos => {
               const p = players.find(x => x.position === pos);
               return (
                 <span key={pos} className="ac-tt-card">{p?.name || POSITION_NAMES[pos]}{gameState.declarer?.position === pos && gameState.trumpSuit ? <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span> : null}</span>
               );
             })}
-            <span className="ac-tt-win">Winner</span>
-            <span className="ac-tt-pts">N-S</span>
-            <span className="ac-tt-pts">E-W</span>
           </div>
           {rows.map((r, i) => (
             <div key={i} className={`ac-trick-table-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
               <span className="ac-tt-trick">{i + 1}</span>
+              <span className="ac-tt-pts">+{r.total}</span>
               {posOrder.map(pos => {
                 const isWinner = r.winnerPosition === pos;
                 return (
@@ -230,9 +231,6 @@ function App() {
                   </span>
                 );
               })}
-              <span className="ac-tt-win">{r.winner || '—'}</span>
-              <span className="ac-tt-pts">{r.nsTotal != null ? `+${r.nsTotal}` : '·'}</span>
-              <span className="ac-tt-pts">{r.ewTotal != null ? `+${r.ewTotal}` : '·'}</span>
             </div>
           ))}
         </div>
@@ -241,7 +239,6 @@ function App() {
             Confirm & Next Hand
           </button>
         )}
-        {!isAdmin && <p>Waiting for admin to confirm...</p>}
         <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
         {version && <div className="version">Version {version}</div>}
       </div>
@@ -296,6 +293,18 @@ function App() {
   const timedOutHand = gameState.timedOutHand;
   const timedOutTurn = isAdmin && timedOutHand && curPlayer && curPlayer.id === timedOutHand.playerId;
   const timedOutDeclarer = isAdmin && timedOutHand && gameState.declarer && gameState.declarer.id === timedOutHand.playerId;
+
+  // The current "who is acting" line, folded into the unified message bar.
+  const currentActionText = [
+    gameState.state === 'waiting' && (isAdmin ? 'Waiting — assign positions and start the game' : `Waiting for ${adminName} to assign a seat`),
+    gameState.state === 'cut' && `Waiting for ${adminName} to determine the dealer`,
+    isBidding && `${curPlayer?.name} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`,
+    isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`,
+    gameState.state === 'redeal_pending' && null,
+    isPlaying && `${curPlayer?.name}'s turn${isAdmin && vacatedTurnPos ? ' — you play this seat' : ''}`,
+    gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm',
+    gameState.state === 'game_over' && `${gameState.winner} wins!`
+  ].filter(Boolean).join(' · ');
 
   // Trump action rules: hidden by default — only on your turn when you can't follow the led suit
   const ledSuit = gameState.currentTrick?.[0]?.card?.suit || null;
@@ -573,7 +582,7 @@ function App() {
                 </button>
               )}
               {gameState.state === 'cut' && (
-                <button className="ac-btn green" onClick={() => sendOnce('cut_done')}>Start Bidding</button>
+                <button className="ac-btn green" onClick={() => sendOnce('cut_done')}>Determine Dealer</button>
               )}
                 <button className="ac-btn blue" onClick={() => sendOnce('rotate_dealer')}>Move Dealer</button>
                 <button className="ac-btn orange" onClick={() => sendOnce('reset_scores')}>Reset Scores</button>
@@ -668,33 +677,36 @@ function App() {
     );
   }
 
-  return (
-    <div className="app game-table">
-      {!socketConnected && <div className="reconnect-banner">Connection lost — reconnecting…</div>}
-      {error && <div className="toast error">{error}</div>}
+  const messageBar = currentActionText || !socketConnected || error || gameState.redealPending || timedOut || (isMyTurn && isPlaying && !isSpectator) ? (
+    <div className="message-bar">
+      {!socketConnected && <span>Connection lost — reconnecting…</span>}
+      {error && <span>{error}</span>}
       {gameState.redealPending && (
-        <div className="redeal-banner">
-          <span>{gameState.redealPending.reason}</span>
+        <span className="redeal-msg">
+          {gameState.redealPending.reason}
           {gameState.redealCount > 0 && <span className="redeal-count"> ({gameState.redealCount} redeal{gameState.redealCount > 1 ? 's' : ''} so far)</span>}
           {isAdmin && (
             <button className="action-btn" onClick={() => sendOnce('redeal')}>Redeal</button>
           )}
-        </div>
+        </span>
       )}
       {timedOut && (
-        <div className="timeout-banner">
+        <span className="timeout-msg">
           {timedOut.playerId ? `${timedOut.playerName} timed out!` : `${timedOut.playerName}'s seat needs you!`}
           {isAdmin && timedOut.playerId && (
             <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOut.playerId }); }}>Take Over</button>
           )}
           {isAdmin && !timedOut.playerId && <span> — play their seat below</span>}
-        </div>
+        </span>
       )}
+      {currentActionText && <span className="current-action-msg">{currentActionText}</span>}
+      {isMyTurn && isPlaying && !isSpectator && <span className="your-turn-msg">Your turn!</span>}
+    </div>
+  ) : null;
 
+  return (
+    <div className="app game-table">
       {/* Top: current state message + scores */}
-      {!isAdmin && gameState.state === 'waiting' && (
-        <div className="waiting-banner">Waiting for {adminName} to assign a seat</div>
-      )}
       <div className="state-bar">
         <div className="team-scores">
           <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
@@ -704,16 +716,6 @@ function App() {
         </div>
         <div className="state-info">
           <div className="round-info">Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
-          <div className="current-action">
-            {gameState.state === 'waiting' && (isAdmin ? `Waiting — assign positions and start the game` : `Waiting for ${adminName} to assign a seat`)}
-            {gameState.state === 'cut' && `Waiting for ${adminName} to cut the deck`}
-            {isBidding && `${curPlayer?.name} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`}
-            {isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`}
-            {gameState.state === 'redeal_pending' && 'Redeal needed — waiting for admin to redeal'}
-            {isPlaying && `${curPlayer?.name}'s turn${isAdmin && vacatedTurnPos ? ' — you play this seat' : ''}`}
-            {gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm'}
-            {gameState.state === 'game_over' && `${gameState.winner} wins!`}
-          </div>
           <div className="state-details">
             {isPlaying && declarerName && (
               <div className="trump-indicator">
@@ -755,7 +757,7 @@ function App() {
               </div>
             )}
             {isAdmin && (
-              <button className="start-btn" onClick={() => sendOnce('cut_done')}>Start Bidding</button>
+              <button className="start-btn" onClick={() => sendOnce('cut_done')}>Determine Dealer</button>
             )}
           </div>
         )}
@@ -881,8 +883,8 @@ function App() {
         )}
       </div>
 
-      {/* Turn indicator */}
-      {isMyTurn && isPlaying && !isSpectator && <div className="turn-indicator">Your turn!</div>}
+      {/* Unified message bar (your-turn spot) */}
+      {messageBar}
 
       {/* My hand */}
       <div className="my-area">
