@@ -56,21 +56,24 @@ function followSuitChoice(g, hand, leadSuit) {
   return led[0];
 }
 
-// After revealing trump via Ask Trump, prefer to win with the cheapest trump; otherwise
-// dump the cheapest card.
-function playChoiceAfterAsk(g, bot) {
+// After revealing trump via Ask Trump, prefer to win with the cheapest trump that
+// beats the current best card; otherwise dump the cheapest non-trump card.
+function pickCannotFollow(g, bot) {
   const best = currentBest(g);
-  const trumps = bot.hand.filter(c => c.suit === g.trumpSuit).sort((a, b) => a.hcp - b.hcp);
-  if (best) {
-    if (best.suit !== g.trumpSuit) {
-      if (trumps.length) return trumps[0];
-    } else {
-      for (const c of trumps) {
-        if (RANK_ORDER[c.rank] > RANK_ORDER[best.rank]) return c;
-      }
+  const trump = g.trumpSuit;
+  if (best && trump) {
+    const trumps = bot.hand.filter(c => c.suit === trump).sort((a, b) => a.hcp - b.hcp);
+    const bestIsTrump = best.suit === trump;
+    // An opponent is winning the trick: win it with the lowest trump that beats the
+    // best card (any trump beats a non-trump; a higher-rank trump beats a trump).
+    for (const c of trumps) {
+      if (!bestIsTrump || RANK_ORDER[c.rank] > RANK_ORDER[best.rank]) return c;
     }
   }
-  return lowestHcp(bot.hand);
+  // Cannot win the trick — dump the cheapest non-trump card so trumps are saved for
+  // a hand that can actually win (only fall back to a trump when nothing else remains).
+  const nonTrumps = trump ? bot.hand.filter(c => c.suit !== trump) : bot.hand;
+  return lowestHcp(nonTrumps.length ? nonTrumps : bot.hand);
 }
 
 function decideBid(g, bot) {
@@ -141,12 +144,14 @@ function decidePlay(g, bot) {
 
   // Defender/partner can't follow and trump is hidden: reveal it, then play.
   if (!isDeclarer && !g.trumpRevealed && !leading && !hasLeadSuit) {
-    return { type: 'ask_then_play', card: playChoiceAfterAsk(g, bot) };
+    return { type: 'ask_then_play', card: pickCannotFollow(g, bot) };
   }
 
   if (leading) return { type: 'play', card: highestHcp(hand) };
   if (hasLeadSuit) return { type: 'play', card: followSuitChoice(g, hand, leadSuit) };
-  return { type: 'play', card: lowestHcp(hand) };
+  // Cannot follow the led suit (trump already revealed): overtrump the opponent's
+  // winning card when possible, otherwise dump the cheapest non-trump card.
+  return { type: 'play', card: pickCannotFollow(g, bot) };
 }
 
 function botAction(g, bot) {

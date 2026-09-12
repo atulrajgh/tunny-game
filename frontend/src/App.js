@@ -464,7 +464,7 @@ function App() {
                   <div key={s.id} className="ac-player-row">
                     <span className="ac-name">{s.name}<span className="bot-tag">BOT</span></span>
                     <div className="ac-actions">
-                      {['N','S','E','W'].filter(seatOpenFor).map(pos => (
+                      {['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
                         <button key={pos} className="ac-btn green pos"
                           onClick={() => sendOnce('promote_to_player', { spectatorId: s.id, position: pos })}>
                           {pos}

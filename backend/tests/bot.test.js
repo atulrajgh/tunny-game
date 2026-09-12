@@ -202,7 +202,7 @@ describe('bot strategy', () => {
     assert.equal(d.type, 'play_trump');
   });
 
-  it('dumps the cheapest card once the trump is already revealed', () => {
+  it('overtrumps the opponent with the lowest winning trump when it cannot follow', () => {
     const { g, bot } = mkGame();
     g.state = 'playing';
     g.trumpRevealed = true; g.trumpSuit = '♥';
@@ -213,7 +213,63 @@ describe('bot strategy', () => {
     bot.hand = [C('♥', 'J'), C('♦', '10')];
     const d = decidePlay(g, bot);
     assert.equal(d.type, 'play');
-    assert.equal(d.card.toString(), '10♦', 'no trump play needed when trump is public');
+    assert.equal(d.card.toString(), 'J♥', 'win the trick instead of dumping to the opponent');
+  });
+
+  it('wins with the lowest trump that beats the opponent trump', () => {
+    const { g, bot } = mkGame();
+    g.state = 'playing';
+    g.trumpRevealed = true; g.trumpSuit = '♥';
+    g.trickNumber = 2;
+    g.declarer = { id: 'someone-else' };
+    g.currentTrick = [{ player: { id: 'p', team: 'E-W' }, card: C('♥', '9') }];
+    g.leadSuit = '♠';
+    bot.hand = [C('♥', 'J'), C('♥', 'K'), C('♦', '10')];
+    const d = decidePlay(g, bot);
+    assert.equal(d.type, 'play');
+    assert.equal(d.card.toString(), 'J♥', 'cheapest trump that beats 9♥');
+  });
+
+  it('dumps the cheapest non-trump and saves trumps when it cannot win the trick', () => {
+    const { g, bot } = mkGame();
+    g.state = 'playing';
+    g.trumpRevealed = true; g.trumpSuit = '♥';
+    g.trickNumber = 2;
+    g.declarer = { id: 'someone-else' };
+    g.currentTrick = [{ player: { id: 'p', team: 'E-W' }, card: C('♥', 'A') }];
+    g.leadSuit = '♠';
+    bot.hand = [C('♥', 'K'), C('♥', 'Q'), C('♦', '10')];
+    const d = decidePlay(g, bot);
+    assert.equal(d.type, 'play');
+    assert.equal(d.card.toString(), '10♦', 'no trump beats A♥; keep the trumps');
+  });
+
+  it('plays the cheapest trump when only trumps remain and none can win', () => {
+    const { g, bot } = mkGame();
+    g.state = 'playing';
+    g.trumpRevealed = true; g.trumpSuit = '♥';
+    g.trickNumber = 2;
+    g.declarer = { id: 'someone-else' };
+    g.currentTrick = [{ player: { id: 'p', team: 'E-W' }, card: C('♥', 'A') }];
+    g.leadSuit = '♠';
+    bot.hand = [C('♥', 'K'), C('♥', 'Q')];
+    const d = decidePlay(g, bot);
+    assert.equal(d.type, 'play');
+    assert.equal(d.card.toString(), 'Q♥');
+  });
+
+  it('asks and overtrumps the hidden trump held by an opponent', () => {
+    const { g, bot } = mkGame();
+    g.state = 'playing';
+    g.trumpRevealed = false; g.trumpSuit = '♥';
+    g.trickNumber = 2;
+    g.declarer = { id: 'someone-else' };
+    g.currentTrick = [{ player: { id: 'p', team: 'E-W' }, card: C('♥', '9') }];
+    g.leadSuit = '♠';
+    bot.hand = [C('♥', 'J'), C('♥', '9'), C('♦', '10')];
+    const d = decidePlay(g, bot);
+    assert.equal(d.type, 'ask_then_play');
+    assert.equal(d.card.toString(), 'J♥', 'reveal, then win the trick');
   });
 
   it('botAction dispatches on the game state and the bot turn', () => {
