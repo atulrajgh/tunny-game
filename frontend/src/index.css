@@ -229,9 +229,9 @@ input, button { font-family: inherit; }
 .version { font-family: 'Dancing Script', cursive; color: #f0c040; font-size: 14px; text-align: center; padding: 6px 0 16px; }
 .version a { color: #f0c040; text-decoration: none; }
 .review-screen .review-table { max-height: none; overflow-y: visible; margin: 16px auto; max-width: 760px; }
-.review-table .ac-trick-table-header, .review-table .ac-trick-table-row { font-size: 14px; grid-template-columns: 48px 92px repeat(4, 1fr); }
-.review-table .ac-tt-win { font-size: 13px; font-weight: 700; color: #f0c040; }
-.review-table .ac-tt-pts { font-size: 13px; text-align: center; }
+.review-table .ac-trick-table-header, .review-table .ac-trick-table-row { font-size: 20px; grid-template-columns: 48px 92px repeat(4, 1fr); }
+.review-table .ac-tt-win { font-size: 20px; font-weight: 700; color: #f0c040; }
+.review-table .ac-tt-pts { font-size: 20px; text-align: center; }
 .review-table .team-totals { display: inline-flex; flex-direction: column; gap: 2px; align-items: center; line-height: 1.2; }
 .review-table .team-total { font-size: 1em; color: #f0c040; font-weight: 700; white-space: nowrap; }
 .review-table .team-total.won { color: #f0c040; font-weight: 700; }
