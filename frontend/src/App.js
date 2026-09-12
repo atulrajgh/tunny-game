@@ -182,26 +182,8 @@ function App() {
 
   // --- Hand Review ---
   if (gameState.state === 'hand_review' && screen === 'review') {
-    const tricks = gameState.trickHistory || [];
     const posOrder = ['N', 'S', 'E', 'W'];
-    let nsRunning = 0;
-    let ewRunning = 0;
-    const rows = tricks.map(t => {
-      const cardAt = {};
-      for (const c of t.cards) cardAt[c.position] = c.card;
-      const winValue = t.winnerPoints != null
-        ? t.winnerPoints
-        : (t.teamPoints?.['N-S'] || 0) + (t.teamPoints?.['E-W'] || 0);
-      if (t.winnerTeam === 'N-S') nsRunning += winValue;
-      else ewRunning += winValue;
-      return {
-        cards: cardAt,
-        winner: t.winnerTeam,
-        winnerPosition: t.winnerPosition,
-        ns: nsRunning,
-        ew: ewRunning
-      };
-    });
+    const rows = buildTrickRows(gameState.trickHistory || []);
     return (
       <div className="app review-screen">
         <h2 className="review-title">Hand {gameState.handNumber} Review{gameState.highestBid ? <> · Highest Bid: {gameState.highestBid} ({handHCPRequirement(gameState.highestBid)} HCP)</> : ''}</h2>
@@ -226,7 +208,7 @@ function App() {
             <div key={i} className={`ac-trick-table-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
               <span className="ac-tt-trick">{i + 1}</span>
               <span className="ac-tt-pts team-totals">
-                <span className="team-total won">{r.winner === 'N-S' ? `+${r.ns}` : `+${r.ew}`}</span>
+                <span className="team-total">{r.winner === 'N-S' ? `+${r.ns}` : `+${r.ew}`}</span>
               </span>
               {posOrder.map(pos => {
                 const isWinner = r.winnerPosition === pos;
@@ -370,6 +352,28 @@ function App() {
         {c.rank}<span className="suit-mark">{c.suit}</span>
       </span>
     );
+  }
+
+  function buildTrickRows(trickHistory) {
+    let nsRunning = 0;
+    let ewRunning = 0;
+    return (trickHistory || []).map(t => {
+      const cardAt = {};
+      for (const c of t.cards) cardAt[c.position] = c.card;
+      const winValue = t.winnerPoints != null
+        ? t.winnerPoints
+        : (t.teamPoints?.['N-S'] || 0) + (t.teamPoints?.['E-W'] || 0);
+      if (t.winnerTeam === 'N-S') nsRunning += winValue;
+      else ewRunning += winValue;
+      return {
+        t,
+        cards: cardAt,
+        winner: t.winnerTeam,
+        winnerPosition: t.winnerPosition,
+        ns: nsRunning,
+        ew: ewRunning
+      };
+    });
   }
 
   function vacatedAt(pos) {
@@ -623,22 +627,23 @@ function App() {
         <div className="ac-panel ac-wide" style={{ marginTop: 12 }}>
           <h3>Tricks & Scores <span style={{ fontWeight: 400, fontSize: 11, color: '#a0d0a0' }}>(live)</span></h3>
           {(gameState.trickHistory?.length > 0 || gameState.currentTrick?.length > 0) ? (
-            <div className="ac-trick-table">
+            <div className="ac-trick-table ac-review-style">
               <div className="ac-trick-table-header">
                 <span className="ac-tt-trick">Trick</span>
+                <span className="ac-tt-pts">Team Totals</span>
                 {trickOrder.map(pos => {
                   const pn = players.find(x => x.position === pos);
                   return (
-                    <span key={pos} className="ac-tt-card">{pn?.name || POSITION_NAMES[pos]}</span>
+                    <span key={pos} className="ac-tt-card">{pn?.name || POSITION_NAMES[pos]}{gameState.declarer?.position === pos && gameState.trumpSuit ? <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span> : null}</span>
                   );
                 })}
-                <span className="ac-tt-win">Winner</span>
-                <span className="ac-tt-pts">N-S</span>
-                <span className="ac-tt-pts">E-W</span>
               </div>
               {gameState.currentTrick?.length > 0 && (
                 <div className="ac-trick-table-row current">
                   <span className="ac-tt-trick">{gameState.trickNumber + 1}*</span>
+                  <span className="ac-tt-pts team-totals">
+                    <span className="team-total pending">…</span>
+                  </span>
                   {trickOrder.map(pos => {
                     const entry = gameState.currentTrick.find(t => t.position === pos);
                     return (
@@ -647,31 +652,25 @@ function App() {
                       </span>
                     );
                   })}
-                  <span className="ac-tt-win">…</span>
-                  <span className="ac-tt-pts">—</span>
-                  <span className="ac-tt-pts">—</span>
                 </div>
               )}
-              {gameState.trickHistory.map((t, i) => {
-                const winValue = t.winnerPoints != null
-                  ? t.winnerPoints
-                  : (t.teamPoints?.['N-S'] || 0) + (t.teamPoints?.['E-W'] || 0);
-                const winnerIdx = t.cards.findIndex(c => c.position === t.winnerPosition);
+              {buildTrickRows(gameState.trickHistory).map((r, i) => {
+                const winnerIdx = r.t.cards.findIndex(c => c.position === r.winnerPosition);
                 return (
-                  <div key={i} className={`ac-trick-table-row${t.winnerTeam === 'N-S' ? ' win-ns' : ' win-ew'}`}>
-                    <span className="ac-tt-trick">{t.trickNumber + 1}</span>
+                  <div key={i} className={`ac-trick-table-row${r.winner === 'N-S' ? ' win-ns' : ' win-ew'}`}>
+                    <span className="ac-tt-trick">{r.t.trickNumber + 1}</span>
+                    <span className="ac-tt-pts team-totals">
+                      <span className="team-total">{r.winner === 'N-S' ? `+${r.ns}` : `+${r.ew}`}</span>
+                    </span>
                     {trickOrder.map(pos => {
-                      const entry = t.cards.find(c => c.position === pos);
-                      const isWinner = entry && winnerIdx !== -1 && t.cards[winnerIdx].position === pos;
+                      const entry = r.t.cards.find(c => c.position === pos);
+                      const isWinner = entry && winnerIdx !== -1 && r.t.cards[winnerIdx].position === pos;
                       return (
                         <span key={pos} className="ac-tt-card">
                           {miniCard(entry?.card, isWinner) || <span className="ac-empty" style={{ padding: 0 }}>—</span>}
                         </span>
                       );
                     })}
-                    <span className="ac-tt-win">{t.winnerTeam}</span>
-                    <span className="ac-tt-pts">{t.winnerTeam === 'N-S' ? `+${winValue}` : '·'}</span>
-                    <span className="ac-tt-pts">{t.winnerTeam === 'E-W' ? `+${winValue}` : '·'}</span>
                   </div>
                 );
               })}

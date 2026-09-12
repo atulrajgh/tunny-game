@@ -229,18 +229,17 @@ input, button { font-family: inherit; }
 .version { font-family: 'Dancing Script', cursive; color: #f0c040; font-size: 14px; text-align: center; padding: 6px 0 16px; }
 .version a { color: #f0c040; text-decoration: none; }
 .review-screen .review-table { max-height: none; overflow-y: visible; margin: 16px auto; max-width: 760px; }
-.review-table .ac-trick-table-header, .review-table .ac-trick-table-row { font-size: 20px; grid-template-columns: 48px 92px repeat(4, 1fr); }
-.review-table .ac-tt-win { font-size: 20px; font-weight: 700; color: #f0c040; }
-.review-table .ac-tt-pts { font-size: 20px; text-align: center; }
-.review-table .team-totals { display: inline-flex; flex-direction: column; gap: 2px; align-items: center; line-height: 1.2; }
-.review-table .team-total { font-size: 1em; color: #f0c040; font-weight: 700; white-space: nowrap; }
-.review-table .team-total.won { color: #f0c040; font-weight: 700; }
+.review-table .ac-trick-table-header, .review-table .ac-trick-table-row,
+.ac-review-style .ac-trick-table-header, .ac-review-style .ac-trick-table-row { font-size: 20px; grid-template-columns: 48px 92px repeat(4, 1fr); }
+.review-table .ac-tt-pts, .ac-review-style .ac-tt-pts { font-size: 20px; text-align: center; }
+.review-table .team-totals, .ac-review-style .team-totals { display: inline-flex; flex-direction: column; gap: 2px; align-items: center; line-height: 1.2; }
+.review-table .team-total, .ac-review-style .team-total { font-size: 1em; color: #f0c040; font-weight: 700; white-space: nowrap; }
+.review-table .team-total.pending, .ac-review-style .team-total.pending { color: #7da77d; font-weight: 400; }
 
 @media (max-width: 500px) {
-  .review-table .team-totals { flex-direction: column; }
-  .review-table .team-total { font-size: 0.9em; }
+  .review-table .team-total, .ac-review-style .team-total { font-size: 0.9em; }
 }
-.review-table .mini-card { font-size: 20px; }
+.review-table .mini-card, .ac-review-style .mini-card { font-size: 20px; }
 .review-hands { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin: 16px 0; }
 .review-hand { background: #2d6e2d; border-radius: 12px; padding: 16px; }
 .review-player { font-weight: 700; margin-bottom: 8px; }
@@ -319,7 +318,7 @@ input, button { font-family: inherit; }
 
 /* Live trick + score table */
 .ac-trick-table { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; }
-.ac-trick-table-header, .ac-trick-table-row { display: grid; grid-template-columns: 48px repeat(4, 1fr) 56px 40px 40px; gap: 6px; align-items: center; padding: 4px 6px; border-radius: 4px; }
+.ac-trick-table-header, .ac-trick-table-row { display: grid; gap: 6px; align-items: center; padding: 4px 6px; border-radius: 4px; }
 .ac-trick-table-header { font-size: 12px; color: #a0d0a0; background: #1a3a1a; position: sticky; top: 0; z-index: 1; }
 .ac-trick-table-row { background: #1a3a1a; font-size: 13px; }
 .ac-trick-table-row.win-ns { background: #243d5e; }
@@ -327,7 +326,6 @@ input, button { font-family: inherit; }
 .ac-trick-table-row.current { border: 1px dashed #f0c040; }
 .ac-tt-trick { font-weight: 700; color: #f0c040; }
 .ac-tt-card { display: flex; justify-content: center; }
-.ac-tt-win { font-size: 12px; font-weight: 700; color: #f0c040; }
 .ac-tt-pts { font-size: 12px; text-align: center; }
 .mini-card.trick-winner { position: relative; border: 2px solid #f0c040; border-radius: 4px; padding: 2px 4px; }
 .mini-card.trick-winner::after { content: '✓'; position: absolute; top: -8px; right: -8px; background: #27ae60; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 14px; line-height: 18px; text-align: center; }

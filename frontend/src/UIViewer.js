@@ -218,7 +218,7 @@ export default function UIViewer() {
               <div key={i} className={`ac-trick-table-row${t.winner === 'N-S' ? ' win-ns' : ' win-ew'}`}>
                 <span className="ac-tt-trick">{i + 1}</span>
                 <span className="ac-tt-pts team-totals">
-                  <span className="team-total won">{t.winner === 'N-S' ? `+${t.ns}` : `+${t.ew}`}</span>
+                  <span className="team-total">{t.winner === 'N-S' ? `+${t.ns}` : `+${t.ew}`}</span>
                 </span>
                 {['N', 'S', 'E', 'W'].map(pos => {
                   const c = t.cards[i % 4];
