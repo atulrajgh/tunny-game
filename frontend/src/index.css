@@ -36,8 +36,7 @@ input, button { font-family: inherit; }
 .review-screen .review-title,
 .score-card h3,
 .score-num,
-.trump-indicator,
-.current-action { font-family: 'Bodoni Moda', 'EB Garamond', serif; font-weight: 800; }
+.trump-indicator { font-family: 'Bodoni Moda', 'EB Garamond', serif; font-weight: 800; }
 .room-screen h2 { color: #f0c040; text-shadow: 0 2px 4px rgba(0,0,0,0.35); }
 
 .login-box { background: #2d6e2d; border-radius: 16px; padding: 32px; width: 400px; max-width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
@@ -121,7 +120,6 @@ input, button { font-family: inherit; }
 .state-info { flex: 1; text-align: center; min-width: 200px; }
 .state-details { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 6px; font-size: 14px; color: #a0d0a0; }
 .round-info { color: #a0d0a0; margin-bottom: 4px; }
-.current-action { font-size: 18px; font-weight: 800; color: #f0c040; text-align: center; }
 .trump-indicator { font-size: 22px; font-weight: 800; color: #f0c040; }
 .trump-revealed { background: #f0c040; color: #2d4a2d; padding: 2px 12px; border-radius: 20px; font-weight: 700; display: inline-block; animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
@@ -215,27 +213,12 @@ input, button { font-family: inherit; }
 .action-btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: #3498db; color: #fff; font-size: 15px; touch-action: manipulation; }
 .action-btn.reset { background: #7f8c8d; }
 
-/* ---- Turn indicator ---- */
-.turn-indicator { text-align: center; padding: 8px; background: #f0c040; color: #2d4a2d; font-weight: 700; border-radius: 8px; animation: pulse 1s infinite; }
-
 /* ---- Unified message bar ---- */
 .message-bar { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; text-align: center; padding: 8px 12px; background: #f0c040; color: #2d4a2d; font-weight: 700; border-radius: 8px; }
 .message-bar .redeal-count { font-weight: 400; opacity: 0.85; }
 .message-bar button { padding: 4px 12px; border: none; border-radius: 4px; background: #fff; color: #8e44ad; cursor: pointer; font-weight: 600; touch-action: manipulation; }
 .message-bar .your-turn-msg { animation: pulse 1s infinite; }
 .review-screen .message-bar { max-width: 620px; margin: 12px auto; }
-
-/* ---- Waiting banner (player awaiting seat) ---- */
-.waiting-banner { text-align: center; padding: 14px; background: #f0c040; color: #2d4a2d; font-weight: 700; border-radius: 8px; font-size: 18px; margin-bottom: 12px; }
-
-/* ---- Timeout banner ---- */
-.timeout-banner { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #e67e22; padding: 12px 24px; border-radius: 8px; z-index: 100; font-weight: 600; animation: pulse 1s infinite; }
-.timeout-banner button { margin-left: 12px; padding: 4px 12px; border: none; border-radius: 4px; background: #fff; color: #e67e22; cursor: pointer; font-weight: 600; }
-
-/* ---- Redeal banner ---- */
-.redeal-banner { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #8e44ad; padding: 12px 24px; border-radius: 8px; z-index: 100; font-weight: 600; display: flex; align-items: center; gap: 12px; }
-.redeal-banner .redeal-count { font-weight: 400; opacity: 0.85; }
-.redeal-banner button { padding: 4px 12px; border: none; border-radius: 4px; background: #fff; color: #8e44ad; cursor: pointer; font-weight: 600; }
 
 /* ---- Review Screen ---- */
 .review-screen { text-align: center; }
@@ -246,9 +229,17 @@ input, button { font-family: inherit; }
 .version { font-family: 'Dancing Script', cursive; color: #f0c040; font-size: 14px; text-align: center; padding: 6px 0 16px; }
 .version a { color: #f0c040; text-decoration: none; }
 .review-screen .review-table { max-height: none; overflow-y: visible; margin: 16px auto; max-width: 760px; }
-.review-table .ac-trick-table-header, .review-table .ac-trick-table-row { font-size: 14px; grid-template-columns: 48px 56px repeat(4, 1fr); }
+.review-table .ac-trick-table-header, .review-table .ac-trick-table-row { font-size: 14px; grid-template-columns: 48px 92px repeat(4, 1fr); }
 .review-table .ac-tt-win { font-size: 13px; font-weight: 700; color: #f0c040; }
 .review-table .ac-tt-pts { font-size: 13px; text-align: center; }
+.review-table .team-totals { display: inline-flex; flex-direction: column; gap: 2px; align-items: center; line-height: 1.2; }
+.review-table .team-total { font-size: 11px; color: #7da77d; font-weight: 400; white-space: nowrap; }
+.review-table .team-total.won { color: #f0c040; font-weight: 700; }
+
+@media (max-width: 500px) {
+  .review-table .team-totals { flex-direction: column; }
+  .review-table .team-total { font-size: 10px; }
+}
 .review-table .mini-card { font-size: 20px; }
 .review-hands { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin: 16px 0; }
 .review-hand { background: #2d6e2d; border-radius: 12px; padding: 16px; }
@@ -259,21 +250,8 @@ input, button { font-family: inherit; }
 .mini-card.red { color: #c0392b; }
 .review-score { font-size: 22px; font-weight: 700; margin: 16px; }
 
-/* ---- Review Grid (6 columns) ---- */
-.review-grid { display: flex; flex-direction: column; gap: 2px; max-width: 720px; margin: 16px auto; }
-.review-grid-row { display: grid; grid-template-columns: repeat(4, 1fr) 90px 90px; align-items: center; gap: 2px; padding: 4px 2px; border-radius: 6px; }
-.review-grid-row.header { font-size: 13px; font-weight: 700; color: #f0c040; background: #1a3a1a; }
-.review-grid-row.header .trump-suit { margin-left: 4px; font-size: 15px; color: #f0c040; }
 .trump-suit { margin-left: 5px; font-weight: 700; color: #f0c040; }
 .trump-suit.red { color: #ff7b6b; }
-.review-grid-row.header .trump-suit.red { color: #ff7b6b; }
-.review-grid-row.header div { padding: 6px 4px; }
-.review-grid-row.win-ns { background: #2d4a7a; }
-.review-grid-row.win-ew { background: #7a2d2d; }
-.review-grid-card { display: flex; justify-content: center; }
-.review-grid-card .mini-card { font-size: 16px; padding: 3px 6px; }
-.review-grid-pts { font-size: 15px; font-weight: 700; color: #f0c040; text-align: center; }
-.review-grid-pts:empty { color: #6a9a6a; }
 
 /* ---- Game Over ---- */
 .gameover-screen { text-align: center; }
@@ -336,10 +314,7 @@ input, button { font-family: inherit; }
 .ac-state-item { display: flex; flex-direction: column; align-items: center; background: #1a3a1a; padding: 8px 14px; border-radius: 6px; min-width: 70px; flex: 1 1 auto; max-width: 100px; }
 .ac-state-item .ac-label { font-size: 11px; color: #a0d0a0; }
 .ac-state-item .ac-value { font-size: 15px; font-weight: 700; color: #f0c040; }
-.ac-tricks { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
-.ac-trick-row { display: flex; justify-content: space-between; align-items: center; background: #1a3a1a; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-.ac-trick-winner { font-weight: 600; color: #f0c040; }
-.ac-trick-cards { display: flex; gap: 2px; font-size: 12px; }
+.ac-state-item .ac-value.small { font-size: 11px; }
 .ac-empty { color: #6a9a6a; font-size: 13px; padding: 8px; text-align: center; }
 
 /* Live trick + score table */
@@ -378,4 +353,3 @@ input, button { font-family: inherit; }
 .ac-btn.add-bot { width: 100%; min-width: 100%; background: #2c5f2c; border: 1px dashed #57a357; }
 
 .reconnect-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: #c0392b; color: #fff; text-align: center; padding: 8px 12px; font-size: 14px; font-weight: 600; }
-.reconnect-banner + * { margin-top: 30px; }

@@ -201,23 +201,26 @@ export default function UIViewer() {
           <div className="ac-trick-table review-table" style={{ margin: '16px auto', maxWidth: 760 }}>
             <div className="ac-trick-table-header">
               <span className="ac-tt-trick">Trick</span>
-              <span className="ac-tt-pts">Total</span>
+              <span className="ac-tt-pts">Team Totals</span>
               <span className="ac-tt-card">Alice<span className="trump-suit">♥</span></span>
               <span className="ac-tt-card">Bob</span>
               <span className="ac-tt-card">Carol</span>
               <span className="ac-tt-card">Dan</span>
             </div>
             {[
-              { cards: [card('♥', 'A'), card('♠', '10'), card('♥', 'J'), card('♠', 'K')], winner: 'N-S', winnerPosition: 'N', total: 20 },
-              { cards: [card('♣', 'Q'), card('♦', '9'), card('♣', 'K'), card('♠', 'J')], winner: 'E-W', winnerPosition: 'E', total: 35 },
-              { cards: [card('♠', 'A'), card('♥', 'K'), card('♦', 'J'), card('♠', 'Q')], winner: 'N-S', winnerPosition: 'S', total: 80 },
-              { cards: [card('♣', 'J'), card('♦', '10'), card('♥', 'Q'), card('♦', 'K')], winner: 'E-W', winnerPosition: 'W', total: 130 },
-              { cards: [card('♠', '9'), card('♣', '10'), card('♦', 'A'), card('♥', '10')], winner: 'N-S', winnerPosition: 'N', total: 145 },
-              { cards: [card('♣', 'A'), card('♦', 'Q'), card('♣', '9'), card('♠', '10')], winner: 'E-W', winnerPosition: 'E', total: 220 }
+              { cards: [card('♥', 'A'), card('♠', '10'), card('♥', 'J'), card('♠', 'K')], winner: 'N-S', winnerPosition: 'N', ns: 20, ew: 0 },
+              { cards: [card('♣', 'Q'), card('♦', '9'), card('♣', 'K'), card('♠', 'J')], winner: 'E-W', winnerPosition: 'E', ns: 20, ew: 15 },
+              { cards: [card('♠', 'A'), card('♥', 'K'), card('♦', 'J'), card('♠', 'Q')], winner: 'N-S', winnerPosition: 'S', ns: 50, ew: 15 },
+              { cards: [card('♣', 'J'), card('♦', '10'), card('♥', 'Q'), card('♦', 'K')], winner: 'E-W', winnerPosition: 'W', ns: 50, ew: 65 },
+              { cards: [card('♠', '9'), card('♣', '10'), card('♦', 'A'), card('♥', '10')], winner: 'N-S', winnerPosition: 'N', ns: 95, ew: 65 },
+              { cards: [card('♣', 'A'), card('♦', 'Q'), card('♣', '9'), card('♠', '10')], winner: 'E-W', winnerPosition: 'E', ns: 95, ew: 105 }
             ].map((t, i) => (
               <div key={i} className={`ac-trick-table-row${t.winner === 'N-S' ? ' win-ns' : ' win-ew'}`}>
                 <span className="ac-tt-trick">{i + 1}</span>
-                <span className="ac-tt-pts">+{t.total}</span>
+                <span className="ac-tt-pts team-totals">
+                  <span className={`team-total${t.winner === 'N-S' ? ' won' : ''}`}>N-S +{t.ns}</span>
+                  <span className={`team-total${t.winner === 'E-W' ? ' won' : ''}`}>E-W +{t.ew}</span>
+                </span>
                 {['N', 'S', 'E', 'W'].map(pos => {
                   const c = t.cards[i % 4];
                   const isWinner = t.winnerPosition === pos;

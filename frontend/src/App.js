@@ -184,19 +184,22 @@ function App() {
   if (gameState.state === 'hand_review' && screen === 'review') {
     const tricks = gameState.trickHistory || [];
     const posOrder = ['N', 'S', 'E', 'W'];
-    let runningTotal = 0;
+    let nsRunning = 0;
+    let ewRunning = 0;
     const rows = tricks.map(t => {
       const cardAt = {};
       for (const c of t.cards) cardAt[c.position] = c.card;
       const winValue = t.winnerPoints != null
         ? t.winnerPoints
         : (t.teamPoints?.['N-S'] || 0) + (t.teamPoints?.['E-W'] || 0);
-      runningTotal += winValue;
+      if (t.winnerTeam === 'N-S') nsRunning += winValue;
+      else ewRunning += winValue;
       return {
         cards: cardAt,
         winner: t.winnerTeam,
         winnerPosition: t.winnerPosition,
-        total: runningTotal
+        ns: nsRunning,
+        ew: ewRunning
       };
     });
     return (
@@ -211,7 +214,7 @@ function App() {
         <div className="ac-trick-table review-table">
           <div className="ac-trick-table-header">
             <span className="ac-tt-trick">Trick</span>
-            <span className="ac-tt-pts">Total</span>
+            <span className="ac-tt-pts">Team Totals</span>
             {posOrder.map(pos => {
               const p = players.find(x => x.position === pos);
               return (
@@ -222,12 +225,15 @@ function App() {
           {rows.map((r, i) => (
             <div key={i} className={`ac-trick-table-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
               <span className="ac-tt-trick">{i + 1}</span>
-              <span className="ac-tt-pts">+{r.total}</span>
+              <span className="ac-tt-pts team-totals">
+                <span className={`team-total${r.winner === 'N-S' ? ' won' : ''}`}>N-S +{r.ns}</span>
+                <span className={`team-total${r.winner === 'E-W' ? ' won' : ''}`}>E-W +{r.ew}</span>
+              </span>
               {posOrder.map(pos => {
                 const isWinner = r.winnerPosition === pos;
                 return (
                   <span key={pos} className="ac-tt-card">
-                    {r.cards[pos] ? <span className={`mini-card${isWinner ? ' trick-winner' : ''} ${r.cards[pos].suit === '♥' || r.cards[pos].suit === '♦' ? 'red' : ''}`}>{r.cards[pos].rank}<span className="suit-mark">{r.cards[pos].suit}</span></span> : <span className="ac-empty" style={{ padding: 0 }}>—</span>}
+                    {miniCard(r.cards[pos], isWinner) || <span className="ac-empty" style={{ padding: 0 }}>—</span>}
                   </span>
                 );
               })}
@@ -357,6 +363,16 @@ function App() {
     );
   }
 
+  function miniCard(c, isWinner) {
+    if (!c) return null;
+    const isRed = c.suit === '♥' || c.suit === '♦';
+    return (
+      <span className={`mini-card${isWinner ? ' trick-winner' : ''} ${isRed ? 'red' : ''}`}>
+        {c.rank}<span className="suit-mark">{c.suit}</span>
+      </span>
+    );
+  }
+
   function vacatedAt(pos) {
     return (gameState.vacatedHands || []).find(v => v.position === pos) || null;
   }
@@ -459,12 +475,12 @@ function App() {
                     <div className="ac-actions">
                       {['N','S','E','W'].filter(seatOpenFor).map(pos => (
                         <button key={pos} className="ac-btn green pos"
-                          onClick={() => socket.emit('assign_position', { playerId: p.id, position: pos })}>
+                          onClick={() => sendOnce('assign_position', { playerId: p.id, position: pos })}>
                           {pos}
                         </button>
                       ))}
                       {p.id !== playerId && (
-                        <button className="ac-btn red pos" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
+                        <button className="ac-btn red pos" onClick={() => sendOnce('kick_player', { targetId: p.id })}>✕</button>
                       )}
                     </div>
                   </div>
@@ -498,7 +514,7 @@ function App() {
                       <span className="ac-team">{p.team || '—'}</span>
                       <div className="ac-actions">
                         {isAdmin && p.id !== playerId && (
-                          <button className="ac-btn red" onClick={() => socket.emit('kick_player', { targetId: p.id })}>✕</button>
+                          <button className="ac-btn red" onClick={() => sendOnce('kick_player', { targetId: p.id })}>✕</button>
                         )}
                       </div>
                     </>
@@ -547,9 +563,9 @@ function App() {
             <div className="ac-state">
               <div className="ac-state-item"><span className="ac-label">Hand</span><span className="ac-value">{gameState.handNumber}</span></div>
               <div className="ac-state-item"><span className="ac-label">Trick</span><span className="ac-value">{gameState.trickNumber + 1}/6</span></div>
-              <div className="ac-state-item"><span className="ac-label">State</span><span className="ac-value" style={{ fontSize: 11 }}>{gameState.state}</span></div>
-              {gameState.dealer && <div className="ac-state-item"><span className="ac-label">Dealer</span><span className="ac-value" style={{ fontSize: 11 }}>{players.find(p => p.id === gameState.dealer.id)?.name || gameState.dealer.position}</span></div>}
-              {gameState.declarer && <div className="ac-state-item"><span className="ac-label">Declarer</span><span className="ac-value" style={{ fontSize: 11 }}>{players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position}</span></div>}
+              <div className="ac-state-item"><span className="ac-label">State</span><span className="ac-value small">{gameState.state}</span></div>
+              {gameState.dealer && <div className="ac-state-item"><span className="ac-label">Dealer</span><span className="ac-value small">{players.find(p => p.id === gameState.dealer.id)?.name || gameState.dealer.position}</span></div>}
+              {gameState.declarer && <div className="ac-state-item"><span className="ac-label">Declarer</span><span className="ac-value small">{players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position}</span></div>}
               {gameState.highestBid && <div className="ac-state-item"><span className="ac-label">Bid</span><span className="ac-value">{gameState.highestBid}</span></div>}
               {gameState.trumpSuit && <div className="ac-state-item"><span className="ac-label">Trump</span><span className="ac-value">{gameState.trumpSuit}</span></div>}
             </div>
@@ -628,11 +644,7 @@ function App() {
                     const entry = gameState.currentTrick.find(t => t.position === pos);
                     return (
                       <span key={pos} className="ac-tt-card">
-                        {entry?.card ? (
-                          <span className={`mini-card ${entry.card.suit === '♥' || entry.card.suit === '♦' ? 'red' : ''}`}>
-                            {entry.card.rank}<span className="suit-mark">{entry.card.suit}</span>
-                          </span>
-                        ) : <span className="ac-empty" style={{ padding: 0 }}>·</span>}
+                        {miniCard(entry?.card) || <span className="ac-empty" style={{ padding: 0 }}>·</span>}
                       </span>
                     );
                   })}
@@ -654,11 +666,7 @@ function App() {
                       const isWinner = entry && winnerIdx !== -1 && t.cards[winnerIdx].position === pos;
                       return (
                         <span key={pos} className="ac-tt-card">
-                          {entry ? (
-                            <span className={`mini-card${isWinner ? ' trick-winner' : ''} ${entry.card.suit === '♥' || entry.card.suit === '♦' ? 'red' : ''}`}>
-                              {entry.card.rank}<span className="suit-mark">{entry.card.suit}</span>
-                            </span>
-                          ) : <span className="ac-empty" style={{ padding: 0 }}>—</span>}
+                          {miniCard(entry?.card, isWinner) || <span className="ac-empty" style={{ padding: 0 }}>—</span>}
                         </span>
                       );
                     })}
