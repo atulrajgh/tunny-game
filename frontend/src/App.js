@@ -226,8 +226,7 @@ function App() {
             <div key={i} className={`ac-trick-table-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
               <span className="ac-tt-trick">{i + 1}</span>
               <span className="ac-tt-pts team-totals">
-                <span className={`team-total${r.winner === 'N-S' ? ' won' : ''}`}>N-S +{r.ns}</span>
-                <span className={`team-total${r.winner === 'E-W' ? ' won' : ''}`}>E-W +{r.ew}</span>
+                <span className="team-total won">{r.winner === 'N-S' ? `N-S +${r.ns}` : `E-W +${r.ew}`}</span>
               </span>
               {posOrder.map(pos => {
                 const isWinner = r.winnerPosition === pos;
