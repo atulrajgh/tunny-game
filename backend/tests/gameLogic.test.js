@@ -944,6 +944,92 @@ describe('admin actions', () => {
   });
 });
 
+describe('declarer seat vacated during trump selection (bots → humans)', () => {
+  // 3 humans + a bot declarer at W in trump_selection; hands avoid the trump-hog
+  // redeal so the game proceeds to playing.
+  function botDeclarerTrumpGame() {
+    const { g, humans, placed } = makeBotGame({ humanSeats: ['N', 'S', 'E'], botSeats: ['W'] });
+    const w = placed.W;
+    w.hand = [C('♠', 'A'), C('♥', 'A'), C('♠', 'Q'), C('♠', 'K')];
+    playerAt(g, 'E').hand = [C('♦', 'A'), C('♦', 'K'), C('♦', 'Q'), C('♦', 'J')];
+    playerAt(g, 'N').hand = [C('♥', 'J'), C('♥', 'Q'), C('♥', 'K'), C('♥', '10')];
+    playerAt(g, 'S').hand = [C('♣', 'A'), C('♣', 'K'), C('♣', 'Q'), C('♣', 'J')];
+    g.state = 'bidding';
+    g.dealer = w;
+    g.currentPlayer = w;
+    g.placeBid(w.id, 50);
+    g.placeBid(playerAt(g, 'N').id, 'pass');
+    g.placeBid(playerAt(g, 'E').id, 'pass');
+    g.placeBid(playerAt(g, 'S').id, 'pass');
+    assert.equal(g.state, 'trump_selection');
+    assert.equal(g.declarer, w);
+    return { g, w };
+  }
+
+  it('demoting the bot declarer keeps the declarer pointing at the seat and playable', () => {
+    const { g, w } = botDeclarerTrumpGame();
+    g.demoteToSpectator(g.admin.id, w.id);
+    assert.equal(g.state, 'trump_selection');
+    // Declarer follows the vacated seat (id null) rather than a detached bot with
+    // a null position, so the frontend never falls back to "Declarer is selecting trump".
+    assert.equal(g.declarer.position, 'W');
+    assert.equal(g.declarer.id, null);
+    const saved = g.vacatedHands['W'];
+    assert.ok(saved && saved.hand.some(c => c.equals(C('♠', 'A'))));
+    assert.ok(g.selectVacatedTrump('W', C('♠', 'A')), 'admin can finish the trump pick');
+    assert.notEqual(g.state, 'trump_selection');
+  });
+
+  it('refilling the displaced bot-declarer seat hands the trump pick to the human', () => {
+    const { g, w } = botDeclarerTrumpGame();
+    g.demoteToSpectator(g.admin.id, w.id);
+    const human = g.addSpectator('Megan');
+    assert.ok(g.promoteSpectator(g.admin.id, human.id, 'W'));
+    assert.equal(g.declarer, human, 'declarer re-pointed at the refilled human');
+    assert.ok(g.selectTrump(human.id, C('♠', 'A')), 'the human selects trump');
+    assert.notEqual(g.state, 'trump_selection');
+  });
+
+  it('a host declarer leaving the seat stays playable via the saved seat', () => {
+    const { g, w } = botDeclarerTrumpGame();
+    g.demoteToSpectator(g.admin.id, w.id);
+    assert.ok(g.adminSit('W'));
+    assert.equal(g.declarer, g.admin, 'seated host inherits the declared seat');
+    assert.ok(g.adminLeaveSeat());
+    assert.equal(g.declarer.position, 'W');
+    assert.equal(g.declarer.id, null);
+    assert.ok(g.selectVacatedTrump('W', C('♠', 'A')));
+    assert.notEqual(g.state, 'trump_selection');
+  });
+
+  it('an auction won while the seat was vacant re-points the declarer on refill', () => {
+    const { g, humans, placed } = makeBotGame({ humanSeats: ['N', 'S', 'E'], botSeats: ['W'] });
+    const w = placed.W;
+    for (const p of g.players) p.hand = [C('♠', 'A'), C('♥', 'K'), C('♦', 'Q'), C('♣', 'J')];
+    g.state = 'bidding';
+    g.dealer = w;
+    g.currentPlayer = w;
+    // Vacate the seat mid-auction, admin wins the contract while acting for it.
+    g.removePlayer(w.id);
+    assert.equal(g.currentPlayer.position, 'W');
+    assert.equal(g.currentPlayer.id, null);
+    assert.ok(g.placeVacatedBid('W', 50), 'admin bids for the vacated seat');
+    g.placeBid(playerAt(g, 'N').id, 'pass');
+    g.placeBid(playerAt(g, 'E').id, 'pass');
+    g.placeBid(playerAt(g, 'S').id, 'pass');
+    assert.equal(g.state, 'trump_selection');
+    assert.equal(g.declarer.position, 'W');
+    assert.equal(g.declarer.id, null, 'declarer is the acted-for vacated seat');
+    // A human refills the seat — even without the wasDeclarer flag, the declarer
+    // must move to the refilled player so the trump phase can continue.
+    const human = g.addSpectator('Nadia');
+    assert.ok(g.promoteSpectator(g.admin.id, human.id, 'W'));
+    assert.equal(g.declarer, human);
+    assert.ok(g.selectTrump(human.id, C('♠', 'A')));
+    assert.notEqual(g.state, 'trump_selection');
+  });
+});
+
 describe('WINNING_SCORE', () => {
   it('is 12 points', () => {
     assert.equal(WINNING_SCORE, 12);
