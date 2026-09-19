@@ -210,6 +210,36 @@ describe('cut & dealer', () => {
     assert.equal(g.currentPlayer, playerAt(g, 'E'));
     for (const p of g.players) assert.equal(p.hand.length, 4);
   });
+
+  it('demote + promote during the cut deals the newcomer a cut card and cannot crash determineDealer', () => {
+    const { g, ids } = makeGame();
+    assert.ok(g.startCut());
+    for (const p of g.players) assert.ok(p.cutCard, 'every seat cut at the start');
+    const bot = g.addBot();
+    assert.ok(bot);
+    // Demote East mid-cut (seat freed, its card discarded), then promote a bot there.
+    assert.ok(g.demoteToSpectator(g.admin.id, ids.East.id));
+    assert.equal(g.players.length, 3);
+    assert.ok(g.promoteSpectator(g.admin.id, bot.id, 'E'));
+    assert.equal(g.players.length, 4);
+    assert.ok(playerAt(g, 'E').cutCard, 'seated-during-cut newcomer gets a cut card');
+    for (const p of g.players) assert.ok(p.cutCard, 'all seats hold a cut card');
+    assert.doesNotThrow(() => g.determineDealer());
+    assert.equal(g.state, 'bidding');
+    assert.ok(['N', 'S', 'E', 'W'].includes(g.dealer.position));
+    for (const p of g.players) assert.equal(p.hand.length, 4);
+  });
+
+  it('a player sat during the cut via setPosition also gets a cut card', () => {
+    const { g, ids } = makeGame();
+    assert.ok(g.startCut());
+    const fresh = g.addPlayer('Fresh');
+    g.demoteToSpectator(g.admin.id, ids.West.id);
+    assert.ok(g.setPosition(fresh.id, 'W'));
+    assert.ok(playerAt(g, 'W').cutCard, 'setPosition during cut deals a cut card');
+    assert.doesNotThrow(() => g.determineDealer());
+    assert.equal(g.state, 'bidding');
+  });
 });
 
 describe('bidding', () => {

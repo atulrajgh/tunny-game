@@ -285,10 +285,10 @@ function App() {
   const currentActionText = [
     gameState.state === 'waiting' && (isAdmin ? 'Waiting — assign positions and start the game' : `Waiting for ${adminName} to assign a seat`),
     gameState.state === 'cut' && `Waiting for ${adminName} to determine the dealer`,
-    isBidding && `${curPlayer?.name} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`,
+    isBidding && `${curPlayer?.name || 'Someone'} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`,
     isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`,
     gameState.state === 'redeal_pending' && null,
-    isPlaying && `${curPlayer?.name}'s turn${isAdmin && vacatedTurnPos ? ' — you play this seat' : ''}`,
+    isPlaying && `${curPlayer?.name || 'Someone'}'s turn${isAdmin && vacatedTurnPos ? ' — you play this seat' : ''}`,
     gameState.state === 'hand_review' && 'Hand review — waiting for admin to confirm',
     gameState.state === 'game_over' && `${gameState.winner} wins!`
   ].filter(Boolean).join(' · ');

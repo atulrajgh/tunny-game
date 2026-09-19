@@ -343,6 +343,7 @@ class Game {
       }
     }
     this.players.push(s);
+    this._maybeDealCutCard(s);
     if (this.state !== 'waiting' && this.state !== 'cut') this.restoreSavedState(s, s.position);
     this.lastActivity = Date.now();
     return s;
@@ -362,6 +363,7 @@ class Game {
     this.positions[pos] = playerId;
     player.position = pos;
     player.team = (pos === 'N' || pos === 'S') ? 'N-S' : 'E-W';
+    this._maybeDealCutCard(player);
     if (this.state !== 'waiting' && this.state !== 'cut') this.restoreSavedState(player, pos);
     this.lastActivity = Date.now();
     return true;
@@ -386,6 +388,7 @@ class Game {
     this.positions[position] = admin.id;
     admin.position = position;
     admin.team = (position === 'N' || position === 'S') ? 'N-S' : 'E-W';
+    this._maybeDealCutCard(admin);
     if (this.state !== 'waiting' && this.state !== 'cut') this.restoreSavedState(admin, position);
     this.lastActivity = Date.now();
     return admin;
@@ -432,8 +435,23 @@ class Game {
     return true;
   }
 
+  // During the cut phase every seated player must hold a cutCard. A seat filled after
+  // startCut (promote/setPosition/adminSit) arrives without one — deal it immediately
+  // so the cut list always shows a card and determineDealer can never read a null.
+  _maybeDealCutCard(player) {
+    if (this.state !== 'cut' || !player || player.cutCard || this.deck.length === 0) return;
+    player.cutCard = this.deck.pop();
+  }
+
   determineDealer() {
     const seated = this.seatedPlayers();
+    // Guard: if any seat still lacks a cutCard (edge cases beyond the three seating
+    // paths), deal one now so the cut always resolves instead of crashing the server.
+    for (const p of seated) {
+      if (!p.cutCard) {
+        p.cutCard = this.deck.length > 0 ? this.deck.pop() : new Card('♠', 'Q');
+      }
+    }
     let highest = seated[0];
     for (const p of seated) {
       if (RANK_ORDER[p.cutCard.rank] > RANK_ORDER[highest.cutCard.rank]) {

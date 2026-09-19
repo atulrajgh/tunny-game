@@ -62,7 +62,7 @@ Embedded below the game table as a collapsible section (toggle at bottom of acti
 - **Game State** — hand/trick number, state, declarer, bid, trump
 - **Tricks & Scores** — live table using the same 6-column review layout (`Trick | Team Totals | N | S | E | W`), 20px text, winner's running cumulative per row, declarer trump badge
 - **Scores** — running scores, HCP this hand, tricks this hand
-- **Controls** — Move Dealer, Reset Scores, Reset Game, Take Over (timed-out player), Confirm & Next Hand. During `waiting` it shows **Start Game** (`start_game` → `startCut()`) and during `cut` it shows **Determine Dealer** (`cut_done` → `determineDealer()`) — the cut-phase button was renamed from "Start Bidding" so the two start phases don't read as redundant (no logic change).
+- **Controls** — Move Dealer, Reset Scores, Reset Game, Take Over (timed-out player), Confirm & Next Hand. During `waiting` it shows **Start Game** (`start_game` → `startCut()`) and during `cut` it shows **Determine Dealer** (`cut_done` → `determineDealer()`) — the cut-phase button was renamed from "Start Bidding" so the two start phases don't read as redundant (no logic change). A seat filled during the cut (demote a human to spectator, then promote a bot/player, `setPosition`, or `adminSit`) is dealt a fresh cut card immediately (`_maybeDealCutCard`), and `determineDealer` re-deals to any seated player still missing one — so the cut can never crash on a null `cutCard`.
 
 On mobile (< 768px) the 3-column grid stacks to single column; button sizes increase for touch targets. All admin buttons have `touch-action: manipulation` for reliable Android tap handling.
 
