@@ -118,11 +118,12 @@ class Game {
   // Save a seated player's game state so their seat can be re-filled later.
   vacateSeat(player) {
     const pid = player.id;
-    this.vacatedHands[player.position] = {
+    const pos = player.position;
+    this.vacatedHands[pos] = {
       id: null,
       originalPlayerId: pid,
       playerName: player.name,
-      position: player.position,
+      position: pos,
       hand: [...player.hand],
       team: player.team,
       bid: player.bid,
@@ -131,10 +132,21 @@ class Game {
       wasDeclarer: this.declarer && this.declarer.id === pid,
       wasDummy: this.dummy && this.dummy.id === pid,
     };
-    if (this.vacatedHands[player.position].wasCurrentPlayer &&
+    if (this.vacatedHands[pos].wasCurrentPlayer &&
         (this.state === 'playing' || this.state === 'bidding' || this.state === 'trump_selection')) {
-      this.currentPlayer = this.vacatedPseudo(player.position);
+      this.currentPlayer = this.vacatedPseudo(pos);
     }
+    // Seat-role references follow the seat, not the platform object. When the dealer,
+    // declarer or dummy leaves the seat, re-point them at the vacated pseudo so
+    // seatAfter(dealer.position), the auction/trump logic and turn rotation keep
+    // working until a human refills the seat (restoreSavedState re-points on refill).
+    // Without this, seating churn (bots -> humans) left dealer.position === null and
+    // seatAfter(null) returned null — a 'playing' game with no currentPlayer, which
+    // surfaces as a frozen "Someone's turn" with nobody able to act.
+    const rolePseudo = this.vacatedPseudo(pos);
+    if (this.dealer && this.dealer.id === pid) this.dealer = rolePseudo;
+    if (this.declarer && this.declarer.id === pid) this.declarer = rolePseudo;
+    if (this.dummy && this.dummy.id === pid) this.dummy = rolePseudo;
     this.lastActivity = Date.now();
   }
 
@@ -268,9 +280,6 @@ class Game {
     for (const [p, id] of Object.entries(this.positions)) if (id === bot.id) delete this.positions[p];
     bot.position = null; bot.team = null; bot.hand = []; bot.bid = null;
     bot.playedCard = null; bot.cutCard = null;
-    // If the displaced bot was the declarer, re-point the declarer at the vacated
-    // seat (id null pseudo) so its position/name stay valid until a human refills.
-    if (this.declarer && this.declarer.id === bot.id) this.declarer = this.vacatedPseudo(pos) || this.declarer;
     if (!this.spectators.includes(bot)) this.spectators.push(bot);
     this.lastActivity = Date.now();
   }
@@ -312,6 +321,7 @@ class Game {
     if (!saved.wasDeclarer && this.declarer && this.declarer.id === null && this.declarer.position === pos) {
       this.declarer = player;
     }
+    if (this.dealer && this.dealer.id === null && this.dealer.position === pos) this.dealer = player;
     // The declarer seat is back: if the reserved card never rejoined (it couldn't be
     // delivered while the seat was in limbo), join it into the refilled hand now.
     if (saved.wasDeclarer && this.trumpCard && !this.trumpCardPlayed && this.trumpRevealed) {
@@ -417,9 +427,6 @@ class Game {
     for (const [p, id] of Object.entries(this.positions)) if (id === admin.id) delete this.positions[p];
     admin.position = null; admin.team = null; admin.hand = []; admin.bid = null;
     admin.playedCard = null; admin.cutCard = null;
-    // A seated host who was also the declarer leaves the seat vacated — keep the
-    // declarer pointing at the seat (id null pseudo) so the trump phase can resume.
-    if (this.declarer && this.declarer.id === admin.id) this.declarer = this.vacatedPseudo(pos) || this.declarer;
     const idx = this.players.indexOf(admin);
     if (idx !== -1) this.players.splice(idx, 1);
     this.lastActivity = Date.now();
@@ -760,7 +767,12 @@ class Game {
       winnerPoints: (trickPoints['N-S'] || 0) + (trickPoints['E-W'] || 0)
     });
     this.currentTrick = [];
-    this.currentPlayer = winner.player;
+    // The trick winner leads the next one. If their seat was refilled or vacated
+    // mid-trick (seat churn), hand the lead to whoever now holds that seat.
+    const ws = winner.position;
+    const winnerSeated = winner.player && this.positions[ws] === winner.player.id;
+    this.currentPlayer = winnerSeated ? winner.player
+      : (this.getPlayer(this.positions[ws]) || this.vacatedPseudo(ws) || winner.player);
     this.trickNumber++;
     if (this.trickNumber >= 6) {
       this.handNumber++;
@@ -910,9 +922,6 @@ class Game {
     p.cutCard = null;
     p.team = null;
     p.isAdmin = false;
-    // If the demoted player was the declarer, re-point the declarer at the vacated
-    // seat (id null pseudo) so its position/name stay valid until a human refills.
-    if (this.declarer && this.declarer.id === p.id) this.declarer = this.vacatedPseudo(pos) || this.declarer;
     this.spectators.push(p);
     this.lastActivity = Date.now();
     return p;

@@ -1028,6 +1028,57 @@ describe('declarer seat vacated during trump selection (bots → humans)', () =>
     assert.ok(g.selectTrump(human.id, C('♠', 'A')));
     assert.notEqual(g.state, 'trump_selection');
   });
+
+  it('displacing a bot dealer mid-selection never yields a null turn', () => {
+    const { g, placed } = makeBotGame({ humanSeats: ['S', 'E'], botSeats: ['N', 'W'] });
+    const w = placed.W;
+    const botN = placed.N;
+    w.hand = [C('♥', 'A'), C('♥', 'J'), C('♠', 'A'), C('♠', '10')];
+    playerAt(g, 'N').hand = [C('♠', 'K'), C('♠', 'Q'), C('♦', 'K'), C('♦', 'Q')];
+    playerAt(g, 'E').hand = [C('♦', 'A'), C('♦', '10'), C('♣', 'A'), C('♣', '10')];
+    playerAt(g, 'S').hand = [C('♥', 'K'), C('♥', 'Q'), C('♣', 'K'), C('♣', 'Q')];
+    g.dealer = botN;
+    g.state = 'bidding';
+    g.currentPlayer = w;
+    g.placeBid(w.id, 50);
+    g.placeBid(botN.id, 'pass');
+    g.placeBid(playerAt(g, 'E').id, 'pass');
+    g.placeBid(playerAt(g, 'S').id, 'pass');
+    assert.equal(g.state, 'trump_selection');
+    // The admin displaces BOTH the bot dealer and the bot declarer mid-selection.
+    g.demoteToSpectator(g.admin.id, w.id);
+    g.demoteToSpectator(g.admin.id, botN.id);
+    const z = g.addSpectator('Zeta');
+    const y = g.addSpectator('Yana');
+    assert.ok(g.promoteSpectator(g.admin.id, z.id, 'W'));
+    assert.ok(g.promoteSpectator(g.admin.id, y.id, 'N'));
+    assert.equal(g.declarer, z);
+    assert.equal(g.dealer, y, 'dealer re-pointed at the refilled seat');
+    const zHeart = z.hand.find(c => c.suit === '♥');
+    assert.ok(g.selectTrump(z.id, zHeart));
+    assert.equal(g.state, 'playing');
+    assert.ok(g.currentPlayer && g.currentPlayer.position,
+      'first lead is a real seat — no null-turn ' + 'Someone' + "'s turn" + ' hang');
+  });
+
+  it('rotation still works after the dealer seat turned over', () => {
+    const { g, placed } = makeBotGame({ humanSeats: ['S', 'E'], botSeats: ['N', 'W'] });
+    const botN = placed.N;
+    g.dealer = botN;
+    g.state = 'playing';
+    g.demoteToSpectator(g.admin.id, botN.id); // dealer seat vacated -> dealer = pseudo N
+    assert.equal(g.dealer.position, 'N');
+    assert.equal(g.dealer.id, null);
+    const y = g.addSpectator('Yana');
+    assert.ok(g.promoteSpectator(g.admin.id, y.id, 'N')); // refilled -> dealer = Yana
+    assert.equal(g.dealer, y);
+    const before = g.dealer;
+    g.resetForNextHand(true); // next hand rotates the dealer
+    assert.ok(g.dealer, 'dealer survives the rotation');
+    assert.notEqual(g.dealer, before, 'dealer advanced to the next seat');
+    assert.ok(g.currentPlayer, 'next hand starts on a real bidder');
+    assert.equal(g.state, 'bidding');
+  });
 });
 
 describe('WINNING_SCORE', () => {
