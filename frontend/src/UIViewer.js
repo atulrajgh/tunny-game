@@ -118,7 +118,7 @@ export default function UIViewer() {
       <Section title="Overlays">
         <Row title="Bidding overlay (top-left style)">
           <div className="overlay bidding-top active" style={{ position: 'relative', transform: 'none', left: 0, top: 0 }}>
-            <h3>Your bid</h3>
+            <h3>Bidding</h3>
             <div className="bid-buttons">
               <button className="bid-pass">Pass</button>
               <div className="bid-stepper">
@@ -127,6 +127,20 @@ export default function UIViewer() {
                 <button className="bid-arrow">▼</button>
               </div>
               <button className="bid-inc">60</button>
+            </div>
+          </div>
+        </Row>
+        <Row title="Bidding overlay (disabled — not your turn)">
+          <div className="overlay bidding-top active" style={{ position: 'relative', transform: 'none', left: 0, top: 0 }}>
+            <h3>Bidding</h3>
+            <div className="bid-buttons">
+              <button className="bid-pass" disabled>Pass</button>
+              <div className="bid-stepper">
+                <button className="bid-arrow" disabled>▲</button>
+                <div className="bid-hcp">70</div>
+                <button className="bid-arrow" disabled>▼</button>
+              </div>
+              <button className="bid-inc" disabled>70</button>
             </div>
           </div>
         </Row>
@@ -191,6 +205,11 @@ export default function UIViewer() {
         <Row title="Message bar (admin)">
           <div className="message-bar">
             <span className="redeal-msg">Reduced trump: N-S holds 6 trumps<span className="redeal-count"> (2 redeals so far)</span><button>Redeal</button></span>
+          </div>
+        </Row>
+        <Row title="Message bar (error)">
+          <div className="message-bar error">
+            <span>Invalid play — you must follow the led suit</span>
           </div>
         </Row>
       </Section>

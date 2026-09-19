@@ -170,15 +170,34 @@ function runBotTurn(g) {
   const bot = cp && cp.id !== null ? g.getPlayer(cp.id) : null;
   if (!bot || !bot.isBot) return;
   const action = botAction(g, bot);
-  if (!action) return;
+  // A null action means the bot could not find a legal move (a hand-count drift must
+  // have occurred somewhere — the game must never freeze on a bot seat). Retry once
+  // in case transient state settles, then advance the turn as a last resort.
+  if (!action) {
+    if (!g._botRetry) {
+      g._botRetry = true;
+      scheduleBotAfter(g, BOT_MIN_DELAY_MS);
+      return;
+    }
+    g._botRetry = false;
+    finishBotTurn(g);
+    return;
+  }
+  g._botRetry = false;
   if (action.type === 'bid' || action.type === 'pass') {
-    if (!g.placeBid(bot.id, action.type === 'pass' ? 'pass' : action.amount)) return;
+    if (!g.placeBid(bot.id, action.type === 'pass' ? 'pass' : action.amount)) {
+      if (!retryBotTurn(g)) finishBotTurn(g);
+      return;
+    }
     clearTimeout(g._timeout);
     if (g.state === 'trump_selection') io.to(g.id).emit('trump_selection', { playerId: g.declarer.id, playerName: g.declarer.name });
     broadcastState(g);
     scheduleBots(g);
   } else if (action.type === 'trump') {
-    if (!g.selectTrump(bot.id, action.card)) return;
+    if (!g.selectTrump(bot.id, action.card)) {
+      if (!retryBotTurn(g)) finishBotTurn(g);
+      return;
+    }
     clearTimeout(g._timeout);
     if (g.state === 'redeal_pending') {
       io.to(g.id).emit('redeal_pending', {
@@ -192,15 +211,35 @@ function runBotTurn(g) {
     scheduleBots(g);
   } else if (action.type === 'play' || action.type === 'play_trump') {
     const played = action.type === 'play_trump' ? g.playTrumpCard(bot.id) : g.playCard(bot.id, action.card);
-    if (!played) return;
+    if (!played) {
+      if (!retryBotTurn(g)) finishBotTurn(g);
+      return;
+    }
     finishBotTurn(g);
   } else if (action.type === 'ask_then_play') {
     const asked = g.askTrump(bot.id);
     const played = g.playCard(bot.id, action.card);
-    if (!asked && !played) return;
+    if (!asked && !played) {
+      if (!retryBotTurn(g)) finishBotTurn(g);
+      return;
+    }
     if (asked) io.to(g.id).emit('trump_revealed', { trumpSuit: g.trumpSuit });
     finishBotTurn(g);
   }
+}
+
+// One bounded retry for a failing bot action — a later state change (a human taking
+// the seat, a reveal, etc.) may make the same action legal moments later.
+function retryBotTurn(g) {
+  if (g._botRetry) return false;
+  g._botRetry = true;
+  scheduleBotAfter(g, BOT_MIN_DELAY_MS);
+  return true;
+}
+
+function scheduleBotAfter(g, delay) {
+  clearBotTimer(g);
+  g._botTimer = setTimeout(() => { g._botTimer = null; runBotTurn(g); }, delay);
 }
 
 function scheduleBots(g) {

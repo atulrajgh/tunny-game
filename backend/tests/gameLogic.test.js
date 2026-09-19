@@ -567,6 +567,73 @@ describe('askTrump / playTrumpCard', () => {
     assert.ok(g.playTrumpCard(playerAt(g, 'N').id), 'final trick, leading is allowed');
     assert.ok(g.trumpRevealed);
   });
+
+  it('an empty-handed declarer can always play the reserved trump card (no stall)', () => {
+    const { g } = makeGame();
+    setupPlaying(g, {
+      declarer: 'N', dealer: 'S', trumpSuit: '♥',
+      hands: {
+        N: [C('♥', 'Q'), C('♦', 'A'), C('♦', 'K'), C('♣', 'J'), C('♣', 'K')],
+        W: [C('♠', 'A'), C('♠', 'K'), C('♥', '10'), C('♣', 'Q')],
+        E: [C('♠', 'Q'), C('♦', 'J'), C('♥', '9'), C('♣', 'A')],
+        S: [C('♠', 'J'), C('♦', 'Q'), C('♥', 'K'), C('♦', '10')],
+      },
+    });
+    // Simulate a hand-count drift: the declarer's own cards are spent, only the
+    // reserved card remains, and it is NOT the final trick.
+    playerAt(g, 'N').hand = [];
+    g.trickNumber = 1;
+    assert.equal(g.currentPlayer, playerAt(g, 'W'), 'left of dealer S');
+    assert.ok(g.playCard(playerAt(g, 'W').id, { suit: '♠', rank: 'A' }), 'West leads');
+    assert.equal(g.currentPlayer, playerAt(g, 'N'), "declarer N's turn");
+    assert.ok(g.playTrumpCard(playerAt(g, 'N').id), 'reserved card is playable whenever the hand is empty');
+    assert.ok(g.trumpRevealed);
+    assert.equal(g.trumpCard, null);
+    assert.equal(g.currentTrick.length, 2);
+  });
+
+  it('a refilled declarer seat receives the still-reserved trump card after a reveal', () => {
+    const { g } = makeGame();
+    setupPlaying(g, { declarer: 'N', dealer: 'N', trumpSuit: '♥', hands: DEFAULT_HANDS });
+    const decl = playerAt(g, 'N');
+    assert.ok(g.trumpCard, 'reserved card exists and is not in the live hand');
+    // The declarer vanishes (disconnect) and the reveal happens while the seat is
+    // being moved — the rejoin cannot find a live elected seat.
+    g.removePlayer(decl.id);
+    assert.ok(g.vacatedHands.N, 'seat saved');
+    g.trumpRevealed = true;
+    assert.ok(g.trumpCard, 'reserved card still separate');
+    assert.equal(g.vacatedHands.N.hand.length, 4);
+    // A spectator fills the seat: the reserved card must join their restored hand.
+    const spec = g.addSpectator('NewN');
+    assert.equal(spec.name, 'NewN');
+    g.promoteSpectator(g.admin.id, spec.id, 'N');
+    assert.equal(playerAt(g, 'N'), spec);
+    assert.equal(g.trumpCard, null, 'reserved card rejoined the refilled hand');
+    assert.equal(playerAt(g, 'N').hand.length, 5, '4 saved cards + the rejoined reserved card');
+    assert.ok(playerAt(g, 'N').hand.some(c => c.suit === '♥'), 'trump-suit card is in hand');
+  });
+
+  it('a rejoin never drops the reserved card when the declarer seat is in limbo', () => {
+    const { g } = makeGame();
+    setupPlaying(g, { declarer: 'N', dealer: 'N', trumpSuit: '♥', hands: DEFAULT_HANDS });
+    const decl = playerAt(g, 'N');
+    // Hard limbo: the declarer's seat is neither a live player nor a saved seat.
+    const i = g.players.indexOf(decl);
+    g.players.splice(i, 1);
+    delete g.positions.N;
+    assert.equal(g.players.find(p => p.position === 'N'), undefined);
+    assert.equal(g.vacatedHands.N, undefined);
+    g.trumpRevealed = true;
+    g.rejoinTrumpCard();
+    assert.ok(g.trumpCard, 'reserved card is retained, never dropped');
+    // Once the seat does become available again, the card must land in the hand.
+    g.vacatedHands.N = { position: 'N', playerName: 'N', hand: [], team: 'N-S', wasDeclarer: true };
+    const spec = g.addSpectator('NewN2');
+    g.promoteSpectator(g.admin.id, spec.id, 'N');
+    assert.equal(g.trumpCard, null, 'rejoin now delivers the card');
+    assert.ok(playerAt(g, 'N').hand.some(c => c.suit === '♥'));
+  });
 });
 
 describe('vacated seats (disconnect)', () => {

@@ -299,6 +299,12 @@ class Game {
     if (saved.wasCurrentPlayer) this.currentPlayer = player;
     if (saved.wasDeclarer) this.declarer = player;
     if (saved.wasDummy) this.dummy = player;
+    // The declarer seat is back: if the reserved card never rejoined (it couldn't be
+    // delivered while the seat was in limbo), join it into the refilled hand now.
+    if (saved.wasDeclarer && this.trumpCard && !this.trumpCardPlayed && this.trumpRevealed) {
+      player.hand.push(this.trumpCard);
+      this.trumpCard = null;
+    }
     delete this.vacatedHands[pos];
   }
 
@@ -653,7 +659,11 @@ class Game {
     if (this.state !== 'playing') return false;
     if (!this.trumpCard || this.trumpCardPlayed) return false;
     const isLastTrick = this.trickNumber >= 5;
-    if (!isLastTrick) {
+    // An empty declarer hand means the reserved card is the only card left — always
+    // playable (this also covers the last trick, but is allowed on any trick so the
+    // play can never freeze when the hand counter has drifted by one).
+    const onlyCardLeft = hand.length === 0;
+    if (!isLastTrick && !onlyCardLeft) {
       if (this.currentTrick.length === 0) return false;
       if (this.leadSuit) {
         const hasSuit = hand.some(c => c.suit === this.leadSuit);
@@ -742,12 +752,19 @@ class Game {
     const dPos = this.declarer?.position;
     if (!dPos) return;
     const live = this.players.find(p => p.position === dPos);
+    let rejoined = false;
     if (live) {
       live.hand.push(this.trumpCard);
+      rejoined = true;
     } else if (this.vacatedHands[dPos]) {
       this.vacatedHands[dPos].hand.push(this.trumpCard);
+      rejoined = true;
     }
-    this.trumpCard = null;
+    // If the declarer's seat is in limbo (neither a live player nor a saved seat —
+    // e.g. mid disconnect/reconnect), keep the card reserved instead of dropping it:
+    // it is picked up again when the seat is refilled (restoreSavedState) or played
+    // via Play Trump. Never let the reserved card vanish from the game.
+    if (rejoined) this.trumpCard = null;
   }
 
   playTrumpCard(playerId) {

@@ -133,12 +133,12 @@ function decidePlay(g, bot) {
     if (others.length) return { type: 'play', card: highestHcp(others) };
     if (hand.length) return { type: 'play', card: highestHcp(hand) };
     if (canPlayTrump) return { type: 'play_trump' }; // the reserved trump is the only card
-    return null;
+    return null; // unreachable: nothing left to play, never deadlock
   }
 
-  // Declarer: the reserved trump card wins on the last trick, or any trick where the
-  // led suit can't be followed.
-  if (canPlayTrump && (g.trickNumber >= 5 || (!leading && !hasLeadSuit))) {
+  // Declarer: the reserved trump card wins on the last trick, any trick where the
+  // hand is empty (all other cards already played), or a lead that can't be followed.
+  if (canPlayTrump && (g.trickNumber >= 5 || hand.length === 0 || (!leading && !hasLeadSuit))) {
     return { type: 'play_trump' };
   }
 
@@ -146,6 +146,11 @@ function decidePlay(g, bot) {
   if (!isDeclarer && !g.trumpRevealed && !leading && !hasLeadSuit) {
     return { type: 'ask_then_play', card: pickCannotFollow(g, bot) };
   }
+
+  // Empty hand with no reserved card left: no legal play exists. Return a marker the
+  // driver can act on rather than fabricating a card (an empty hand mid-game means
+  // the hand counters drifted — never let the seat deadlock).
+  if (hand.length === 0) return null;
 
   if (leading) return { type: 'play', card: highestHcp(hand) };
   if (hasLeadSuit) return { type: 'play', card: followSuitChoice(g, hand, leadSuit) };

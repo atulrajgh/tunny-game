@@ -573,20 +573,6 @@ function App() {
               {gameState.trumpSuit && <div className="ac-state-item"><span className="ac-label">Trump</span><span className="ac-value">{gameState.trumpSuit}</span></div>}
             </div>
 
-            <h3 style={{ marginTop: 12 }}>Bids</h3>
-            <div className="ac-bids">
-              {['N','S','E','W'].map(pos => {
-                const p = players.find(x => x.position === pos);
-                const occupied = !!(p && p.id);
-                return (
-                  <div key={pos} className={'ac-bid-row' + (occupied ? '' : ' empty')}>
-                    <span className="ac-name">{occupied ? p.name : POSITION_NAMES[pos]}</span>
-                    <span>{p?.bid || '—'}</span>
-                  </div>
-                );
-              })}
-            </div>
-
           </div>
 
           {/* Right: Controls */}
@@ -684,7 +670,7 @@ function App() {
   }
 
   const messageBar = currentActionText || !socketConnected || error || gameState.redealPending || timedOut || (isMyTurn && isPlaying && !isSpectator) ? (
-    <div className="message-bar">
+    <div className={'message-bar' + (error ? ' error' : '')}>
       {!socketConnected && <span>Connection lost — reconnecting…</span>}
       {error && <span>{error}</span>}
       {gameState.redealPending && (
@@ -769,54 +755,68 @@ function App() {
         )}
       </div>
 
-{/* Bidding overlay — top of screen */}
+{/* Bidding overlay — visible to everyone during bidding; controls enabled only for the current bidder */}
   {isBidding && (
-    <div className={`overlay bidding-top${isMyTurn || (isAdmin && (vacatedTurnPos || timedOutTurn)) ? ' active' : ''}`}>
+    <div className="overlay bidding-top active">
       <h3>Bidding</h3>
-      {isMyTurn && (
-        <div className="bid-buttons">
-          <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
-          <div className="bid-stepper">
-            <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
-            <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
-            <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
-          </div>
-          <button onClick={placeMyBid} className="bid-inc">{incBid}</button>
-        </div>
-      )}
-      {isAdmin && (vacatedPlayer || timedOutTurn) && (
+      {isMyTurn || (isAdmin && (vacatedTurnPos || timedOutTurn)) ? (
         <>
-          <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
-          <div className="bid-buttons">
-            {vacatedPlayer && (
-              <div className="bid-buttons admin">
-                <div className="bid-stepper">
-                  <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
-                  <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
-                  <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
-                </div>
-                <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.position, card: incBid })} className="bid-inc">{incBid}</button>
+          {isAdmin && (vacatedPlayer || timedOutTurn) && (
+            <p style={{ marginTop: 8, color: '#a0d0a0' }}>Bidding for {curPlayer?.name}:</p>
+          )}
+          {isMyTurn && (
+            <div className="bid-buttons">
+              <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
+              <div className="bid-stepper">
+                <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
+                <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
+                <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
               </div>
-            )}
-            {timedOutTurn && (
-              <div className="bid-buttons admin">
-                <div className="bid-stepper">
-                  <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
-                  <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
-                  <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
+              <button onClick={placeMyBid} className="bid-inc">{incBid}</button>
+            </div>
+          )}
+          {isAdmin && (vacatedPlayer || timedOutTurn) && (
+            <div className="bid-buttons">
+              {vacatedPlayer && (
+                <div className="bid-buttons admin">
+                  <div className="bid-stepper">
+                    <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
+                    <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
+                    <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
+                  </div>
+                  <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.position, card: incBid })} className="bid-inc">{incBid}</button>
                 </div>
-                <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: incBid }); }} className="bid-inc">{incBid}</button>
-              </div>
-            )}
-            <button onClick={() => {
-              const payload = vacatedPlayer
-                ? { position: vacatedPlayer.position, card: 'pass' }
-                : { targetId: timedOutHand.playerId, card: 'pass' };
-              setTimedOut(null);
-              sendOnce('admin_play', payload);
-            }} className="bid-pass">Pass</button>
-          </div>
+              )}
+              {timedOutTurn && (
+                <div className="bid-buttons admin">
+                  <div className="bid-stepper">
+                    <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
+                    <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
+                    <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
+                  </div>
+                  <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: incBid }); }} className="bid-inc">{incBid}</button>
+                </div>
+              )}
+              <button onClick={() => {
+                const payload = vacatedPlayer
+                  ? { position: vacatedPlayer.position, card: 'pass' }
+                  : { targetId: timedOutHand.playerId, card: 'pass' };
+                setTimedOut(null);
+                sendOnce('admin_play', payload);
+              }} className="bid-pass">Pass</button>
+            </div>
+          )}
         </>
+      ) : (
+        <div className="bid-buttons">
+          <button className="bid-pass" disabled>Pass</button>
+          <div className="bid-stepper">
+            <button className="bid-arrow up" disabled aria-label="Increase bid">▲</button>
+            <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
+            <button className="bid-arrow down" disabled aria-label="Decrease bid">▼</button>
+          </div>
+          <button className="bid-inc" disabled>{incBid}</button>
+        </div>
       )}
       <div className="bid-summary">
         {players.map(p => <span key={p.id || p.position} className="bid-summary-item">{p.name}: {p.bid || '—'}</span>)}
@@ -932,7 +932,7 @@ function App() {
               <button className="action-btn" onClick={() => sendOnce('ask_trump')}>Ask Trump</button>
             )}
             {isPlaying && isDeclarer && myPos && !gameState.trumpRevealed && gameState.trumpCard && isMyTurn &&
-              (isLastTrick || canTrumpAction) && (
+              (isLastTrick || canTrumpAction || (me?.hand || []).length === 0) && (
               <button className="action-btn" onClick={() => sendOnce('play_trump')}>Play Trump</button>
             )}
           </>
