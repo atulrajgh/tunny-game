@@ -240,6 +240,24 @@ describe('cut & dealer', () => {
     assert.doesNotThrow(() => g.determineDealer());
     assert.equal(g.state, 'bidding');
   });
+
+  it('determineDealer is a no-op outside the cut (double-click safe)', () => {
+    const { g } = makeGame();
+    g.state = 'cut';
+    playerAt(g, 'N').cutCard = C('♠', 'J');
+    playerAt(g, 'S').cutCard = C('♠', 'A');
+    playerAt(g, 'E').cutCard = C('♠', 'K');
+    playerAt(g, 'W').cutCard = C('♠', 'Q');
+    assert.equal(g.determineDealer(), true);
+    const dealerAfterFirst = g.dealer;
+    const handsAfterFirst = g.players.map(p => p.hand.length);
+    assert.equal(g.state, 'bidding');
+    // A second seated player clicking Determine Dealer must not re-deal or re-roll.
+    assert.equal(g.determineDealer(), false);
+    assert.equal(g.state, 'bidding');
+    assert.equal(g.dealer, dealerAfterFirst);
+    assert.deepEqual(g.players.map(p => p.hand.length), handsAfterFirst);
+  });
 });
 
 describe('bidding', () => {

@@ -468,6 +468,7 @@ class Game {
   }
 
   determineDealer() {
+    if (this.state !== 'cut') return false;
     const seated = this.seatedPlayers();
     // Guard: if any seat still lacks a cutCard (edge cases beyond the three seating
     // paths), deal one now so the cut always resolves instead of crashing the server.
@@ -492,6 +493,7 @@ class Game {
     this.highestBid = null;
     this.passCount = 0;
     this.lastActivity = Date.now();
+    return true;
   }
 
   getNextPlayer(currentId) {

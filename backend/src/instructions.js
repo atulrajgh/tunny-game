@@ -93,17 +93,16 @@ td{font-size:13px}
 <h2>Admin Controls</h2>
 <p>The collapsible admin panel below the table includes:</p>
 <ul>
-<li><strong>Gallery</strong> — unseated players, with position assign and kick</li>
+<li><strong>Host</strong> — sit yourself as a player (N/S/E/W), or leave your seat</li>
 <li><strong>Table</strong> — seated players with team badges and kick</li>
+<li><strong>Gallery</strong> — unseated players, with position assign and kick</li>
 <li><strong>Spectators</strong> — promote a spectator to a seat</li>
 <li><strong>Bots</strong> — add up to 3 computer players, or remove an unseated bot</li>
-<li><strong>Host</strong> — sit yourself as a player (N/S/E/W), or leave your seat</li>
 <li><strong>Game State</strong> — hand/trick, state, declarer, bid, trump</li>
-<li><strong>Bids</strong> — each player's bid</li>
-<li><strong>Current Trick</strong> — cards played</li>
-<li><strong>Scores</strong> — running scores, HCP, tricks</li>
-<li><strong>Controls</strong> — Move Dealer, Reset Scores, Reset Game, Take Over, Confirm & Next Hand</li>
+<li><strong>Tricks &amp; Scores</strong> — live trick-by-trick table with running HCP totals</li>
+<li><strong>Controls</strong> — Move Dealer, Reset Scores, Reset Game, Take Over, Confirm &amp; Next Hand</li>
 </ul>
+<p>During waiting/cut/redeal, the <strong>Start Game</strong>, <strong>Determine Dealer</strong>, and <strong>Redeal</strong> buttons appear in the message bar above your hand and can be used by any seated player or the host.</p>
 
 <div class="back"><a href="/">← Back to Game</a></div>
 <div class="version">Version ${version}</div>

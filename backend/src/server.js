@@ -500,7 +500,7 @@ io.on('connection', (socket) => {
 
   socket.on('start_game', () => {
     const g = game(); if (!g) return error('Not in a game');
-    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    const v = me(); if (!v || v.isBot || !(g.players.includes(v) || v.isAdmin)) return error('Seated players only');
     if (!g.startCut()) return error('Need 4 players with positions');
     io.to(g.id).emit('cut_start', {});
     io.emit('room_list', getPublicList());
@@ -509,7 +509,7 @@ io.on('connection', (socket) => {
 
   socket.on('cut_done', () => {
     const g = game(); if (!g || g.state !== 'cut') return;
-    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    const v = me(); if (!v || v.isBot || !(g.players.includes(v) || v.isAdmin)) return error('Seated players only');
     g.determineDealer();
     io.to(g.id).emit('game_started', { dealer: g.dealer.name });
     io.emit('room_list', getPublicList());
@@ -549,7 +549,7 @@ io.on('connection', (socket) => {
 
   socket.on('redeal', () => {
     const g = game(); if (!g) return error('Not in a game');
-    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    const v = me(); if (!v || v.isBot || !(g.players.includes(v) || v.isAdmin)) return error('Seated players only');
     if (!g.redealAdmin()) return error('No redeal pending');
     clearTimeout(g._timeout);
     io.to(g.id).emit('redealed', { dealer: g.dealer ? g.dealer.name : null, redealCount: g.redealCount });

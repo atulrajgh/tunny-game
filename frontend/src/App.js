@@ -280,11 +280,14 @@ function App() {
   const timedOutHand = gameState.timedOutHand;
   const timedOutTurn = isAdmin && timedOutHand && curPlayer && curPlayer.id === timedOutHand.playerId;
   const timedOutDeclarer = isAdmin && timedOutHand && gameState.declarer && gameState.declarer.id === timedOutHand.playerId;
+  const seatedCount = Object.keys(gameState.positions || {}).length;
+  // Anyone SITTING at a seat (plus the admin host) can advance waiting/cut/redeal.
+  const canStartFlow = !!me && !me.isBot && (me.position || me.isAdmin);
 
   // The current "who is acting" line, folded into the unified message bar.
   const currentActionText = [
-    gameState.state === 'waiting' && (isAdmin ? 'Waiting — assign positions and start the game' : `Waiting for ${adminName} to assign a seat`),
-    gameState.state === 'cut' && `Waiting for ${adminName} to determine the dealer`,
+    gameState.state === 'waiting' && (isAdmin ? 'Waiting — assign positions and the game can start' : `${seatedCount}/4 seated — any seated player can start`),
+    gameState.state === 'cut' && (isAdmin ? 'Waiting — determine the dealer' : 'Cut complete — any seated player can determine the dealer'),
     isBidding && `${curPlayer?.name || 'Someone'} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`,
     isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`,
     gameState.state === 'redeal_pending' && null,
@@ -579,22 +582,9 @@ function App() {
           <div className="ac-panel">
             <h3>Controls</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {gameState.state === 'waiting' && (
-                <button className="ac-btn green"
-                  disabled={Object.keys(gameState.positions || {}).length < 4}
-                  onClick={() => sendOnce('start_game')}>
-                  Start Game
-                </button>
-              )}
-              {gameState.state === 'cut' && (
-                <button className="ac-btn green" onClick={() => sendOnce('cut_done')}>Determine Dealer</button>
-              )}
                 <button className="ac-btn blue" onClick={() => sendOnce('rotate_dealer')}>Move Dealer</button>
                 <button className="ac-btn orange" onClick={() => sendOnce('reset_scores')}>Reset Scores</button>
                 <button className="ac-btn orange" onClick={() => sendOnce('reset_game')}>Reset Game</button>
-              {gameState.redealPending && (
-                <button className="ac-btn green" onClick={() => sendOnce('redeal')}>Redeal Hand</button>
-              )}
               {timedOut && timedOut.playerId && (
                 <button className="ac-btn blue" onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOut.playerId }); }}>
                   Take Over ({timedOut.playerName})
@@ -677,9 +667,21 @@ function App() {
         <span className="redeal-msg">
           {gameState.redealPending.reason}
           {gameState.redealCount > 0 && <span className="redeal-count"> ({gameState.redealCount} redeal{gameState.redealCount > 1 ? 's' : ''} so far)</span>}
-          {isAdmin && (
-            <button className="action-btn" onClick={() => sendOnce('redeal')}>Redeal</button>
-          )}
+          <button className="action-btn" disabled={!canStartFlow} onClick={() => sendOnce('redeal')}>Redeal</button>
+        </span>
+      )}
+      {gameState.state === 'waiting' && (
+        <span className="flow-msg">
+          <button className="action-btn" disabled={!canStartFlow || seatedCount < 4}
+            onClick={() => sendOnce('start_game')}>Start Game</button>
+          {!canStartFlow && <span className="flow-hint"> (seated players only)</span>}
+        </span>
+      )}
+      {gameState.state === 'cut' && (
+        <span className="flow-msg">
+          <button className="action-btn" disabled={!canStartFlow}
+            onClick={() => sendOnce('cut_done')}>Determine Dealer</button>
+          {!canStartFlow && <span className="flow-hint"> (seated players only)</span>}
         </span>
       )}
       {timedOut && (
@@ -747,9 +749,6 @@ function App() {
                 {me?.cutCard ? renderCard(me.cutCard) : <span className="cut-card-pending">Cutting…</span>}
                 <span className="cut-card-label">Your card</span>
               </div>
-            )}
-            {isAdmin && (
-              <button className="start-btn" onClick={() => sendOnce('cut_done')}>Determine Dealer</button>
             )}
           </div>
         )}
