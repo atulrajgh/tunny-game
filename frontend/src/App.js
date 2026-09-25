@@ -284,7 +284,7 @@ function App() {
 const seatedCount = Object.keys(gameState.positions || {}).length;
   const humanSeated = (gameState.players || []).filter(p => !p.isBot).length;
   const botCount = (gameState.players || []).filter(p => p.isBot).length + (gameState.spectators || []).filter(s => s.isBot).length;
-  const shortOnHumans = humanSeated < 4 && botCount < 3;
+  const tableFull = seatedCount === 4;
   // Anyone SITTING at a seat (plus the host admin) can advance waiting/cut/redeal.
   const canStartFlow = !!me && !me.isBot && (me.position || me.isAdmin);
   // Assign Seats is admin-only: seats unseated humans, then existing bots; the admin
@@ -297,9 +297,9 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
   // The current "who is acting" line, folded into the unified message bar.
   const currentActionText = [
-    gameState.state === 'waiting' && (shortOnHumans
-      ? (isAdmin ? `Only ${humanSeated} human${humanSeated === 1 ? '' : 's'} — add bots then assign seats` : `Only ${humanSeated} human${humanSeated === 1 ? '' : 's'} here — add bots`)
-      : (isAdmin ? 'Waiting — assign seats and the game can start' : `${seatedCount}/4 seated — any seated player can start`)),
+    gameState.state === 'waiting' && (tableFull
+      ? (isAdmin ? 'Waiting — the table is full; start the game' : `${seatedCount}/4 seated — any seated player can start`)
+      : `Only ${seatedCount}/4 seated — add bots or assign seats`),
     gameState.state === 'cut' && (isAdmin ? 'Waiting — determine the dealer' : 'Cut complete — any seated player can determine the dealer'),
     isBidding && `${curPlayer?.name || 'Someone'} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`,
     isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`,
@@ -688,15 +688,17 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
           <button className="action-btn" disabled={!assignSeatsEnabled}
             onClick={() => sendOnce('assign_seats')}>Assign Seats</button>
           {!isAdmin && <span className="flow-hint"> (admin only)</span>}
-          {shortOnHumans ? (
-            <>
-              <button className="action-btn" disabled={!canStartFlow}
-                onClick={() => sendOnce('add_bot')}>Add Bots</button>
-              {!canStartFlow && <span className="flow-hint"> (seated players only)</span>}
-            </>
+          {!tableFull ? (
+            botCount < 3 && (
+              <>
+                <button className="action-btn" disabled={!canStartFlow}
+                  onClick={() => sendOnce('add_bot')}>Add Bots</button>
+                {!canStartFlow && <span className="flow-hint"> (seated players only)</span>}
+              </>
+            )
           ) : (
             <>
-              <button className="action-btn" disabled={!canStartFlow || seatedCount < 4 || humanSeated < 1}
+              <button className="action-btn" disabled={!canStartFlow || humanSeated < 1}
                 onClick={() => sendOnce('start_game')}>Start Game</button>
               {!canStartFlow && <span className="flow-hint"> (seated players only)</span>}
             </>
