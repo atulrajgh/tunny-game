@@ -202,6 +202,39 @@ export default function UIViewer() {
             <span className="your-turn-msg">Your turn!</span>
           </div>
         </Row>
+        <Row title="Message bar (waiting - short, no Assign Seats)">
+          <div className="message-bar">
+            <span className="flow-msg">
+              <button className="action-btn">Add Bots</button>
+              <span className="flow-hint"> (seated players only)</span>
+            </span>
+          </div>
+        </Row>
+        <Row title="Message bar (waiting - 3+ waiting for a seat)">
+          <div className="message-bar">
+            <span className="flow-msg">
+              <button className="action-btn">Assign Seats</button>
+              <button className="action-btn">Add Bots</button>
+            </span>
+          </div>
+        </Row>
+        <Row title="Message bar (waiting - observer / non-admin)">
+          <div className="message-bar">
+            <span className="flow-msg">
+              <button className="action-btn" disabled>Assign Seats</button>
+              <span className="flow-hint"> (admin only)</span>
+              <button className="action-btn" disabled>Add Bots</button>
+              <span className="flow-hint"> (seated players only)</span>
+            </span>
+          </div>
+        </Row>
+        <Row title="Message bar (waiting - full table)">
+          <div className="message-bar">
+            <span className="flow-msg">
+              <button className="action-btn">Start Game</button>
+            </span>
+          </div>
+        </Row>
         <Row title="Message bar (admin)">
           <div className="message-bar">
             <span className="redeal-msg">Reduced trump: N-S holds 6 trumps<span className="redeal-count"> (2 redeals so far)</span><button>Redeal</button></span>
@@ -253,7 +286,7 @@ export default function UIViewer() {
           </div>
           <button className="start-btn">Confirm & Next Hand</button>
           <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
-          <div className="version">Version 1.8.1606</div>
+          <div className="version">Version 1.9.2503</div>
         </div>
       </Section>
 
@@ -281,7 +314,7 @@ export default function UIViewer() {
             <button>Join</button>
           </div>
           <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
-          <div className="version">Version 1.8.1606</div>
+          <div className="version">Version 1.9.2503</div>
         </div>
       </Section>
 

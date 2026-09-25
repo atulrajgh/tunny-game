@@ -292,6 +292,11 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
   const unseatedHumans = (gameState.players || []).filter(p => !p.isBot && !p.position).length;
   const unseatedBots = (gameState.spectators || []).filter(s => s.isBot && !s.position).length;
   const adminUnseated = !!me && me.isAdmin && !me.position;
+  // The gallery pool = unseated players + unseated spectator bots awaiting a seat.
+  // Assign Seats only renders once the pool has at least 3 candidates so a single
+  // click meaningfully fills the table.
+  const galleryPool = unseatedHumans + unseatedBots;
+  const showAssignSeats = galleryPool >= 3;
   const assignSeatsEnabled = !!me && me.isAdmin && seatedCount < 4 &&
     (unseatedHumans > 0 || unseatedBots > 0 || adminUnseated);
 
@@ -299,7 +304,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
   const currentActionText = [
     gameState.state === 'waiting' && (tableFull
       ? (isAdmin ? 'Waiting — the table is full; start the game' : `${seatedCount}/4 seated — any seated player can start`)
-      : `Only ${seatedCount}/4 seated — add bots or assign seats`),
+      : `Only ${seatedCount}/4 seated — ${showAssignSeats ? 'add bots or assign seats' : 'add bots to fill the table'}`),
     gameState.state === 'cut' && (isAdmin ? 'Waiting — determine the dealer' : 'Cut complete — any seated player can determine the dealer'),
     isBidding && `${curPlayer?.name || 'Someone'} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`,
     isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`,
@@ -685,9 +690,13 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
       )}
       {gameState.state === 'waiting' && (
         <span className="flow-msg">
-          <button className="action-btn" disabled={!assignSeatsEnabled}
-            onClick={() => sendOnce('assign_seats')}>Assign Seats</button>
-          {!isAdmin && <span className="flow-hint"> (admin only)</span>}
+          {showAssignSeats && (
+            <>
+              <button className="action-btn" disabled={!assignSeatsEnabled}
+                onClick={() => sendOnce('assign_seats')}>Assign Seats</button>
+              {!isAdmin && <span className="flow-hint"> (admin only)</span>}
+            </>
+          )}
           {!tableFull ? (
             botCount < 3 && (
               <>

@@ -40,7 +40,7 @@ td{font-size:13px}
 
 <h2>Game Flow</h2>
 <h3>1. Waiting Room</h3>
-<p>The first player to join becomes the <strong>admin</strong>; the next four players fill the N/S/E/W seats, and anyone after that joins as a <strong>spectator</strong>. The admin assigns positions and starts the game once all four seats are filled.</p>
+<p>The first player to join becomes the <strong>admin</strong>; the next players fill the N/S/E/W seats, and anyone after that joins as a <strong>spectator</strong>. While seats are open the message bar shows <strong>Add Bots</strong> (up to 3 computer players) and, once at least <strong>3 players/bots are waiting for a seat</strong>, <strong>Assign Seats</strong> — an admin-only one-click button that seats them all at random open positions (the host sits too when no other human is waiting). The <strong>Start Game</strong> button appears only when <strong>all 4 seats are filled</strong>.</p>
 
 <h3>2. Cut</h3>
 <p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>, and the player to their left bids first. The dealer rotates clockwise to the next seat at the start of each new hand (the admin can also move the dealer manually).</p>
@@ -102,7 +102,7 @@ td{font-size:13px}
 <li><strong>Tricks &amp; Scores</strong> — live trick-by-trick table with running HCP totals</li>
 <li><strong>Controls</strong> — Move Dealer, Reset Scores, Reset Game, Take Over, Confirm &amp; Next Hand</li>
 </ul>
-<p>During waiting/cut/redeal, the <strong>Start Game</strong>, <strong>Determine Dealer</strong>, and <strong>Redeal</strong> buttons appear in the message bar above your hand and can be used by any seated player or the host — <strong>Start Game</strong> shows only once all 4 seats are filled. The <strong>Assign Seats</strong> button (admin only, during waiting) seats unseated humans and then existing bots at random open positions — with no humans waiting, the host sits too.</p>
+<p>During waiting/cut/redeal, the <strong>Start Game</strong>, <strong>Determine Dealer</strong>, and <strong>Redeal</strong> buttons appear in the message bar above your hand and can be used by any seated player or the host — <strong>Start Game</strong> shows only once all 4 seats are filled. The <strong>Assign Seats</strong> button (admin only, during waiting, once at least 3 players await a seat) seats unseated humans and then existing bots at random open positions — with no humans waiting, the host sits too.</p>
 
 <div class="back"><a href="/">← Back to Game</a></div>
 <div class="version">Version ${version}</div>
