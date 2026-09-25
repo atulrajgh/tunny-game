@@ -498,6 +498,16 @@ io.on('connection', (socket) => {
     scheduleBots(game());
   });
 
+  socket.on('assign_seats', () => {
+    const g = game(); if (!g) return error('Not in a game');
+    const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    const seated = g.assignSeats(admin.id);
+    if (!seated) return error('Nothing to assign');
+    io.to(g.id).emit('seats_assigned', { summary: seated.join(', ') });
+    updateAll();
+    scheduleBots(game());
+  });
+
   socket.on('start_game', () => {
     const g = game(); if (!g) return error('Not in a game');
     const v = me(); if (!v || v.isBot || !(g.players.includes(v) || v.isAdmin)) return error('Seated players only');

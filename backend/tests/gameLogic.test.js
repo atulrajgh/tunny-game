@@ -271,6 +271,79 @@ describe('cut & dealer', () => {
   });
 });
 
+describe('assign seats', () => {
+  function waitingRoom() {
+    const g = new Game('r');
+    g.addPlayer('Admin', true);
+    return { g };
+  }
+
+  it('seats gallery humans at random positions, then existing bots, keeping the host unseated', () => {
+    const { g } = waitingRoom();
+    const h1 = g.addPlayer('Al');
+    const h2 = g.addPlayer('Bo');
+    const b1 = g.addBot();
+    const b2 = g.addBot();
+    assert.ok(b1 && b2);
+    const res = g.assignSeats(g.admin.id);
+    assert.ok(res, 'returns the seating summary');
+    assert.equal(res.length, 4, 'Al, Bo and 2 bots seated');
+    assert.equal(Object.keys(g.positions).length, 4);
+    const seats = Object.values(g.positions);
+    assert.equal(new Set(seats).size, 4, 'no duplicate assignments');
+    for (const name of ['Al', 'Bo']) {
+      const p = g.players.find(x => x.name === name);
+      assert.ok(p.position, name + ' seated (humans first)');
+      assert.ok(!p.isBot);
+    }
+    assert.equal(g.players.length, 4, 'bots promoted into players');
+    assert.equal(g.admin.position, null, 'host stays host when humans exist');
+    assert.equal(g.state, 'waiting');
+  });
+
+  it('seats the admin only when no gallery humans exist, then fills with existing bots', () => {
+    const { g } = waitingRoom();
+    assert.equal(g.players.length, 0, 'no humans besides host');
+    const b1 = g.addBot();
+    const b2 = g.addBot();
+    const b3 = g.addBot();
+    assert.ok(b1 && b2 && b3);
+    const res = g.assignSeats(g.admin.id);
+    assert.ok(res);
+    assert.equal(res.length, 4, 'admin + 3 bots = full table');
+    assert.ok(['N','S','E','W'].includes(g.admin.position), 'admin holds a random open position');
+    assert.ok(g.players.includes(g.admin), 'admin pushed into players when seated');
+    assert.equal(Object.keys(g.positions).length, 4);
+    // The table now has exactly one human (the host).
+    assert.equal(g.players.filter(p => !p.isBot).length, 1);
+  });
+
+  it('never auto-adds bots: only empty seats get filled by existing bots, leftovers stay open', () => {
+    const { g } = waitingRoom();
+    g.addPlayer('Al');
+    const res = g.assignSeats(g.admin.id);
+    assert.ok(res);
+    assert.equal(g.players.length, 1, 'only Al seated, no bots created');
+    assert.equal(Object.keys(g.positions).length, 1);
+    assert.equal(g.admin.position, null, 'human exists, so host stays unseated');
+  });
+
+  it('is a no-op on a full table', () => {
+    const { g } = makeGame();
+    assert.equal(Object.keys(g.positions).length, 4);
+    assert.equal(g.assignSeats(g.admin.id), null);
+  });
+
+  it('rejects non-admin callers and non-waiting states', () => {
+    const { g } = waitingRoom();
+    const h = g.addPlayer('Eve');
+    assert.equal(g.assignSeats(h.id), null, 'non-admin rejected');
+    g.addPlayer('Al');
+    g.state = 'cut';
+    assert.equal(g.assignSeats(g.admin.id), null, 'not allowed after waiting');
+  });
+});
+
 describe('bidding', () => {
   function biddingGame() {
     const { g } = makeGame();

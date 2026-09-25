@@ -102,6 +102,7 @@ function App() {
     socket.on('trump_revealed', () => { /* state update handles it */ });
     socket.on('redeal_pending', () => { setScreen('game'); setTimedOut(null); unlockAction(); });
     socket.on('redealed', (d) => { unlockAction(); showError(`Redeal done${d && d.dealer ? ' — new dealer ' + d.dealer : ''}`); });
+    socket.on('seats_assigned', (d) => showError(`Seats assigned — ${(d && d.summary) || ''}`));
     socket.on('player_joined', () => {});
     socket.on('room_closed', (data) => {
       joinedRef.current = false;
@@ -280,18 +281,25 @@ function App() {
   const timedOutHand = gameState.timedOutHand;
   const timedOutTurn = isAdmin && timedOutHand && curPlayer && curPlayer.id === timedOutHand.playerId;
   const timedOutDeclarer = isAdmin && timedOutHand && gameState.declarer && gameState.declarer.id === timedOutHand.playerId;
-  const seatedCount = Object.keys(gameState.positions || {}).length;
+const seatedCount = Object.keys(gameState.positions || {}).length;
   const humanSeated = (gameState.players || []).filter(p => !p.isBot).length;
   const botCount = (gameState.players || []).filter(p => p.isBot).length + (gameState.spectators || []).filter(s => s.isBot).length;
   const shortOnHumans = humanSeated < 4 && botCount < 3;
-  // Anyone SITTING at a seat (plus the admin host) can advance waiting/cut/redeal.
+  // Anyone SITTING at a seat (plus the host admin) can advance waiting/cut/redeal.
   const canStartFlow = !!me && !me.isBot && (me.position || me.isAdmin);
+  // Assign Seats is admin-only: seats unseated humans, then existing bots; the admin
+  // fills a seat only when no humans are in the gallery.
+  const unseatedHumans = (gameState.players || []).filter(p => !p.isBot && !p.position).length;
+  const unseatedBots = (gameState.spectators || []).filter(s => s.isBot && !s.position).length;
+  const adminUnseated = !!me && me.isAdmin && !me.position;
+  const assignSeatsEnabled = !!me && me.isAdmin && seatedCount < 4 &&
+    (unseatedHumans > 0 || unseatedBots > 0 || adminUnseated);
 
   // The current "who is acting" line, folded into the unified message bar.
   const currentActionText = [
     gameState.state === 'waiting' && (shortOnHumans
       ? (isAdmin ? `Only ${humanSeated} human${humanSeated === 1 ? '' : 's'} — add bots then assign seats` : `Only ${humanSeated} human${humanSeated === 1 ? '' : 's'} here — add bots`)
-      : (isAdmin ? 'Waiting — assign positions and the game can start' : `${seatedCount}/4 seated — any seated player can start`)),
+      : (isAdmin ? 'Waiting — assign seats and the game can start' : `${seatedCount}/4 seated — any seated player can start`)),
     gameState.state === 'cut' && (isAdmin ? 'Waiting — determine the dealer' : 'Cut complete — any seated player can determine the dealer'),
     isBidding && `${curPlayer?.name || 'Someone'} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`,
     isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`,
@@ -677,6 +685,9 @@ function App() {
       )}
       {gameState.state === 'waiting' && (
         <span className="flow-msg">
+          <button className="action-btn" disabled={!assignSeatsEnabled}
+            onClick={() => sendOnce('assign_seats')}>Assign Seats</button>
+          {!isAdmin && <span className="flow-hint"> (admin only)</span>}
           {shortOnHumans ? (
             <>
               <button className="action-btn" disabled={!canStartFlow}

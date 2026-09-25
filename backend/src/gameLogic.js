@@ -417,6 +417,48 @@ class Game {
     return admin;
   }
 
+  // Auto-arrange the waiting table ("Assign Seats" button): seat unseated humans
+  // first at random open positions, then fill remaining open positions with
+  // existing unseated bots. Only when there are no unseated humans does the host
+  // admin take a seat (so the table still has a human). Never adds new bots and
+  // never displaces a seated player. Returns the seating summary or null.
+  assignSeats(adminId) {
+    const admin = this.getPlayer(adminId);
+    if (!admin || !admin.isAdmin) return null;
+    if (this.state !== 'waiting') return null;
+    const open = ['N', 'S', 'E', 'W'].filter((pos) => !this.positions[pos]);
+    if (open.length === 0) return null;
+    // Fisher–Yates shuffle so seats are assigned randomly.
+    for (let i = open.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [open[i], open[j]] = [open[j], open[i]];
+    }
+    const seated = [];
+    let i = 0;
+    const humans = this.players.filter((p) => !p.isBot && !p.position);
+    if (humans.length > 0) {
+      for (const h of humans) {
+        if (i >= open.length) break;
+        this.setPosition(h.id, open[i]);
+        seated.push(`${h.name}@${open[i]}`);
+        i++;
+      }
+    } else if (admin && !admin.position && i < open.length) {
+      this.adminSit(open[i]);
+      seated.push(`${admin.name}@${open[i]}`);
+      i++;
+    }
+    const bots = this.spectators.filter((s) => s.isBot && !s.position);
+    for (const b of bots) {
+      if (i >= open.length) break;
+      this.promoteSpectator(adminId, b.id, open[i]);
+      seated.push(`${b.name}@${open[i]}`);
+      i++;
+    }
+    this.lastActivity = Date.now();
+    return seated;
+  }
+
   // The host steps off the table back to spectator-style hosting. Mid-game the seat
   // is vacated (hand saved) so it can be filled or re-sat by the admin.
   adminLeaveSeat() {

@@ -102,7 +102,7 @@ td{font-size:13px}
 <li><strong>Tricks &amp; Scores</strong> — live trick-by-trick table with running HCP totals</li>
 <li><strong>Controls</strong> — Move Dealer, Reset Scores, Reset Game, Take Over, Confirm &amp; Next Hand</li>
 </ul>
-<p>During waiting/cut/redeal, the <strong>Start Game</strong>, <strong>Determine Dealer</strong>, and <strong>Redeal</strong> buttons appear in the message bar above your hand and can be used by any seated player or the host.</p>
+<p>During waiting/cut/redeal, the <strong>Start Game</strong>, <strong>Determine Dealer</strong>, and <strong>Redeal</strong> buttons appear in the message bar above your hand and can be used by any seated player or the host. The <strong>Assign Seats</strong> button (admin only, during waiting) seats unseated humans and then existing bots at random open positions — with no humans waiting, the host sits too.</p>
 
 <div class="back"><a href="/">← Back to Game</a></div>
 <div class="version">Version ${version}</div>
