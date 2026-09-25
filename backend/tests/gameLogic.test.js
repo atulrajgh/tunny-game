@@ -186,6 +186,17 @@ describe('cut & dealer', () => {
     assert.ok(!g.startCut());
   });
 
+  it('startCut refuses a bot-only table (needs at least one human seated)', () => {
+    const { g } = makeGame();
+    for (const p of g.players) p.isBot = true;
+    assert.ok(!g.startCut());
+    assert.equal(g.state, 'waiting');
+    // Reverting one player to human lets the cut proceed.
+    g.players[0].isBot = false;
+    assert.ok(g.startCut());
+    assert.equal(g.state, 'cut');
+  });
+
   it('the dealer is the highest cut card (J beats A)', () => {
     const { g } = makeGame();
     g.state = 'cut';

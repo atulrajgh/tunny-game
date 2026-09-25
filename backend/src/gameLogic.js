@@ -450,6 +450,8 @@ class Game {
     if (this.state !== 'waiting') return false;
     const seated = this.seatedPlayers();
     if (seated.length < 4) return false;
+    // The table needs at least one human (the host admin can sit as that human).
+    if (seated.every((p) => p.isBot)) return false;
     this.setupDeck();
     for (const player of seated) {
       player.cutCard = this.deck.pop();
