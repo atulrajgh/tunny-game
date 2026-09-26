@@ -22,6 +22,22 @@ Tests (backend, no extra deps — Node's built-in runner):
 cd backend && npm test
 ```
 
+Frontend render smoke test — **run this before every push that touches `frontend/src`**:
+
+```bash
+cd frontend && npm test        # node scripts/smoke-render.js
+```
+
+`frontend/scripts/smoke-render.js` mounts the real `App` in jsdom and drives 15 scripted
+server states (login, waiting as admin/player/spectator, cut, bidding, trump selection,
+playing, stuck seat, redeal, review, game over) through the real socket handlers. It fails
+on any render-time throw, and a static pass catches temporal-dead-zone references. This
+exists because `react-scripts build` cannot catch either: a `const` read above its own
+declaration inside a component body compiles fine and throws a blank page in the browser
+— that shipped once as `Cannot access 'log' before initialization` and took the whole
+site down after Join. It uses `acorn` + `acorn-jsx` + `jsdom` from react-scripts' tree
+(`@babel/parser` 7.29 in this tree returns nodes without `declarators`, so don't use it).
+
 No lint, typecheck, or formatter scripts exist. Backend tests live in `backend/tests/` (138 tests across `gameLogic.test.js` and `instructions.test.js` covering deck/cards, bidding, trump, trick resolution, scoring, bots, disconnect/take-over, card integrity, hand log, visibility, persistence, instructions render). New tests must be deterministic: build hands with the retrying `buildFullHandInPlay()` helper and play them with `playLegalCard()`/`playHandOut()` — never blind `hand[0]` plays, which fail to follow suit and make the suite flaky.
 
 ## Architecture

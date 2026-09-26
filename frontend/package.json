@@ -14,9 +14,11 @@
   "scripts": {
     "start": "node --no-deprecation ./node_modules/react-scripts/bin/react-scripts.js start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "smoke": "node scripts/smoke-render.js",
+    "test": "node scripts/smoke-render.js",
     "eject": "react-scripts eject"
   },
+
   "devDependencies": {
     "react-scripts": "5.0.1"
   },

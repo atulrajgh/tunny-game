@@ -452,6 +452,8 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     );
   }
 
+  const stuckSeat = gameState.stuckSeat;
+  const log = gameState.lastHandLog;
   let adminPanel = null;
   if (isAdmin && !isSpectator) {
     const unseated = players.filter(p => !p.position);
@@ -745,8 +747,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     );
   }
 
-  const stuckSeat = gameState.stuckSeat;
-  const log = gameState.lastHandLog;
   const messageBar = currentActionText || !socketConnected || error || gameState.redealPending || timedOut || stuckSeat || (isMyTurn && isPlaying && !isSpectator) ? (
     <div className={'message-bar' + (error ? ' error' : '')}>
       {!socketConnected && <span>Connection lost — reconnecting…</span>}
