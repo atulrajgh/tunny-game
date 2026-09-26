@@ -44,6 +44,15 @@ function Row({ title, children }) {
 }
 
 export default function UIViewer() {
+  const [version, setVersion] = React.useState('');
+
+  React.useEffect(() => {
+    fetch('/settings.json')
+      .then(r => r.json())
+      .then(s => { if (s && s.version) setVersion(s.version); })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="app" style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
       <h1 style={{ fontSize: 36, marginBottom: 24, textAlign: 'center' }}>Tunny UI Viewer</h1>
@@ -286,7 +295,7 @@ export default function UIViewer() {
           </div>
           <button className="start-btn">Confirm & Next Hand</button>
           <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
-          <div className="version">Version 1.9.2503</div>
+          <div className="version">Version {version || '…'}</div>
         </div>
       </Section>
 
@@ -314,7 +323,7 @@ export default function UIViewer() {
             <button>Join</button>
           </div>
           <div className="credit">This site is brought to you courtesy of <a href="https://render.com/" target="_blank" rel="noreferrer">https://render.com/</a></div>
-          <div className="version">Version 1.9.2503</div>
+          <div className="version">Version {version || '…'}</div>
         </div>
       </Section>
 

@@ -156,7 +156,8 @@ function App() {
     return (
       <div className="app login-screen">
         <h1 className="title">♠ TUNNY ♥</h1>
-        <a href="/instructions" target="_blank" className="help-link" style={{ marginBottom: 12 }}>How to Play</a>
+        <a href="/instructions" target="_blank" className="help-link" style={{ marginBottom: 4 }}>How to Play</a>
+        <a href="/demo/tunny-demo.mp4" target="_blank" className="help-link" style={{ marginBottom: 12 }}>Watch a demo</a>
         {!socketConnected && <div className="reconnect-banner">Connection lost — reconnecting…</div>}
         {error && <div className="toast error">{error}</div>}
         <div className="login-box">
@@ -408,7 +409,12 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     const clickable = isAdmin && isPlaying && isTurn;
     const vacatedHoldsLead = !!ledSuit && (v.hand || []).some(c => c.suit === ledSuit);
     const isVacatedDeclarer = isPlaying && gameState.declarer && gameState.declarer.position === pos;
-    const vacatedTrumpAllowed = isAdmin && isPlaying && isTurn && isVacatedDeclarer && gameState.trumpCard && !gameState.trumpRevealed && (isLastTrick || (!!ledSuit && !vacatedHoldsLead));
+    // Mirrors _playTrumpCore: allowed on the last trick, when the seat holds no
+    // led-suit card while following, or when its hand is empty (reserved trump is
+    // then the only card left). The last clause must stay in step with the engine
+    // so an admin taking over an empty declarer can never be shown a dead table.
+    const vacatedOnlyCardLeft = (v.hand || []).length === 0;
+    const vacatedTrumpAllowed = isAdmin && isPlaying && isTurn && isVacatedDeclarer && gameState.trumpCard && !gameState.trumpRevealed && (isLastTrick || vacatedOnlyCardLeft || (!!ledSuit && !vacatedHoldsLead));
     return (
       <div className={`vacated-hand${vertical ? ' vert' : ''}`}>
         {isAdmin && isTurn && <div className="vacated-tag">Play for {v.playerName}</div>}
@@ -433,7 +439,9 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     const clickable = isAdmin && isPlaying && isTurn;
     const timedOutHoldsLead = !!ledSuit && (timedOutHand.hand || []).some(c => c.suit === ledSuit);
     const isTimedOutDeclarer = isPlaying && gameState.declarer && gameState.declarer.id === timedOutHand.playerId;
-    const timedOutTrumpAllowed = isAdmin && isPlaying && isTurn && isTimedOutDeclarer && gameState.trumpCard && !gameState.trumpRevealed && (isLastTrick || (!!ledSuit && !timedOutHoldsLead));
+    // Same engine rule as renderVacated above - see _playTrumpCore `onlyCardLeft`.
+    const timedOutOnlyCardLeft = (timedOutHand.hand || []).length === 0;
+    const timedOutTrumpAllowed = isAdmin && isPlaying && isTurn && isTimedOutDeclarer && gameState.trumpCard && !gameState.trumpRevealed && (isLastTrick || timedOutOnlyCardLeft || (!!ledSuit && !timedOutHoldsLead));
     return (
       <div className="vacated-hand">
         {isAdmin && isTurn && <div className="vacated-tag">Play for {timedOutHand.playerName}</div>}
