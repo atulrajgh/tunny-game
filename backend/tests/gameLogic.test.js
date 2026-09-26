@@ -1414,3 +1414,285 @@ describe('bots & host (computer players)', () => {
     assert.equal(rt.countBots(), 2);
   });
 });
+
+// Builds a fully dealt hand that is actually in play: 4 cards each during bidding, the
+// declarer wins at 100 with three passes, reserves a trump card, then 2 more go out.
+// Retries the deal until it is playable (no trump sweep, no redeal pending).
+function buildFullHandInPlay() {
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const { g } = makeGame();
+    g.startHandLog();
+    g.setupDeck();
+    g.dealCards(4);
+    g.state = 'bidding';
+    g.dealer = playerAt(g, 'E');
+    g.currentPlayer = g.seatAfter(g.dealer.position);
+    const order = [];
+    let p = g.currentPlayer, i = 0;
+    while (p && i++ < 4) { order.push(p); p = g.seatAfter(p.position); }
+    g.placeBid(order[0].id, 100);
+    for (let k = 1; k < order.length; k++) g.placeBid(order[k].id, 'pass');
+    if (g.state !== 'trump_selection') continue;
+    if (g.teamHoldsAllTrump()) continue;              // redeal: declarer's team holds all trumps
+    g._selectTrump(g.declarer.hand, g.declarer.hand[0]);
+    if (g.state !== 'playing') continue;
+    return { g, declarer: g.declarer };
+  }
+  throw new Error('could not deal a playable hand');
+}
+
+// Plays one legal card for the seat on turn: follows the led suit when it can, otherwise
+// its first card; falls back to the reserved trump for an empty declarer hand.
+function playLegalCard(g, cur) {
+  if (cur.hand.length === 0) {
+    if (g.trumpCard && !g.trumpCardPlayed) return g._playTrumpCore(cur.hand, cur, cur.position);
+    return false;
+  }
+  const follow = g.leadSuit ? cur.hand.filter(c => c.suit === g.leadSuit) : [];
+  return g.playCard(cur.id, (follow.length ? follow : cur.hand)[0]);
+}
+
+// Plays a hand out to the review screen.
+function playHandOut(g, max = 60) {
+  let n = 0;
+  while (g.state === 'playing' && n++ < max) {
+    if (!playLegalCard(g, g.currentPlayer)) break;
+  }
+  return g.state;
+}
+
+// Reported freeze: a declarer times out, the admin take-over panel opens, the declarer
+// reconnects and plays, and the admin's click then lands. That click used to force
+// currentPlayer onto the take-over target, so the declarer played a SECOND card in the
+// same trick, the next seat was skipped, and the hand ended one card short of its 6
+// tricks - the last trick could then never be completed.
+describe('stale take-over click (timeout then reconnect)', () => {
+  const buildPlayingHand = buildFullHandInPlay;
+
+  const trickPositions = (g) => g.currentTrick.map(e => e.player.position);
+
+
+  it('a seat cannot play a second card in the same trick', () => {
+    const { g, declarer } = buildPlayingHand();
+    const pos = declarer.position;
+    g.currentPlayer = declarer;
+    const first = declarer.hand[0];
+    assert.ok(g.playCard(declarer.id, first), 'declarer plays');
+    const second = declarer.hand[0];
+    assert.equal(g.playCard(declarer.id, second), false, 'second card in the same trick is rejected');
+    assert.equal(g.currentTrick.length, 1, 'trick still holds one card');
+    assert.ok(declarer.hand.some(c => c.equals(second)), 'the card was not spent');
+    assert.ok(!trickPositions(g).includes(pos) || trickPositions(g).filter(x => x === pos).length === 1);
+  });
+
+  it('a stale take-over click after the declarer reconnected is rejected', () => {
+    const { g, declarer } = buildPlayingHand();
+    // Play up to the declarer's turn, then let the declarer reconnect and play.
+    let guard = 0;
+    while (g.currentPlayer.position !== declarer.position && g.state === 'playing' && guard++ < 20) {
+      const cur = g.currentPlayer;
+      g.playCard(cur.id, cur.hand[0]);
+    }
+    assert.equal(g.currentPlayer.position, declarer.position, 'declarer is on turn');
+    g._timedOutPlayerId = declarer.id;               // turn timeout fired
+    assert.ok(g.playCard(declarer.id, declarer.hand[0]), 'declarer plays after reconnecting');
+    const handBefore = declarer.hand.length;
+    const trickBefore = trickPositions(g).slice();
+    const turnBefore = g.currentPlayer.position;
+    // The admin's click arrives afterwards - it must not be able to act for a passed turn.
+    assert.equal(g.playCard(declarer.id, declarer.hand[0]), false, 'stale click rejected');
+    assert.equal(declarer.hand.length, handBefore, 'no card spent');
+    assert.deepEqual(trickPositions(g), trickBefore, 'trick unchanged');
+    assert.equal(g.currentPlayer.position, turnBefore, 'turn unchanged');
+  });
+
+  it('the reserved trump cannot be played out of turn either', () => {
+    const { g, declarer } = buildPlayingHand();
+    g.currentPlayer = playerAt(g, declarer.position === 'N' ? 'E' : 'N');
+    assert.equal(g.playTrumpCard(declarer.id), false, 'not the declarer\'s turn');
+    assert.ok(g.trumpCard, 'reserved card still held');
+  });
+
+  it('a full hand with a stale click mid-trick still completes all 6 tricks', () => {
+    const { g, declarer } = buildPlayingHand();
+    let guard = 0;
+    let tried = 0, rejected = 0;
+    while (g.state === 'playing' && guard++ < 60) {
+      const cur = g.currentPlayer;
+      if (cur.position !== declarer.position) {
+        tried++;
+        if (g.playCard(declarer.id, declarer.hand[0]) === false) rejected++;
+      }
+      if (cur.hand.length === 0) {
+        if (!(g.trumpCard && !g.trumpCardPlayed)) break;
+        g._playTrumpCore(cur.hand, cur, cur.position);
+        continue;
+      }
+      const follow = g.leadSuit ? cur.hand.filter(c => c.suit === g.leadSuit) : [];
+      const pick = (follow.length ? follow : cur.hand)[0];
+      if (!g.playCard(cur.id, pick)) break;
+    }
+    assert.ok(tried > 0 && rejected === tried, 'every stale click was rejected');
+    assert.equal(g.state, 'hand_review', 'hand completed instead of hanging');
+    assert.equal(g.trickHistory.length, 6);
+    for (const t of g.trickHistory) {
+      assert.equal(t.cards.length, 4, 'four cards per trick');
+      assert.equal(new Set(t.cards.map(c => c.position)).size, 4, 'four distinct seats per trick');
+    }
+    for (const pos of ['N', 'S', 'E', 'W']) {
+      assert.equal(g.trickHistory.flatMap(t => t.cards).filter(c => c.position === pos).length, 6, `${pos} played 6 cards`);
+    }
+  });
+});
+
+describe('hand card integrity + hand log', () => {
+  const buildPlayingHand = buildFullHandInPlay;
+  const playLegal = playLegalCard;
+  const playOutHand = playHandOut;
+
+
+  it('handAudit counts all 24 cards and reports a healthy hand', () => {
+    const { g } = buildPlayingHand();
+    const audit = g.handAudit();
+    assert.equal(audit.orphanCards.length, 0, 'no card is unaccounted for');
+    assert.equal(audit.shortSeats.length, 0);
+    assert.deepEqual(audit.duplicateTrickCards, []);
+    assert.equal(audit.ok, true);
+    for (const pos of ['N', 'S', 'E', 'W']) {
+      assert.equal(audit.seats[pos].counted, 6, `${pos} accounts for 6 cards`);
+    }
+    assert.equal(audit.seats[g.declarer.position].reserved, 1, 'declarer counts the reserved trump');
+  });
+
+  it('reconcileHands returns a vanished card to the declarer', () => {
+    const { g, declarer } = buildPlayingHand();
+    let guard = 0;
+    while (g.currentPlayer.position !== declarer.position && g.state === 'playing' && guard++ < 20) {
+      playLegal(g, g.currentPlayer);
+    }
+    playLegal(g, g.currentPlayer);
+    const lost = declarer.hand.pop();
+    const audit = g.handAudit();
+    assert.equal(audit.ok, false, 'audit notices the shortfall');
+    assert.deepEqual(audit.orphanCards, [lost.suit + lost.rank], 'the lost card is the orphan');
+    assert.equal(audit.seats[declarer.position].short, 1);
+
+    const report = g.reconcileHands('test-lost-card');
+    assert.equal(report.missingCards, 1);
+    assert.deepEqual(report.repairs, [{ position: declarer.position, card: lost.toString() }]);
+    assert.equal(g.handAudit().ok, true, 'hand is whole again');
+    assert.equal(g.handAudit().seats[declarer.position].counted, 6);
+    assert.ok(g.lastHandLog.events.some(e => e.type === 'card_restored'), 'repair recorded in the log');
+    assert.ok(g.lastHandLog.integrity.some(r => r.reason === 'test-lost-card'), 'integrity report recorded');
+  });
+
+  it('reconcileHands refuses to invent cards for a hand that was never fully dealt', () => {
+    const { g } = makeGame();
+    g.state = 'playing';
+    g.trumpSuit = '♥';
+    g.dealer = playerAt(g, 'N');
+    g.declarer = playerAt(g, 'N');
+    g.dummy = playerAt(g, 'S');
+    g.currentPlayer = playerAt(g, 'E');
+    setHand(g, 'N', [{ suit: '♥', rank: 'Q' }]);   // deliberately partial deal
+    for (const pos of ['E', 'S', 'W']) setHand(g, pos, [{ suit: '♠', rank: 'A' }]);
+    const before = g.getPlayer(g.positions.N).hand.length;
+    const report = g.reconcileHands('partial');
+    assert.equal(report.dealComplete, false, 'recognised as an incomplete deal');
+    assert.deepEqual(report.repairs, [], 'nothing was handed out');
+    assert.equal(g.getPlayer(g.positions.N).hand.length, before, 'hands untouched');
+  });
+
+  it('reconcileHands hands a vanished card to whichever seat is short, not always the declarer', () => {
+    const { g } = buildPlayingHand();
+    // A defender, not the declarer, loses a card.
+    const victim = playerAt(g, g.declarer.position === 'E' ? 'N' : 'E');
+    const lost = victim.hand.pop();
+    const report = g.reconcileHands('defender-lost');
+    assert.deepEqual(report.repairs, [{ position: victim.position, card: lost.toString() }]);
+    assert.equal(g.handAudit().ok, true);
+  });
+
+  it('trickIntegrity reports a seat that played twice in one trick', () => {
+    const { g } = buildPlayingHand();
+    assert.equal(g.trickIntegrity().corrupt, false, 'a fresh hand is clean');
+    // Score one full trick, then forge the reported corruption: the same seat recorded
+    // twice in that trick, which means the seat after it never played.
+    let guard = 0;
+    while (g.trickHistory.length === 0 && guard++ < 10) {
+      if (!playLegal(g, g.currentPlayer)) break;
+    }
+    assert.equal(g.trickHistory.length, 1, 'one trick scored');
+    assert.equal(g.currentTrick.length, 0, 'trick cleared');
+    assert.equal(g.trickIntegrity().corrupt, false, 'a completed trick is clean');
+    const dup = g.trickHistory[g.trickHistory.length - 1];
+    dup.cards[1] = { ...dup.cards[1], position: dup.cards[0].position };
+    const t = g.trickIntegrity();
+    assert.equal(t.corrupt, true);
+    assert.equal(t.duplicates.length, 1);
+    assert.ok(t.mismatched.length > 0, 'per-seat totals no longer add up');
+  });
+
+
+  it('stuckSeat reports a seat that can never act, but not one holding the reserved trump', () => {
+    const { g, declarer } = buildPlayingHand();
+    g.currentPlayer = declarer;
+    declarer.hand.splice(0);
+    assert.equal(g.stuckSeat(), null, 'the reserved trump is still playable');
+    g.trumpCardPlayed = true;
+    g.trumpCard = null;
+    const stuck = g.stuckSeat();
+    assert.ok(stuck, 'stuck seat surfaced');
+    assert.equal(stuck.position, declarer.position);
+  });
+
+  it('the hand log records every play of all 6 tricks and is overwritten each hand', () => {
+    const { g, declarer } = buildPlayingHand();
+    const first = g.lastHandLog;
+    assert.equal(first.declarer, declarer.position);
+    assert.equal(first.bid, 100);
+    assert.equal(first.trumpSuit, g.trumpSuit);
+    assert.equal(first.reservedTrump, g.trumpCard.toString());
+    assert.ok(first.events.some(e => e.type === 'contract'));
+    assert.ok(first.events.some(e => e.type === 'trump_reserved'));
+    assert.ok(first.events.some(e => e.type === 'playing_start'));
+
+    playOutHand(g);
+    assert.equal(g.state, 'hand_review');
+    assert.equal(g.lastHandLog.plays.length, 24, 'one entry per play');
+    const tricks = new Set(g.lastHandLog.plays.map(p => p.trick));
+    assert.deepEqual([...tricks].sort((a, b) => a - b), [1, 2, 3, 4, 5, 6], 'all 6 tricks logged');
+    assert.ok(g.lastHandLog.plays.some(p => p.kind === 'reserved_trump'), 'the trump play is marked');
+
+    // A new hand replaces the log rather than growing it.
+    g.startHandLog();
+    assert.notEqual(g.lastHandLog, first);
+    assert.equal(g.lastHandLog.plays.length, 0);
+  });
+
+  it('the hand log is sealed with the result when the hand is confirmed', () => {
+    const { g, declarer } = buildPlayingHand();
+    playOutHand(g);
+    assert.equal(g.state, 'hand_review');
+    const log = g.lastHandLog;
+    assert.equal(log.result, null, 'not sealed while under review');
+    const admin = g.getPlayer(g.adminId);
+    assert.ok(g.confirmHand(admin.id));
+    assert.ok(log.result, 'sealed on confirm');
+    assert.equal(log.result.declarer, declarer.position);
+    assert.equal(log.result.bid, 100);
+    assert.equal(log.result.tricks.length, 6);
+    assert.equal(typeof log.result.made, 'boolean');
+  });
+
+  it('getGameState exposes the log and the audit to the admin only', () => {
+    const { g, declarer } = buildPlayingHand();
+    const adminState = g.getGameState(g.adminId);
+    assert.ok(adminState.lastHandLog, 'admin sees the hand log');
+    assert.ok(adminState.handIntegrity, 'admin sees the card audit');
+    assert.equal(adminState.stuckSeat, null);
+    const playerState = g.getGameState(declarer.id);
+    assert.equal(playerState.lastHandLog, undefined, 'players do not see the log');
+    assert.equal(playerState.handIntegrity, undefined);
+  });
+});

@@ -667,7 +667,14 @@ io.on('connection', (socket) => {
     } else {
       const target = g.getPlayer(targetId);
       if (!target) return error('Player no longer in game');
-      g.currentPlayer = target;
+      // Never hand the turn to the take-over target. A stale take-over click (the player
+      // reconnected and played before the admin's click landed) would otherwise be
+      // accepted for a seat whose turn had already passed: the seat plays a second card
+      // in the same trick, the next seat is skipped, and the hand ends one card short
+      // of its 6 tricks. Acting for someone means acting on THEIR turn.
+      if (!g.currentPlayer || g.currentPlayer.id !== targetId) {
+        return error(`It is ${g.currentPlayer ? g.currentPlayer.name : 'nobody'}'s turn, not ${target.name}'s`);
+      }
       if (trump) {
         if (g.state !== 'playing' || !g.playTrumpCard(targetId)) return error('Cannot play trump now');
       } else if (card !== undefined && card !== null) {

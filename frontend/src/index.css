@@ -221,7 +221,24 @@ input, button { font-family: inherit; }
 .message-bar button { padding: 4px 12px; border: none; border-radius: 4px; background: #fff; color: #8e44ad; cursor: pointer; font-weight: 600; touch-action: manipulation; }
 .message-bar.error { background: #c0392b; color: #fff; box-shadow: 0 0 0 2px #e74c3c; }
 .message-bar .your-turn-msg { animation: pulse 1s infinite; }
+.message-bar .stuck-msg { color: #fff; background: #8e44ad; padding: 3px 8px; border-radius: 4px; }
 .review-screen .message-bar { max-width: 620px; margin: 12px auto; }
+
+/* ---- Admin hand log (debug) ---- */
+.hl-summary { color: #a0d0a0; font-size: 13px; margin-bottom: 6px; }
+.hl-seats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.hl-seat { color: #8ac48a; font-size: 12px; }
+.hl-plays { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; }
+.hl-play { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 2px 4px; border-radius: 4px; }
+.hl-play.special { background: #2a4a2a; }
+.hl-trick { color: #6a9a6a; font-size: 11px; min-width: 22px; }
+.hl-pos { color: #a0d0a0; font-size: 11px; min-width: 14px; }
+.hl-card { color: #fff; font-weight: 700; min-width: 28px; }
+.hl-note { color: #6a9a6a; font-size: 11px; }
+.hl-events { margin-top: 8px; }
+.hl-event { color: #a0d0a0; font-size: 12px; }
+.hl-repair { color: #8ac48a; }
+.hl-bad { color: #e8a0a0; font-weight: 700; }
 
 /* ---- Review Screen ---- */
 .review-screen { text-align: center; }

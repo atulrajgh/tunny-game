@@ -6,6 +6,9 @@ const RANKS = ['J', '9', 'A', '10', 'K', 'Q'];
 const RANK_ORDER = { J: 6, 9: 5, A: 4, 10: 3, K: 2, Q: 1 };
 const HCP_VALUES = { J: 30, 9: 18, A: 12, 10: 10, K: 3, Q: 2 };
 const WINNING_SCORE = 12;
+// Cards each seat is dealt for a hand (24-card deck / 4 seats). The declarer holds
+// HAND_SIZE - 1 in hand plus the reserved trump card set aside at trump selection.
+const HAND_SIZE = 6;
 // Human-style names drawn at random (any unused one) for computer players.
 const BOT_NAMES = ['Abbot', 'Alex', 'Alicia', 'Bob', 'Bianca', 'Bette', 'Charlie', 'Chica', 'Chelsea'];
 const MAX_BOTS = 3;
@@ -78,6 +81,11 @@ class Game {
     this.revokedTokens = new Set();
     this.redealCount = 0;
     this.redealPending = null;
+    // Diagnostics for the previous hand. Overwritten at the start of every hand so it
+    // always holds the most recent one - see startHandLog()/reconcileHands().
+    this.lastHandLog = null;
+    this._lastIntegritySignature = null;
+    this._handDealtComplete = false;
   }
 
   setupDeck() {
@@ -529,6 +537,7 @@ class Game {
     }
     this.dealer = highest;
     for (const p of seated) { p.cutCard = null; p.bid = null; }
+    this.startHandLog();
     this.setupDeck();
     this.dealCards(4);
     this.currentPlayer = this.seatAfter(this.dealer.position);
@@ -536,6 +545,7 @@ class Game {
     this.lastBidder = null;
     this.highestBid = null;
     this.passCount = 0;
+    this.logEvent('bidding_start', { dealer: this.dealer.position, lead: (this.currentPlayer || {}).position });
     this.lastActivity = Date.now();
     return true;
   }
@@ -596,6 +606,7 @@ class Game {
 
   _placeBid(seat, position, bid) {
     if (this.state !== 'bidding') return false;
+    const before = seat.bid;
     if (bid === 'pass') {
       seat.bid = 'pass';
       this.passCount++;
@@ -607,6 +618,7 @@ class Game {
     } else {
       return false;
     }
+    this.logEvent('bid', { position, bid: seat.bid, previous: before, highest: this.highestBid });
     if (this.passCount >= 4 && !this.lastBidder) {
       this.resetForNextHand(false);
       return true;
@@ -616,6 +628,15 @@ class Game {
       this.dummy = this.getPlayer(this.positions[this.getPartnerPosition(this.declarer.position)]);
       this.state = 'trump_selection';
       this.currentPlayer = this.declarer;
+      this.logEvent('contract', { declarer: this.declarer.position, bid: this.declarer.bid, dummy: this.dummy ? this.dummy.position : null });
+      // The contract is only known now, so fill in what startHandLog() could not.
+      if (this.lastHandLog) {
+        this.lastHandLog.declarer = this.declarer.position;
+        this.lastHandLog.bid = this.declarer.bid;
+        if (this.lastHandLog.seats[this.declarer.position]) {
+          this.lastHandLog.seats[this.declarer.position].bid = this.declarer.bid;
+        }
+      }
       this.lastActivity = Date.now();
       return true;
     }
@@ -647,6 +668,25 @@ class Game {
     this.trumpCard = hand.splice(idx, 1)[0];
     this.trumpCardIndex = idx;
     this.dealCards(2);
+    // Positive signal that the hand really was dealt in full (16 cards during bidding plus
+    // these last 8). reconcileHands() uses it to tell a lost card apart from a hand that
+    // was never fully dealt - in both cases the same number of cards is unaccounted for.
+    if (this.deck.length === 0) this._handDealtComplete = true;
+    if (this.lastHandLog) {
+      this.lastHandLog.trumpSuit = this.trumpSuit;
+      this.lastHandLog.reservedTrump = this.trumpCard.toString();
+      this.lastHandLog.bid = this.declarer ? this.declarer.bid : this.highestBid;
+      for (const pos of ['N', 'S', 'E', 'W']) {
+        const p = this.getPlayer(this.positions[pos]);
+        const v = this.vacatedHands[pos];
+        if (this.lastHandLog.seats[pos]) this.lastHandLog.seats[pos].handSize = p ? p.hand.length : (v ? (v.hand || []).length : 0);
+      }
+    }
+    this.logEvent('trump_reserved', {
+      position: (this.declarer && this.declarer.position) || null,
+      trumpSuit: this.trumpSuit,
+      reserved: this.trumpCard.toString(),
+    });
     // Before the first trick, check whether the declarer's team holds every card of
     // the trump suit. If so, pause and ask the admin to redeal instead of playing a
     // lopsided hand (defenders would hold no trump at all).
@@ -658,12 +698,15 @@ class Game {
       };
       this.state = 'redeal_pending';
       this.currentPlayer = null;
+      this.logEvent('redeal_pending', { reason: this.redealPending.reason });
       return true;
     }
     this.state = 'playing';
     this.currentTrick = [];
     this.trickNumber = 0;
     this.currentPlayer = this.seatAfter(this.dealer.position);
+    this.logEvent('playing_start', { lead: (this.currentPlayer || {}).position });
+    this.reconcileHands('trump-selected');
     this.lastActivity = Date.now();
     return true;
   }
@@ -709,6 +752,10 @@ class Game {
     if (this.state !== 'playing') return false;
     const idx = hand.findIndex(c => c.equals(card));
     if (idx === -1) return false;
+    // A seat may hold at most one card in a trick. Without this a take-over click that
+    // lands after the player already played spends a second card for that seat, which
+    // skips the seat after it and leaves the hand one card short of its 6 tricks.
+    if (this.currentTrick.some(e => (e.player && e.player.position) === position)) return false;
     const played = hand.splice(idx, 1)[0];
     if (this.currentTrick.length === 0) {
       this.leadSuit = played.suit;
@@ -717,11 +764,15 @@ class Game {
     }
     this.currentTrick.push({ player: playedBy, card: played });
     if (playedBy.id) playedBy.playedCard = played;
-    if (this.currentTrick.length === 4) {
+    const willEnd = this.currentTrick.length === 4;
+    const trickNo = this.trickNumber + 1;
+    if (willEnd) {
       this.endTrick();
     } else {
       this.currentPlayer = this.seatAfter(position);
     }
+    this.logPlay({ trick: trickNo, position, card: played.toString(), kind: 'card', handAfter: hand.length, next: (this.currentPlayer || {}).position || null, trickEnded: willEnd });
+    if (willEnd) this.reconcileHands('trick-complete');
     this.lastActivity = Date.now();
     return true;
   }
@@ -758,6 +809,8 @@ class Game {
         if (hasSuit) return false;
       }
     }
+    // One card per seat per trick - see _playCard.
+    if (this.currentTrick.some(e => (e.player && e.player.position) === position)) return false;
     const played = this.trumpCard;
     this.trumpCard = null;
     this.trumpRevealed = true;
@@ -765,11 +818,16 @@ class Game {
     if (player.id) player.playedCard = played;
     if (this.currentTrick.length === 0) this.leadSuit = played.suit;
     this.currentTrick.push({ player, card: played });
-    if (this.currentTrick.length === 4) {
+    const willEnd = this.currentTrick.length === 4;
+    const trickNo = this.trickNumber + 1;
+    if (willEnd) {
       this.endTrick();
     } else {
       this.currentPlayer = this.seatAfter(position);
     }
+    this.logPlay({ trick: trickNo, position, card: played.toString(), kind: 'reserved_trump', handAfter: hand.length, next: (this.currentPlayer || {}).position || null, trickEnded: willEnd });
+    this.logEvent('trump_played', { position, card: played.toString() });
+    if (willEnd) this.reconcileHands('trick-complete');
     this.lastActivity = Date.now();
     return true;
   }
@@ -827,6 +885,233 @@ class Game {
     }
     this.lastActivity = Date.now();
   }
+
+  // ---- Hand diagnostics ----------------------------------------------------
+  // A frozen table used to be the only symptom of a lost card, which left the cause to
+  // guesswork. Two things make it observable instead:
+  //   startHandLog()   - a full trace of the current hand (every play of all 6 tricks,
+  //                      the reserved-trump lifecycle, integrity repairs, the result).
+  //                      Overwritten at the start of each hand, so it always holds the
+  //                      most recent hand and nothing else.
+  //   reconcileHands() - counts cards per seat (played in completed tricks + the trick in
+  //                      progress + still in hand + the reserved trump) and hands any card
+  //                      that belongs to nobody back to the short seat.
+  startHandLog() {
+    this._lastIntegritySignature = null;
+    this._handDealtComplete = false;
+    const seat = (pos) => {
+      const p = this.getPlayer(this.positions[pos]);
+      const v = this.vacatedHands[pos];
+      return {
+        position: pos,
+        name: p ? p.name : (v ? v.name : null),
+        id: p ? p.id : null,
+        team: p ? p.team : (v ? v.team : null),
+        isBot: p ? !!p.isBot : !!(v && v.isBot),
+        handSize: p ? p.hand.length : (v ? (v.hand || []).length : 0),
+      };
+    };
+    this.lastHandLog = {
+      handNumber: this.handNumber + 1,
+      startedAt: Date.now(),
+      dealer: this.dealer ? this.dealer.position : null,
+      declarer: this.declarer ? this.declarer.position : null,
+      bid: this.highestBid,
+      trumpSuit: this.trumpSuit,
+      reservedTrump: null,
+      trumpRevealed: false,
+      seats: { N: seat('N'), S: seat('S'), E: seat('E'), W: seat('W') },
+      plays: [],
+      events: [],
+      integrity: [],
+      result: null,
+    };
+  }
+
+  logEvent(type, data = {}) {
+    if (!this.lastHandLog) return;
+    this.lastHandLog.events.push({ at: Date.now(), type, ...data });
+  }
+
+  logPlay(entry) {
+    if (!this.lastHandLog) return;
+    this.lastHandLog.plays.push({ at: Date.now(), trick: this.trickNumber + 1, ...entry });
+  }
+
+  logIntegrity(report) {
+    if (!this.lastHandLog) return;
+    // Dedupe: a corrupt-but-unrepairable trick keeps reporting on every state read, so
+    // only record (and print) a signature we have not seen yet for this hand.
+    const signature = JSON.stringify([report.reason, report.missingCards, report.repairs, report.duplicateTrickCards, report.shortSeats]);
+    if (this._lastIntegritySignature === signature) return;
+    this._lastIntegritySignature = signature;
+    this.lastHandLog.integrity.push({ at: Date.now(), ...report });
+    console.log(`[hand ${this.lastHandLog.handNumber}] integrity: ${JSON.stringify(report)}`);
+  }
+
+  // Every completed trick must hold exactly 4 cards from 4 distinct seats, and by the
+  // time trick N is scored each seat must have played exactly N cards. A seat appearing
+  // twice in one trick (a take-over click landing after the player had already played)
+  // skips a neighbour and shows up here as a per-seat total that does not add up.
+  trickIntegrity() {
+    const duplicates = [];
+    for (let i = 0; i < this.trickHistory.length; i++) {
+      const tally = {};
+      for (const e of this.trickHistory[i].cards) {
+        const pos = e.position || (e.player && e.player.position) || '?';
+        tally[pos] = (tally[pos] || 0) + 1;
+      }
+      for (const pos of Object.keys(tally)) {
+        if (tally[pos] > 1) duplicates.push({ trick: i + 1, position: pos, count: tally[pos] });
+      }
+    }
+    const played = { N: 0, S: 0, E: 0, W: 0 };
+    for (const t of this.trickHistory) {
+      for (const e of t.cards) {
+        const pos = e.position || (e.player && e.player.position);
+        if (pos in played) played[pos]++;
+      }
+    }
+    // Each seat must have played exactly one card per COMPLETED trick. The trick in
+    // progress is excluded: seats that have not played it yet are perfectly normal, and
+    // a second card from the same seat is already blocked at play time.
+    const expected = this.trickHistory.length;
+    const mismatched = Object.keys(played).filter(pos => played[pos] !== expected);
+    return { duplicates, played, expected, mismatched, corrupt: duplicates.length > 0 || mismatched.length > 0 };
+  }
+
+  // Read-only card audit: for each seat, how many of its HAND_SIZE cards we can still
+  // account for (played in completed tricks + the trick in progress + in hand, plus the
+  // declarer's reserved trump), plus any card of the 24 that belongs to nobody. Purely
+  // informational - it never changes a hand, so it is safe to call while building state.
+  handAudit() {
+    if (this.state !== 'playing' && this.state !== 'hand_review') return null;
+    const seen = new Set();
+    const account = (c) => { if (c && c.suit && c.rank) seen.add(c.suit + c.rank); };
+    for (const t of this.trickHistory) for (const e of t.cards) account(e.card);
+    for (const e of this.currentTrick) account(e.card);
+    for (const p of this.players) for (const c of (p.hand || [])) account(c);
+    for (const v of Object.values(this.vacatedHands)) for (const c of (v.hand || [])) account(c);
+    if (this.trumpCard && !this.trumpCardPlayed) account(this.trumpCard);
+    const orphans = [];
+    for (const suit of SUITS) {
+      for (const rank of RANKS) {
+        if (!seen.has(suit + rank)) orphans.push(suit + rank);
+      }
+    }
+    const counts = { N: 0, S: 0, E: 0, W: 0 };
+    for (const t of this.trickHistory) {
+      for (const e of t.cards) {
+        const pos = e.position || (e.player && e.player.position);
+        if (pos in counts) counts[pos]++;
+      }
+    }
+    for (const e of this.currentTrick) {
+      const pos = e.position || (e.player && e.player.position);
+      if (pos in counts) counts[pos]++;
+    }
+    const dPos = this.declarer && this.declarer.position;
+    const held = (pos) => {
+      const live = this.players.find(p => p.position === pos);
+      if (live) return live.hand;
+      const v = this.vacatedHands[pos];
+      return v && Array.isArray(v.hand) ? v.hand : null;
+    };
+    const seats = {};
+    for (const pos of ['N', 'S', 'E', 'W']) {
+      const hand = held(pos);
+      if (!hand) continue;
+      const reserved = (pos === dPos && this.trumpCard && !this.trumpCardPlayed) ? 1 : 0;
+      const counted = counts[pos] + hand.length + reserved;
+      seats[pos] = { played: counts[pos], inHand: hand.length, reserved, counted, expected: HAND_SIZE, short: HAND_SIZE - counted };
+    }
+    const integrity = this.trickIntegrity();
+    return {
+      seats,
+      orphanCards: orphans,
+      shortSeats: Object.keys(seats).filter(pos => seats[pos].short > 0),
+      trickPlayed: integrity.played,
+      tricksExpected: integrity.expected,
+      duplicateTrickCards: integrity.duplicates,
+      ok: orphans.length === 0 && !integrity.corrupt && !Object.keys(seats).some(pos => seats[pos].short > 0),
+    };
+  }
+
+  // Count each seat's cards and hand any card that belongs to nobody back to the seat that
+  // is short. The declarer is repaired first: an empty declarer hand with an unplayed
+  // reserved trump is exactly what strands the last trick. Repair happens only when the
+  // stray cards exactly account for the shortfall, so a partially dealt hand is reported
+  // rather than topped up with invented cards.
+  reconcileHands(reason = '') {
+    const audit = this.handAudit();
+    if (!audit || audit.ok) return null;
+    const { orphanCards, seats } = audit;
+    const dPos = this.declarer && this.declarer.position;
+    const short = Object.keys(seats)
+      .filter(pos => seats[pos].short > 0)
+      .map(pos => ({ position: pos, hand: this.seatHand(pos), need: seats[pos].short, counted: seats[pos].counted }));
+    const orphans = orphanCards.map(k => new Card(k.slice(0, 1), k.slice(1)));
+    const integrity = this.trickIntegrity();
+    const missing = orphans.length;
+    const shortfall = short.reduce((n, s) => n + s.need, 0);
+    // Only repair a hand that is genuinely in play. Three guards keep this from inventing
+    // cards: the hand must have been dealt in full (see _handDealtComplete), nothing may
+    // be left undealt, and no seat may be sitting on zero cards. A short-but-not-empty
+    // seat is the lost-card case; an empty seat means the deal never completed, and
+    // topping it up would fabricate cards rather than recover them.
+    const emptySeats = short.filter(s => s.counted === 0).map(s => s.position);
+    const dealComplete = this._handDealtComplete === true && this.deck.length === 0 && emptySeats.length === 0;
+    const repairs = [];
+    if (dealComplete && missing > 0 && missing === shortfall) {
+      short.sort((a, b) => (b.position === dPos ? 1 : 0) - (a.position === dPos ? 1 : 0));
+      for (const s of short) {
+        for (const card of orphans.splice(0, s.need)) {
+          s.hand.push(card);
+          repairs.push({ position: s.position, card: card.toString() });
+          this.logEvent('card_restored', { position: s.position, card: card.toString(), reason });
+        }
+      }
+    }
+    const report = {
+      reason,
+      missingCards: missing,
+      repairs,
+      unrecovered: orphans.length,
+      dealComplete,
+      emptySeats,
+      shortSeats: short.map(s => ({ position: s.position, counted: s.counted, expected: HAND_SIZE })),
+      cardsPlayed: integrity.played,
+      tricksExpected: integrity.expected,
+      duplicateTrickCards: integrity.duplicates,
+    };
+    this.logIntegrity(report);
+    return report;
+  }
+
+  // The array that actually holds a seat's cards - a live player's hand, or the saved
+  // hand of a vacated seat. Null when the seat is not in the hand at all.
+  seatHand(pos) {
+    const live = this.players.find(p => p.position === pos);
+    if (live) return live.hand;
+    const v = this.vacatedHands[pos];
+    return v && Array.isArray(v.hand) ? v.hand : null;
+  }
+
+  // A seat on turn with no cards and no reserved trump can never act - the table would sit
+  // on "X's turn" forever. Surfaced in getGameState so it can be announced rather than hang.
+  stuckSeat() {
+    if (this.state !== 'playing') return null;
+    const cur = this.currentPlayer;
+    const pos = cur && cur.position;
+    if (!pos) return null;
+    const live = this.players.find(p => p.position === pos);
+    const hand = this.seatHand(pos);
+    if (!hand) return null;
+    const hasReserved = pos === (this.declarer && this.declarer.position) && !!this.trumpCard && !this.trumpCardPlayed;
+    if (hand.length > 0 || hasReserved) return null;
+    return { position: pos, name: (live && live.name) || cur.name || pos };
+  }
+
 
   askTrump(playerId) {
     if (this.state !== 'playing') return false;
@@ -897,6 +1182,31 @@ class Game {
       this.scores[winnerTeam] += 2;
     }
     for (const p of this.players) p.score = this.scores[p.team] || 0;
+    // Seal the hand log before the next hand overwrites it, so the finished hand's full
+    // 6-trick trace stays available for debugging until the next hand starts.
+    if (this.lastHandLog) {
+      this.lastHandLog.result = {
+        handNumber: this.lastHandLog.handNumber,
+        declarer: this.declarer.position,
+        bid,
+        declarerTeam,
+        declarerTricks,
+        declarerHCP,
+        required: bidRequirement(bid),
+        made: declarerHCP >= bidRequirement(bid),
+        winnerTeam,
+        points: pts,
+        scores: { 'N-S': this.scores['N-S'], 'E-W': this.scores['E-W'] },
+        tricks: this.trickHistory.map(t => ({
+          trick: t.trickNumber,
+          cards: t.cards.map(c => `${c.position}:${c.rank}${c.suit}`),
+          winner: t.winnerPosition,
+          winnerTeam: t.winnerTeam,
+          points: t.winnerPoints,
+        })),
+      };
+      console.log(`[hand ${this.lastHandLog.handNumber}] complete: declarer ${this.declarer.position} bid ${bid}, made ${declarerHCP}/${bidRequirement(bid)}, ${winnerTeam} +${pts}, plays=${this.lastHandLog.plays.length}, repairs=${this.lastHandLog.integrity.length}`);
+    }
     if (this.scores['N-S'] >= WINNING_SCORE || this.scores['E-W'] >= WINNING_SCORE) {
       this.state = 'game_over';
       this.winner = this.scores['N-S'] >= this.scores['E-W'] ? 'N-S' : 'E-W';
@@ -942,10 +1252,12 @@ class Game {
     this._timedOutPlayerId = null;
     this.redealPending = null;
     if (rotateDealer && this.dealer) this.dealer = this.seatAfter(this.dealer.position);
+    this.startHandLog();
     this.setupDeck();
     this.dealCards(4);
     this.currentPlayer = this.dealer ? this.seatAfter(this.dealer.position) : null;
     this.state = 'bidding';
+    this.logEvent('bidding_start', { dealer: this.dealer ? this.dealer.position : null, lead: (this.currentPlayer || {}).position });
   }
 
   kickPlayer(adminId, targetId) {
@@ -1036,7 +1348,9 @@ class Game {
       trickHistory: this.trickHistory,
       spectators: this.spectators.map(s => ({ id: s.id, name: s.name, isBot: s.isBot })),
       redealCount: this.redealCount,
-      redealPending: this.redealPending ? { ...this.redealPending } : null
+      redealPending: this.redealPending ? { ...this.redealPending } : null,
+      // A seat on turn with nothing to play would otherwise hang the table silently.
+      stuckSeat: this.stuckSeat()
     };
     state.teamTricks = { ...this.teamTricks };
     state.teamPoints = { ...this.teamPoints };
@@ -1088,6 +1402,11 @@ if (viewer) {
             hand: this.checkMemo('t:' + tp.id, tp.hand).map(c => ({ suit: c.suit, rank: c.rank }))
           };
         }
+        // Hand trace for debugging: every play of all 6 tricks, the reserved-trump
+        // lifecycle, any integrity repair and the final result. Overwritten each hand.
+        state.lastHandLog = this.lastHandLog ? JSON.parse(JSON.stringify(this.lastHandLog)) : null;
+        // Read-only card audit: cards accounted for per seat vs the 6 each should hold.
+        state.handIntegrity = this.handAudit();
       }
     }
     return state;

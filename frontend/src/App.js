@@ -673,14 +673,89 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
             <div className="ac-empty">No tricks yet — waiting for play to start</div>
           )}
         </div>
+
+        {/* Hand Log — the complete trace of the current/latest hand */}
+        <div className="ac-panel ac-wide" style={{ marginTop: 12 }}>
+          <h3>Hand Log <span style={{ fontWeight: 400, fontSize: 11, color: '#a0d0a0' }}>(debug)</span></h3>
+          {log ? (
+            <>
+              <div className="hl-summary">
+                Hand {log.handNumber} · {log.declarer} declared {log.bid || '—'}
+                {log.trumpSuit ? ` · trump ${log.trumpSuit}` : ' · trump not chosen'}
+                {log.reservedTrump ? ` (reserved ${log.reservedTrump})` : ''}
+                {log.result ? ` · made ${log.result.declarerHCP}/${log.result.required} HCP` : ' · in progress'}
+              </div>
+              {log.seats && (
+                <div className="hl-seats">
+                  {Object.entries(log.seats).map(([pos, s]) => (
+                    <span key={pos} className="hl-seat">
+                      {POSITION_NAMES[pos] || pos} ({s.name || '?'}) bid {s.bid === undefined ? '—' : (s.bid === 'pass' ? 'pass' : s.bid)} · {s.handSize} cards
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="hl-plays">
+                {log.plays.length === 0
+                  ? <div className="ac-empty">No cards played yet</div>
+                  : log.plays.map((p, i) => (
+                      <div key={i} className={'hl-play' + (p.kind !== 'card' ? ' special' : '')}>
+                        <span className="hl-trick">T{p.trick}</span>
+                        <span className="hl-pos">{p.position}</span>
+                        <span className="hl-card">{p.card}</span>
+                        <span className="hl-note">
+                          {p.kind === 'reserved_trump'
+                            ? 'reserved trump played'
+                            : p.kind === 'ask_trump'
+                            ? 'revealed trump'
+                            : `${p.handAfter} left`}
+                        </span>
+                      </div>
+                    ))}
+              </div>
+              {(log.integrity?.length > 0 || log.result) && (
+                <div className="hl-events">
+                  {log.integrity?.map((e, i) => (
+                    <div key={i} className="hl-event">
+                      {e.reason} · missing {e.missingCards}
+                      {(e.repairs || []).map((r, j) => (
+                        <span key={j} className="hl-repair"> → {r.position} got back {r.card}</span>
+                      ))}
+                      {e.unrecovered > 0 && <span className="hl-bad"> · {e.unrecovered} unresolved</span>}
+                    </div>
+                  ))}
+                  {log.result && (
+                    <div className="hl-event">
+                      {log.result.tricks.length} tricks
+                      {log.result.declarerTeam} {log.result.made ? 'made' : 'failed'} it
+                    </div>
+                  )}
+                </div>
+              )}
+              {gameState.handIntegrity && !gameState.handIntegrity.ok && (
+                <div className="hl-event hl-bad">
+                  Card audit not clean: {gameState.handIntegrity.shortSeats.map(s => `${s.position} has ${s.counted}/${s.expected}`).join(', ') || 'see log'}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="ac-empty">No hand log yet</div>
+          )}
+        </div>
       </div>
     );
   }
 
-  const messageBar = currentActionText || !socketConnected || error || gameState.redealPending || timedOut || (isMyTurn && isPlaying && !isSpectator) ? (
+  const stuckSeat = gameState.stuckSeat;
+  const log = gameState.lastHandLog;
+  const messageBar = currentActionText || !socketConnected || error || gameState.redealPending || timedOut || stuckSeat || (isMyTurn && isPlaying && !isSpectator) ? (
     <div className={'message-bar' + (error ? ' error' : '')}>
       {!socketConnected && <span>Connection lost — reconnecting…</span>}
       {error && <span>{error}</span>}
+      {stuckSeat && (
+        <span className="stuck-msg">
+          {stuckSeat.name} has no cards left to play — the hand cannot continue. Admin: end this hand and redeal.
+        </span>
+      )}
       {gameState.redealPending && (
         <span className="redeal-msg">
           {gameState.redealPending.reason}
