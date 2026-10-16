@@ -3,26 +3,35 @@ import React from 'react';
 const SUITS = ['♠', '♥', '♦', '♣'];
 const RANKS = ['J', '9', 'A', '10', 'K', 'Q'];
 const POSITIONS = ['N', 'E', 'S', 'W'];
+const DEMO_HAND = [['♠', 'J'], ['♠', '9'], ['♠', 'A'], ['♥', 'A'], ['♥', '10'], ['♦', 'K']];
 
 function card(suit, rank) {
   return { suit, rank, toString: () => rank + suit };
 }
 
 function renderCard(c, small) {
-  if (!c) return null;
-  const isRed = c.suit === '♥' || c.suit === '♦';
-  return (
-    <span className={`card-face${small ? ' small' : ''}${isRed ? ' red' : ''}`}>
-      <span className="card-suit-top">{c.suit}</span>
-      <span className="card-rank-bottom">{c.rank}</span>
-    </span>
-  );
+  return pc(c, { sm: small });
 }
 
 function renderMiniCard(c) {
   if (!c) return null;
   const isRed = c.suit === '♥' || c.suit === '♦';
   return <span className={`mini-card${isRed ? ' red' : ''}`}>{c.rank}<span className="suit-mark">{c.suit}</span></span>;
+}
+
+function pc(c, opts = {}) {
+  if (!c) return null;
+  const isRed = c.suit === '♥' || c.suit === '♦';
+  const isCourt = c.rank === 'J' || c.rank === 'Q' || c.rank === 'K';
+  return (
+    <span className={`pc${opts.sm ? ' sm' : ''}${isRed ? ' red' : ''}`}>
+      <span className="ix tl"><span className="r">{c.rank}</span><span className="s">{c.suit}</span></span>
+      <span className="ix br"><span className="r">{c.rank}</span><span className="s">{c.suit}</span></span>
+      <span className={`cpip${isCourt ? ' court' : ''}`}>
+        {isCourt ? <>{c.rank}<span className="cpip-suit">{c.suit}</span></> : c.suit}
+      </span>
+    </span>
+  );
 }
 
 function Section({ title, children }) {
@@ -261,6 +270,45 @@ export default function UIViewer() {
             </div>
           </div>
         </div>
+      </Section>
+
+      <Section title="New playing cards (proposed)">
+        <Row title="Card faces — every rank (spades) + red suits">
+          {RANKS.map(r => <span key={r}>{pc(card('♠', r))}</span>)}
+          {['♥', '♦'].map(s => <span key={s}>{pc(card(s, '10'))}</span>)}
+        </Row>
+        <Row title="Small size (trick / cut)">
+          {SUITS.map(s => <span key={s}>{pc(card(s, 'A'), { sm: true })}</span>)}
+        </Row>
+        <Row title="Your hand — sorted + fanned (hover lifts a card)">
+          <div className="fan">
+            {DEMO_HAND.map(([s, r], i) => {
+              const n = DEMO_HAND.length;
+              const t = n > 1 ? i / (n - 1) : 0.5;
+              return (
+                <span key={i} className="fan-card" style={{ transform: `rotate(${(t - 0.5) * 12}deg) translateY(${Math.abs(t - 0.5) * 16}px)` }}>
+                  {pc(card(s, r))}
+                </span>
+              );
+            })}
+          </div>
+        </Row>
+        <Row title="Current trick — compass (N / E / S / W)">
+          <div className="tc-trick" style={{ margin: '0 auto' }}>
+            <div className="tk tk-n"><span>Bob</span>{pc(card('♥', 'A'), { sm: true })}</div>
+            <div className="tk tk-w"><span>Carol</span>{pc(card('♠', '10'), { sm: true })}</div>
+            <div className="tk tk-e"><span>Dan</span><span className="pc-back sm" /></div>
+            <div className="tk tk-s"><span>You</span>{pc(card('♠', 'K'), { sm: true })}<span className="trick-leader" title="Started the trick">1</span></div>
+          </div>
+        </Row>
+        <Row title="Card back + opponent seat">
+          <span className="pc-back" />
+          <span className="pc-back sm" />
+          <div className="dummy-card">
+            <span className="dummy-name">Carol</span>
+            <span className="dummy-count">5</span>
+          </div>
+        </Row>
       </Section>
 
       <Section title="Notifications">

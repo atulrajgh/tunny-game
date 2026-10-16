@@ -6,6 +6,8 @@ import UIViewer from './UIViewer';
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL;
 
 const POSITION_NAMES = { N: 'North', S: 'South', E: 'East', W: 'West' };
+const SUIT_ORDER = { '♠': 0, '♥': 1, '♦': 2, '♣': 3 };
+const RANK_ORDER = { J: 0, '9': 1, A: 2, '10': 3, K: 4, Q: 5 };
 
 function handHCPRequirement(bid) {
   return bid + 100;
@@ -364,12 +366,26 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
   function renderCard(c, small) {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
+    const court = c.rank === 'J' || c.rank === 'Q' || c.rank === 'K';
     return (
-      <span className={`card-face${small ? ' small' : ''}${isRed ? ' red' : ''}`}>
-        <span className="card-suit-top">{c.suit}</span>
-        <span className="card-rank-bottom">{c.rank}</span>
+      <span className={`pc${small ? ' sm' : ''}${isRed ? ' red' : ''}`}>
+        <span className="ix tl"><span className="r">{c.rank}</span><span className="s">{c.suit}</span></span>
+        <span className="ix br"><span className="r">{c.rank}</span><span className="s">{c.suit}</span></span>
+        <span className={`cpip${court ? ' court' : ''}`}>
+          {court ? <>{c.rank}<span className="cpip-suit">{c.suit}</span></> : c.suit}
+        </span>
       </span>
     );
+  }
+
+  function sortHand(hand) {
+    return (hand || []).slice().sort((a, b) =>
+      (SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit]) || (RANK_ORDER[a.rank] - RANK_ORDER[b.rank]));
+  }
+
+  function sideFor(pos) {
+    const idx = posOrder.indexOf(pos);
+    return ['n', 'e', 's', 'w'][idx] || 's';
   }
 
   function miniCard(c, isWinner) {
@@ -893,11 +909,11 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
           </div>
         </div>
         {isPlaying && shownTrick.length > 0 && (
-          <div className="current-trick">
+          <div className="tc-trick">
             {shownTrick.map((t, i) => (
-              <div key={i} className={`trick-entry${!gameState.currentTrick?.length && t.position === lastTrickEntry?.winnerPosition ? ' won' : ''}`}>
+              <div key={i} className={`tk tk-${sideFor(t.position)}${!gameState.currentTrick?.length && t.position === lastTrickEntry?.winnerPosition ? ' won' : ''}`}>
                 <span>{t.playerName}</span>
-                {t.card ? renderCard(t.card) : <span className="card-back tiny" />}
+                {t.card ? renderCard(t.card, true) : <span className="pc-back sm" />}
               </div>
             ))}
           </div>
@@ -950,12 +966,14 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                 ) : isSpectator ? (
                   <div className="spectator-label">Observing</div>
                 ) : (
-                  <div className="my-hand">
-                    {(me?.hand || []).map((c, i) => {
+                  <div className="my-hand fan">
+                    {sortHand(me?.hand).map((c, i, arr) => {
                       const canPlay = isMyTurn && isPlaying && !isBidding && !isTrump;
+                      const t = arr.length > 1 ? i / (arr.length - 1) : 0.5;
                       return (
-                        <button key={i} className="hand-card"
+                        <button key={i} className="hand-card fan-card"
                           disabled={!canPlay}
+                          style={{ transform: `rotate(${(t - 0.5) * 10}deg) translateY(${Math.abs(t - 0.5) * 14}px)` }}
                           onClick={() => canPlay && sendOnce('play', { card: { suit: c.suit, rank: c.rank } })}>
                           {renderCard(c)}
                         </button>
