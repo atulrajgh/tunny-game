@@ -29,6 +29,8 @@ function App() {
   const [incBid, setIncBid] = useState(50);
   const actionLockRef = useRef(false);
   const joinedRef = useRef(false);
+  const [showHandLog, setShowHandLog] = useState(false);
+  const [ctrlMenuOpen, setCtrlMenuOpen] = useState(false);
   const [version, setVersion] = useState('');
 
   const sendOnce = useCallback((type, payload) => {
@@ -206,22 +208,26 @@ function App() {
               );
             })}
           </div>
-          {rows.map((r, i) => (
-            <div key={i} className={`ac-trick-table-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
-              <span className="ac-tt-trick">{i + 1}</span>
-              <span className="ac-tt-pts team-totals">
-                <span className="team-total">{r.winner === 'N-S' ? `+${r.ns}` : `+${r.ew}`}</span>
-              </span>
-              {posOrder.map(pos => {
-                const isWinner = r.winnerPosition === pos;
-                return (
-                  <span key={pos} className="ac-tt-card">
-                    {miniCard(r.cards[pos], isWinner) || <span className="ac-empty" style={{ padding: 0 }}>—</span>}
-                  </span>
-                );
-              })}
-            </div>
-          ))}
+            {rows.map((r, i) => (
+              <div key={i} className={`ac-trick-table-row${r.winner ? ` win-${r.winner === 'N-S' ? 'ns' : 'ew'}` : ''}`}>
+                <span className="ac-tt-trick">{i + 1}</span>
+                <span className="ac-tt-pts team-totals">
+                  <span className="team-total">{r.winner === 'N-S' ? `+${r.ns}` : `+${r.ew}`}</span>
+                </span>
+                {posOrder.map(pos => {
+                  const isWinner = r.winnerPosition === pos;
+                  const isLeader = r.leaderPosition === pos;
+                  return (
+                    <span key={pos} className="ac-tt-card">
+                      {miniCard(r.cards[pos], isWinner)}
+                      {isLeader && <span className="trick-leader review-leader" title="Started the trick">1</span>}
+                      {!r.cards[pos] && <span className="ac-empty" style={{ padding: 0 }}>—</span>}
+                    </span>
+                  );
+                })}
+              </div>
+            ))}
+
         </div>
         {isAdmin && (
           <button className="start-btn" onClick={() => sendOnce('confirm_hand')}>
@@ -382,6 +388,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     return (trickHistory || []).map(t => {
       const cardAt = {};
       for (const c of t.cards) cardAt[c.position] = c.card;
+      const leaderPosition = t.cards && t.cards.length > 0 ? t.cards[0].position : null;
       const winValue = t.winnerPoints != null
         ? t.winnerPoints
         : (t.teamPoints?.['N-S'] || 0) + (t.teamPoints?.['E-W'] || 0);
@@ -392,6 +399,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
         cards: cardAt,
         winner: t.winnerTeam,
         winnerPosition: t.winnerPosition,
+        leaderPosition,
         ns: nsRunning,
         ew: ewRunning
       };
@@ -478,6 +486,33 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     const botCount = players.filter(p => p.isBot).length + (gameState.spectators || []).filter(s => s.isBot).length;
     adminPanel = (
       <div className="admin-panel">
+        <div className="ac-menu-wrap">
+          <button className="ac-menu-btn" onClick={() => setCtrlMenuOpen(o => !o)}>
+            Controls <span aria-hidden="true">{ctrlMenuOpen ? '▴' : '▾'}</span>
+          </button>
+          {ctrlMenuOpen && (
+            <div className="ac-menu">
+              <button className="ac-btn blue" onClick={() => { setCtrlMenuOpen(false); sendOnce('rotate_dealer'); }}>Move Dealer</button>
+              <button className="ac-btn orange" onClick={() => { setCtrlMenuOpen(false); sendOnce('reset_scores'); }}>Reset Scores</button>
+              <button className="ac-btn orange" onClick={() => { setCtrlMenuOpen(false); sendOnce('reset_game'); }}>Reset Game</button>
+              {timedOut && timedOut.playerId && (
+                <button className="ac-btn blue" onClick={() => { setCtrlMenuOpen(false); setTimedOut(null); sendOnce('admin_play', { targetId: timedOut.playerId }); }}>
+                  Take Over ({timedOut.playerName})
+                </button>
+              )}
+              {!timedOut && (
+                <button className="ac-btn green" onClick={() => { setCtrlMenuOpen(false); sendOnce('confirm_hand'); }}>Confirm &amp; Next Hand</button>
+              )}
+              <div className="ac-menu-sep" />
+              <button className="ac-btn green" disabled={botCount >= 3} onClick={() => { setCtrlMenuOpen(false); sendOnce('add_bot'); }}>
+                Add Bot{botCount >= 3 ? ' (full)' : ''}
+              </button>
+              <button className="ac-btn gray" onClick={() => setShowHandLog(s => !s)}>
+                {showHandLog ? 'Hide Hand Log' : 'Hand Log (debug)'}
+              </button>
+            </div>
+          )}
+        </div>
         <div className="ac-grid">
           {/* Left: Host + Gallery + Table Seats */}
           <div className="ac-panel">
@@ -498,7 +533,8 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                 )}
               </div>
             </div>
-            <h3 style={{ marginTop: 12 }}>Table</h3>
+            <h3 style={{ marginTop: 12 }}>Gallery</h3>
+            <h4 style={{ margin: '8px 0 4px 0', fontSize: 12, color: '#a0d0a0' }}>Seated ({seatedCount}/4)</h4>
             {['N','S','E','W'].map(pos => {
               const pid = gameState.positions?.[pos];
               const p = players.find(x => x.id === pid);
@@ -521,7 +557,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                 </div>
               );
             })}
-            <h3 style={{ marginTop: 12 }}>Gallery ({unseated.length + botSpectators.length})</h3>
+            <h4 style={{ margin: '8px 0 4px 0', fontSize: 12, color: '#a0d0a0' }}>Waiting ({unseated.length + botSpectators.length})</h4>
             {unseated.length === 0 && botSpectators.length === 0 ? (
               <div className="ac-empty">No waiting players</div>
             ) : (
@@ -583,12 +619,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
               </>
             )}
             <h3 style={{ marginTop: 12 }}>Bots ({botCount}/3)</h3>
-            <div className="ac-player-row">
-              <button className="ac-btn green add-bot" disabled={botCount >= 3}
-                onClick={() => sendOnce('add_bot')}>
-                Add Bot
-              </button>
-            </div>
+            <div className="ac-empty">Add bots from the Controls menu</div>
           </div>
 
           {/* Center: Game State + Bids + Current Trick */}
@@ -606,26 +637,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
           </div>
 
-          {/* Right: Controls */}
-          <div className="ac-panel">
-            <h3>Controls</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <button className="ac-btn blue" onClick={() => sendOnce('rotate_dealer')}>Move Dealer</button>
-                <button className="ac-btn orange" onClick={() => sendOnce('reset_scores')}>Reset Scores</button>
-                <button className="ac-btn orange" onClick={() => sendOnce('reset_game')}>Reset Game</button>
-              {timedOut && timedOut.playerId && (
-                <button className="ac-btn blue" onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOut.playerId }); }}>
-                  Take Over ({timedOut.playerName})
-                </button>
-              )}
-              {!timedOut && (
-                <button className="ac-btn green" onClick={() => sendOnce('confirm_hand')}>
-                  Confirm & Next Hand
-                </button>
-              )}
-          </div>
         </div>
-      </div>
 
         {/* Live Tricks + Scores */}
         <div className="ac-panel ac-wide" style={{ marginTop: 12 }}>
@@ -650,9 +662,12 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                   </span>
                   {trickOrder.map(pos => {
                     const entry = gameState.currentTrick.find(t => t.position === pos);
+                    const isCurrentLeader = gameState.currentTrick.length > 0 && gameState.currentTrick[0]?.position === pos;
                     return (
                       <span key={pos} className="ac-tt-card">
-                        {miniCard(entry?.card) || <span className="ac-empty" style={{ padding: 0 }}>·</span>}
+                        {miniCard(entry?.card)}
+                        {isCurrentLeader && <span className="trick-leader review-leader" title="Started the trick">1</span>}
+                        {!entry?.card && <span className="ac-empty" style={{ padding: 0 }}>·</span>}
                       </span>
                     );
                   })}
@@ -666,15 +681,19 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                     <span className="ac-tt-pts team-totals">
                       <span className="team-total">{r.winner === 'N-S' ? `+${r.ns}` : `+${r.ew}`}</span>
                     </span>
-                    {trickOrder.map(pos => {
-                      const entry = r.t.cards.find(c => c.position === pos);
-                      const isWinner = entry && winnerIdx !== -1 && r.t.cards[winnerIdx].position === pos;
-                      return (
-                        <span key={pos} className="ac-tt-card">
-                          {miniCard(entry?.card, isWinner) || <span className="ac-empty" style={{ padding: 0 }}>—</span>}
-                        </span>
-                      );
-                    })}
+                  {trickOrder.map(pos => {
+                    const entry = r.t.cards.find(c => c.position === pos);
+                    const isWinner = entry && winnerIdx !== -1 && r.t.cards[winnerIdx].position === pos;
+                    const isLeader = r.leaderPosition === pos;
+                    return (
+                      <span key={pos} className="ac-tt-card">
+                        {miniCard(entry?.card, isWinner)}
+                        {isLeader && <span className="trick-leader review-leader" title="Started the trick">1</span>}
+                        {!entry?.card && <span className="ac-empty" style={{ padding: 0 }}>—</span>}
+                      </span>
+                    );
+                  })}
+
                   </div>
                 );
               })}
@@ -683,10 +702,11 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
             <div className="ac-empty">No tricks yet — waiting for play to start</div>
           )}
         </div>
-
         {/* Hand Log — the complete trace of the current/latest hand */}
+        {showHandLog && (
         <div className="ac-panel ac-wide" style={{ marginTop: 12 }}>
           <h3>Hand Log <span style={{ fontWeight: 400, fontSize: 11, color: '#a0d0a0' }}>(debug)</span></h3>
+
           {log ? (
             <>
               <div className="hl-summary">
@@ -751,6 +771,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
             <div className="ac-empty">No hand log yet</div>
           )}
         </div>
+        )}
       </div>
     );
   }

@@ -1,4 +1,9 @@
 do not push to git
 DISCUSS
-does bot count decrease when admin x a bot from the table
-change the "Start Game" button at the beginning in the message bar to "Add Bots" button with the message if short on humans has the same functionality as existing Add bots button
+start collapsing control section to a drop down menu right top corner
+	move the add bot button in the bots section to the menu, keep the button in message section
+	add an option for Hand Log (debug)
+do we need a Table section?
+only gallery
+card images in hand review section to be of the same size
+	add an icon that also indicates who started the trick "1" inside a circle

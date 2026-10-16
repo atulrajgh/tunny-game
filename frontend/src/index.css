@@ -259,7 +259,8 @@ input, button { font-family: inherit; }
 @media (max-width: 500px) {
   .review-table .team-total, .ac-review-style .team-total { font-size: 0.9em; }
 }
-.review-table .mini-card, .ac-review-style .mini-card { font-size: 20px; }
+.review-table .mini-card, .ac-review-style .mini-card { font-size: 16px; padding: 3px 6px; }
+
 .review-hands { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin: 16px 0; }
 .review-hand { background: #2d6e2d; border-radius: 12px; padding: 16px; }
 .review-player { font-weight: 700; margin-bottom: 8px; }
@@ -303,10 +304,18 @@ input, button { font-family: inherit; }
 }
 
 /* ---- Admin Panel ---- */
-.admin-panel { background: #1a3a1a; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; grid-column: 1 / -1; }
+.admin-panel { background: #1a3a1a; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; grid-column: 1 / -1; position: relative; }
+.ac-menu-wrap { position: absolute; top: 10px; right: 14px; z-index: 40; }
+.ac-menu-btn { min-height: 40px; padding: 7px 14px; background: #3498db; border: none; border-radius: 6px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; touch-action: manipulation; display: inline-flex; align-items: center; gap: 8px; }
+.ac-menu-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ac-menu { position: absolute; top: 46px; right: 0; min-width: 220px; background: #1a3a1a; border: 1px solid #4a9a4a; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.55); }
+.ac-menu button { width: 100%; justify-content: flex-start; text-align: left; }
+.ac-menu .ac-menu-sep { height: 1px; background: #3a6a3a; margin: 2px 0; }
+
 .ac-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid #3a6a3a; }
 .ac-header h2 { font-size: 22px; color: #f0c040; }
-.ac-grid { display: grid; grid-template-columns: 280px 1fr 200px; gap: 12px; flex: 1; }
+.ac-grid { display: grid; grid-template-columns: 280px 1fr; gap: 12px; flex: 1; }
+
 .ac-panel { background: #2d4a2d; border-radius: 8px; padding: 10px; }
 .ac-panel h3 { font-size: 14px; color: #f0c040; margin-bottom: 8px; border-bottom: 1px solid #4a6a4a; padding-bottom: 4px; }
 .ac-panel.ac-wide { grid-column: 1 / -1; }
@@ -366,3 +375,32 @@ input, button { font-family: inherit; }
 .ac-btn.add-bot { width: 100%; min-width: 100%; background: #2c5f2c; border: 1px dashed #57a357; }
 
 .reconnect-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: #c0392b; color: #fff; text-align: center; padding: 8px 12px; font-size: 14px; font-weight: 600; }
+.trick-leader {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #2f79c4;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  margin-right: 4px;
+  vertical-align: middle;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.trick-leader.review-leader {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  font-size: 11px;
+  margin-right: 0;
+  z-index: 1;
+}
+.ac-tt-card {
+  position: relative;
+}
