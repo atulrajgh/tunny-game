@@ -95,7 +95,6 @@ input, button { font-family: inherit; }
 .dummy-card { position: relative; width: 72px; height: 96px; background: linear-gradient(135deg, #3a1a6a, #6a2a9a); border-radius: 8px; border: 1px solid #8a4abc; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 8px; padding: 4px; box-sizing: border-box; gap: 2px; }
 .dummy-name { font-size: 11px; font-weight: 700; color: #e6d0ff; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
 .dummy-role { font-size: 10px; font-weight: 400; color: #8fbf8f; }
-.dummy-count { font-size: 33px; font-weight: 800; color: #f0c040; text-shadow: 0 2px 3px rgba(0,0,0,0.6); }
 .tricks { font-size: 13px; color: #f0c040; margin-top: 4px; }
 
 /* ---- Vacated (admin takes over) seat ---- */
@@ -416,7 +415,6 @@ input, button { font-family: inherit; }
   .table-cross .tc-east { align-self: center; justify-self: end; }
   .table-cross .tc-south { width: 100%; }
   .dummy-card { width: 44px; height: 60px; margin-top: 0; }
-  .dummy-count { font-size: 22px; }
   .dummy-role { font-size: 9px; }
   .table-seat { padding: 2px; }
   .team-scores { min-width: 0; font-size: 11px; padding: 5px; }

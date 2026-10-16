@@ -492,7 +492,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
         <div className="dummy-card" title={`${p?.name || POSITION_NAMES[pos]} — ${faceDownCount(p)} cards`}>
           <span className="dummy-name">{p?.name || POSITION_NAMES[pos]}{p?.isBot ? <span className="bot-tag">BOT</span> : null}{p && p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
           {roleLabel && <span className="dummy-role">{roleLabel}</span>}
-          <span className="dummy-count">{faceDownCount(p)}</span>
         </div>
       </div>
     );
@@ -882,8 +881,24 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
           </div>
         </div>
 
-        {/* North — partner across the table */}
-        <div className="tc-north">{myPos ? renderSeat(posOrder[0], 'Partner') : renderSeat('N')}</div>
+        {/* State messages — top-center */}
+        <div className="tc-north">
+          <div className="state-info">
+            <div className="round-info">Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
+            <div className="state-details">
+              {isPlaying && declarerName && (
+                <div className="trump-indicator">
+                  {gameState.trumpSuit ? `Trump: ${gameState.trumpSuit} · set by ${declarerName}` : `Trump set by ${declarerName}`}
+                </div>
+              )}
+              {contractNeed && (
+                <div className="contract-progress">Need {contractNeed} HCP · made {gameState.teamPoints?.[declarerTeamPos] || 0}</div>
+              )}
+              {gameState.trumpCard && <div className="trump-card-display"><span className="trump-card-label">Trump card:</span>{renderCard(gameState.trumpCard)}</div>}
+              {gameState.trumpRevealed && <div className="trump-revealed">♠ Trump Revealed! ♠</div>}
+            </div>
+          </div>
+        </div>
 
         {/* Controls — top-right (admin only) */}
         <div className="tc-controls">{controlsMenu}</div>
@@ -891,23 +906,9 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
         {/* West */}
         <div className="tc-west">{myPos ? renderSeat(posOrder[3]) : renderSeat('W')}</div>
 
-        {/* Center table */}
+        {/* Center table — partner seat below the messages, above the trick */}
         <div className="tc-table">
-        <div className="state-info">
-          <div className="round-info">Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
-          <div className="state-details">
-            {isPlaying && declarerName && (
-              <div className="trump-indicator">
-                {gameState.trumpSuit ? `Trump: ${gameState.trumpSuit} · set by ${declarerName}` : `Trump set by ${declarerName}`}
-              </div>
-            )}
-            {contractNeed && (
-              <div className="contract-progress">Need {contractNeed} HCP · made {gameState.teamPoints?.[declarerTeamPos] || 0}</div>
-            )}
-            {gameState.trumpCard && <div className="trump-card-display"><span className="trump-card-label">Trump card:</span>{renderCard(gameState.trumpCard)}</div>}
-            {gameState.trumpRevealed && <div className="trump-revealed">♠ Trump Revealed! ♠</div>}
-          </div>
-        </div>
+        {myPos ? renderSeat(posOrder[0], 'Partner') : renderSeat('N')}
         {isPlaying && shownTrick.length > 0 && (
           <div className="tc-trick">
             {shownTrick.map((t, i) => (
