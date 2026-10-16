@@ -434,16 +434,35 @@ input, button { font-family: inherit; }
 .tc-trick .tk .trick-leader { position: absolute; top: 14px; left: -2px; }
 @media (max-width: 768px) {
   .table-cross {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    grid-template-areas: "score" "north" "controls" "west" "table" "east" "south";
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "score north controls"
+      "west table east"
+      "south south south";
+    gap: 6px;
     min-height: 0;
   }
-  .table-cross .tc-score,
-  .table-cross .tc-controls,
-  .table-cross .tc-north,
-  .table-cross .tc-west,
-  .table-cross .tc-east,
-  .table-cross .tc-south { justify-self: center; align-self: center; }
+  .table-cross .tc-table { min-height: 110px; gap: 4px; }
+  .table-cross .tc-score { align-self: start; justify-self: start; }
+  .table-cross .tc-controls { align-self: start; justify-self: end; }
+  .table-cross .tc-north { align-self: start; justify-self: center; }
+  .table-cross .tc-west { align-self: center; justify-self: start; }
+  .table-cross .tc-east { align-self: center; justify-self: end; }
+  .table-cross .tc-south { width: 100%; }
+  .dummy-card { width: 44px; height: 60px; margin-top: 0; }
+  .dummy-count { font-size: 22px; }
+  .dummy-role { font-size: 9px; }
+  .table-seat { padding: 2px; }
+  .team-scores { min-width: 0; font-size: 11px; padding: 5px; }
+  .team-scores .ts-row { grid-template-columns: 22px 1fr 1fr; gap: 2px; }
+  .team-scores .help-link { font-size: 10px; }
+  .state-info { min-width: 0; }
+  .round-info { font-size: 11px; }
+  .state-details { font-size: 11px; }
+  .current-trick, .cut-card-area { min-width: 0; gap: 4px; }
+  .tc-controls .ac-menu-btn { min-height: 34px; padding: 5px 9px; font-size: 12px; }
+  .my-area { flex-wrap: wrap; }
+  .my-hand { flex-wrap: wrap; justify-content: center; }
 }
 
