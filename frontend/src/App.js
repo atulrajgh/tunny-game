@@ -618,8 +618,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                 ))}
               </>
             )}
-            <h3 style={{ marginTop: 12 }}>Bots ({botCount}/3)</h3>
-            <div className="ac-empty">Add bots from the Controls menu</div>
           </div>
 
           {/* Center: Game State + Bids + Current Trick */}
