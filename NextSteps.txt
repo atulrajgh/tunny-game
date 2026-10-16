@@ -1,9 +1,19 @@
 do not push to git
 DISCUSS
-start collapsing control section to a drop down menu right top corner
-	move the add bot button in the bots section to the menu, keep the button in message section
-	add an option for Hand Log (debug)
-do we need a Table section?
-only gallery
-card images in hand review section to be of the same size
-	add an icon that also indicates who started the trick "1" inside a circle
+create a new Layout and show graphic
+Score Card     -----------      Controls
+              |   North   |
+              |           |
+              |           |
+              |           |
+ -----------   -----------   -----------
+|   South   |               }   East    |
+|           |               }           |
+|           |               }           |
+|           |               }           |
+ -----------   -----------   -----------
+              |   South   |
+              |           |
+              |           |
+              |           |
+               -----------

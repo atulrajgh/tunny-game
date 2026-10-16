@@ -204,6 +204,65 @@ export default function UIViewer() {
         </Row>
       </Section>
 
+      <Section title="New cross table layout (proposed)">
+        <div className="table-cross">
+          <div className="tc-score">
+            <div className="team-scores">
+              <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
+              <div className="ts-row ns"><span>N-S</span><span>4</span><span>220</span></div>
+              <div className="ts-row ew"><span>E-W</span><span>2</span><span>120</span></div>
+              <a href="/instructions" target="_blank" className="help-link">How to Play</a>
+            </div>
+          </div>
+
+          <div className="tc-north">
+            <div className="dummy-card">
+              <span className="dummy-name">Bob</span>
+              <span className="dummy-role">Partner</span>
+              <span className="dummy-count">5</span>
+            </div>
+          </div>
+
+          <div className="tc-controls">
+            <button className="ac-menu-btn">Controls <span aria-hidden="true">▾</span></button>
+          </div>
+
+          <div className="tc-west">
+            <div className="dummy-card">
+              <span className="dummy-name">Carol</span>
+              <span className="dummy-count">5</span>
+            </div>
+          </div>
+
+          <div className="tc-table">
+            <div className="tc-trick">
+              <div className="tk tk-n"><span>Bob</span>{renderCard(card('♥', 'A'))}</div>
+              <div className="tk tk-w"><span>Carol</span>{renderCard(card('♠', '10'))}</div>
+              <div className="tk tk-e"><span>Dan</span>{renderCard(card('♥', 'J'))}</div>
+              <div className="tk tk-s"><span>You</span>{renderCard(card('♠', 'K'))}<span className="trick-leader" title="Started the trick">1</span></div>
+            </div>
+          </div>
+
+          <div className="tc-east">
+            <div className="dummy-card">
+              <span className="dummy-name">Dan</span>
+              <span className="dummy-count">5</span>
+            </div>
+          </div>
+
+          <div className="tc-south">
+            <div className="message-bar">
+              <span className="current-action-msg">Bob is playing</span>
+            </div>
+            <div className="my-hand">
+              {[['♠', 'J'], ['♥', '9'], ['♦', 'A'], ['♣', '10']].map(([s, r], i) => (
+                <button key={i} className="hand-card">{renderCard(card(s, r))}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
       <Section title="Notifications">
         <Row title="Message bar">
           <div className="message-bar">

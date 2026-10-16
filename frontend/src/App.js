@@ -468,8 +468,23 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     );
   }
 
+  function renderSeat(pos, roleLabel) {
+    const p = playerAtPos(pos);
+    if (vacatedAt(pos)) return <div className="table-seat">{renderVacated(pos, true)}</div>;
+    return (
+      <div className="table-seat">
+        <div className="dummy-card" title={`${p?.name || POSITION_NAMES[pos]} — ${faceDownCount(p)} cards`}>
+          <span className="dummy-name">{p?.name || POSITION_NAMES[pos]}{p?.isBot ? <span className="bot-tag">BOT</span> : null}{p && p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
+          {roleLabel && <span className="dummy-role">{roleLabel}</span>}
+          <span className="dummy-count">{faceDownCount(p)}</span>
+        </div>
+      </div>
+    );
+  }
+
   const stuckSeat = gameState.stuckSeat;
   const log = gameState.lastHandLog;
+  let controlsMenu = null;
   let adminPanel = null;
   if (isAdmin && !isSpectator) {
     const unseated = players.filter(p => !p.position);
@@ -483,36 +498,37 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
       return !!bp && bp.isBot;
     };
     const seatOpenFor = (pos) => !gameState.positions?.[pos] || isBotAt(pos);
-    const botCount = players.filter(p => p.isBot).length + (gameState.spectators || []).filter(s => s.isBot).length;
+    controlsMenu = (
+      <>
+        <button className="ac-menu-btn" onClick={() => setCtrlMenuOpen(o => !o)}>
+          Controls <span aria-hidden="true">{ctrlMenuOpen ? '▴' : '▾'}</span>
+        </button>
+        {ctrlMenuOpen && (
+          <div className="ac-menu">
+            <button className="ac-btn blue" onClick={() => { setCtrlMenuOpen(false); sendOnce('rotate_dealer'); }}>Move Dealer</button>
+            <button className="ac-btn orange" onClick={() => { setCtrlMenuOpen(false); sendOnce('reset_scores'); }}>Reset Scores</button>
+            <button className="ac-btn orange" onClick={() => { setCtrlMenuOpen(false); sendOnce('reset_game'); }}>Reset Game</button>
+            {timedOut && timedOut.playerId && (
+              <button className="ac-btn blue" onClick={() => { setCtrlMenuOpen(false); setTimedOut(null); sendOnce('admin_play', { targetId: timedOut.playerId }); }}>
+                Take Over ({timedOut.playerName})
+              </button>
+            )}
+            {!timedOut && (
+              <button className="ac-btn green" onClick={() => { setCtrlMenuOpen(false); sendOnce('confirm_hand'); }}>Confirm &amp; Next Hand</button>
+            )}
+            <div className="ac-menu-sep" />
+            <button className="ac-btn green" disabled={botCount >= 3} onClick={() => { setCtrlMenuOpen(false); sendOnce('add_bot'); }}>
+              Add Bot{botCount >= 3 ? ' (full)' : ''}
+            </button>
+            <button className="ac-btn gray" onClick={() => setShowHandLog(s => !s)}>
+              {showHandLog ? 'Hide Hand Log' : 'Hand Log (debug)'}
+            </button>
+          </div>
+        )}
+      </>
+    );
     adminPanel = (
       <div className="admin-panel">
-        <div className="ac-menu-wrap">
-          <button className="ac-menu-btn" onClick={() => setCtrlMenuOpen(o => !o)}>
-            Controls <span aria-hidden="true">{ctrlMenuOpen ? '▴' : '▾'}</span>
-          </button>
-          {ctrlMenuOpen && (
-            <div className="ac-menu">
-              <button className="ac-btn blue" onClick={() => { setCtrlMenuOpen(false); sendOnce('rotate_dealer'); }}>Move Dealer</button>
-              <button className="ac-btn orange" onClick={() => { setCtrlMenuOpen(false); sendOnce('reset_scores'); }}>Reset Scores</button>
-              <button className="ac-btn orange" onClick={() => { setCtrlMenuOpen(false); sendOnce('reset_game'); }}>Reset Game</button>
-              {timedOut && timedOut.playerId && (
-                <button className="ac-btn blue" onClick={() => { setCtrlMenuOpen(false); setTimedOut(null); sendOnce('admin_play', { targetId: timedOut.playerId }); }}>
-                  Take Over ({timedOut.playerName})
-                </button>
-              )}
-              {!timedOut && (
-                <button className="ac-btn green" onClick={() => { setCtrlMenuOpen(false); sendOnce('confirm_hand'); }}>Confirm &amp; Next Hand</button>
-              )}
-              <div className="ac-menu-sep" />
-              <button className="ac-btn green" disabled={botCount >= 3} onClick={() => { setCtrlMenuOpen(false); sendOnce('add_bot'); }}>
-                Add Bot{botCount >= 3 ? ' (full)' : ''}
-              </button>
-              <button className="ac-btn gray" onClick={() => setShowHandLog(s => !s)}>
-                {showHandLog ? 'Hide Hand Log' : 'Hand Log (debug)'}
-              </button>
-            </div>
-          )}
-        </div>
         <div className="ac-grid">
           {/* Left: Host + Gallery + Table Seats */}
           <div className="ac-panel">
@@ -839,14 +855,28 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
   return (
     <div className="app game-table">
-      {/* Top: current state message + scores */}
-      <div className="state-bar">
-        <div className="team-scores">
-          <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
-          <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
-          <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
-          <a href="/instructions" target="_blank" className="help-link">How to Play</a>
+      <div className="table-cross">
+        {/* Score Card — top-left */}
+        <div className="tc-score">
+          <div className="team-scores">
+            <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
+            <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
+            <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
+            <a href="/instructions" target="_blank" className="help-link">How to Play</a>
+          </div>
         </div>
+
+        {/* North — partner across the table */}
+        <div className="tc-north">{myPos ? renderSeat(posOrder[0], 'Partner') : renderSeat('N')}</div>
+
+        {/* Controls — top-right (admin only) */}
+        <div className="tc-controls">{controlsMenu}</div>
+
+        {/* West */}
+        <div className="tc-west">{myPos ? renderSeat(posOrder[3]) : renderSeat('W')}</div>
+
+        {/* Center table */}
+        <div className="tc-table">
         <div className="state-info">
           <div className="round-info">Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
           <div className="state-details">
@@ -891,6 +921,58 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
             )}
           </div>
         )}
+        </div>
+
+        {/* East */}
+        <div className="tc-east">{myPos ? renderSeat(posOrder[1]) : renderSeat('E')}</div>
+
+        {/* South — notification bar, action bar, my hand */}
+        <div className="tc-south">
+          {messageBar}
+          <div className="action-bar">
+            {(isPlaying || isBidding || isTrump) && !isSpectator && (
+              <>
+                {isPlaying && !isDeclarer && myPos && !gameState.trumpRevealed && canTrumpAction && (
+                  <button className="action-btn" onClick={() => sendOnce('ask_trump')}>Ask Trump</button>
+                )}
+                {isPlaying && isDeclarer && myPos && !gameState.trumpRevealed && gameState.trumpCard && isMyTurn &&
+                  (isLastTrick || canTrumpAction || (me?.hand || []).length === 0) && (
+                  <button className="action-btn" onClick={() => sendOnce('play_trump')}>Play Trump</button>
+                )}
+              </>
+            )}
+          </div>
+          <div className="my-area">
+            {timedOutHand ? renderTimedOut() : (
+              vacatedAt(posOrder[2]) ? renderVacated(posOrder[2]) : (
+                (isAdmin && !isSpectator && !myPos) ? (
+                  <div style={{ minHeight: 30 }} />
+                ) : isSpectator ? (
+                  <div className="spectator-label">Observing</div>
+                ) : (
+                  <div className="my-hand">
+                    {(me?.hand || []).map((c, i) => {
+                      const canPlay = isMyTurn && isPlaying && !isBidding && !isTrump;
+                      return (
+                        <button key={i} className="hand-card"
+                          disabled={!canPlay}
+                          onClick={() => canPlay && sendOnce('play', { card: { suit: c.suit, rank: c.rank } })}>
+                          {renderCard(c)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )
+              )
+            )}
+            {isDeclarer && isPlaying && gameState.trumpCard && !gameState.trumpRevealed && (
+              <div className="trump-reserved">
+                {renderCard(gameState.trumpCard)}
+                <span className="trump-reserved-label">TRUMP</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
 {/* Bidding overlay — visible to everyone during bidding; controls enabled only for the current bidder */}
@@ -962,29 +1044,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     </div>
   )}
 
-      {/* Opponents + partner */}
-      <div className="opponents-row">
-        {[
-          { cls: 'opp1', pos: posOrder[3] },
-          { cls: 'partner', pos: posOrder[0] },
-          { cls: 'opp2', pos: posOrder[1] }
-        ].map(({ cls, pos }) => {
-          const p = playerAtPos(pos);
-          const label = cls === 'partner' ? 'Partner' : null;
-          return (
-            <div key={cls} className={`table-seat ${cls}`}>
-              {vacatedAt(pos) ? renderVacated(pos, true) : (
-                <div className="dummy-card" title={`${p?.name || POSITION_NAMES[pos]} — ${faceDownCount(p)} cards`}>
-                  <span className="dummy-name">{p?.name || POSITION_NAMES[pos]}{p?.isBot ? <span className="bot-tag">BOT</span> : null}{p && p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
-                  {label && <span className="dummy-role">{label}</span>}
-                  <span className="dummy-count">{faceDownCount(p)}</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
       {/* Center stage for overlays (trump) */}
       <div className="center-stage">
         {isTrump && (
@@ -1024,56 +1083,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
               <p>Waiting for {players.find(p => p.position === gameState.declarer?.position)?.name || 'declarer'} to choose trump...</p>
             )}
           </div>
-        )}
-      </div>
-
-      {/* Unified message bar (your-turn spot) */}
-      {messageBar}
-
-      {/* My hand */}
-      <div className="my-area">
-        {timedOutHand ? renderTimedOut() : (
-          vacatedAt(posOrder[2]) ? renderVacated(posOrder[2]) : (
-            (isAdmin && !isSpectator && !myPos) ? (
-              <div style={{ minHeight: 30 }} />
-            ) : isSpectator ? (
-              <div className="spectator-label">Observing</div>
-            ) : (
-              <div className="my-hand">
-                {(me?.hand || []).map((c, i) => {
-                  const canPlay = isMyTurn && isPlaying && !isBidding && !isTrump;
-                  return (
-                    <button key={i} className="hand-card"
-                      disabled={!canPlay}
-                      onClick={() => canPlay && sendOnce('play', { card: { suit: c.suit, rank: c.rank } })}>
-                      {renderCard(c)}
-                    </button>
-                  );
-                })}
-              </div>
-            )
-          )
-        )}
-        {isDeclarer && isPlaying && gameState.trumpCard && !gameState.trumpRevealed && (
-          <div className="trump-reserved">
-            {renderCard(gameState.trumpCard)}
-            <span className="trump-reserved-label">TRUMP</span>
-          </div>
-        )}
-      </div>
-
-      {/* Action buttons */}
-      <div className="action-bar">
-        {(isPlaying || isBidding || isTrump) && !isSpectator && (
-          <>
-            {isPlaying && !isDeclarer && myPos && !gameState.trumpRevealed && canTrumpAction && (
-              <button className="action-btn" onClick={() => sendOnce('ask_trump')}>Ask Trump</button>
-            )}
-            {isPlaying && isDeclarer && myPos && !gameState.trumpRevealed && gameState.trumpCard && isMyTurn &&
-              (isLastTrick || canTrumpAction || (me?.hand || []).length === 0) && (
-              <button className="action-btn" onClick={() => sendOnce('play_trump')}>Play Trump</button>
-            )}
-          </>
         )}
       </div>
 
