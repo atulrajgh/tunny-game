@@ -869,6 +869,14 @@ describe('scoring (confirmHand)', () => {
     assert.equal(g.scores['E-W'], 2);
   });
 
+  it('bid 50 made exactly (150/150) gives declarers +1, not defenders', () => {
+    const g = reviewGame(50);
+    g.teamPoints['N-S'] = 150;
+    assert.ok(g.confirmHand(g.admin.id));
+    assert.equal(g.scores['N-S'], 1);
+    assert.equal(g.scores['E-W'], 0);
+  });
+
   it('a slam adds a bonus point', () => {
     const g = reviewGame(60);
     g.teamPoints['N-S'] = 300;
