@@ -496,9 +496,8 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
   let controlsMenu = null;
   let adminPanel = null;
   if (isAdmin && !isSpectator) {
-    const unseated = players.filter(p => !p.position);
-    const botSpectators = (gameState.spectators || []).filter(s => s.isBot);
     const humanSpectators = (gameState.spectators || []).filter(s => !s.isBot);
+    const botSpectators = (gameState.spectators || []).filter(s => s.isBot);
     const trickOrder = ['N', 'S', 'E', 'W'];
     const hostSeated = !!myPos;
     const isBotAt = (pos) => {
@@ -507,14 +506,19 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
       return !!bp && bp.isBot;
     };
     const seatOpenFor = (pos) => !gameState.positions?.[pos] || isBotAt(pos);
+    // A seated human can only be moved between seats before the hand starts — moving
+    // them mid-hand would leave their old seat empty.
+    const canReseatHuman = gameState.state === 'waiting' || gameState.state === 'cut';
     const seatedBots = players.filter(p => p.isBot);
     const allBots = [
       ...seatedBots,
       ...botSpectators
     ];
+    // Humans (other than the host) stay listed under Observers whether they hold a seat
+    // or not — seating an observer must not make them vanish from the People list.
     const observers = [
-      ...unseated.filter(p => !p.isBot),
-      ...humanSpectators
+      ...players.filter(p => !p.isBot && !p.isAdmin),
+      ...humanSpectators.filter(s => !players.some(p => p.id === s.id))
     ];
     controlsMenu = (
       <>
@@ -598,8 +602,9 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
               observers.map(s => (
                 <div key={s.id} className="ac-player-row">
                   <span className="ac-name">{s.name}{s.isBot ? <span className="bot-tag">BOT</span> : null}</span>
+                  <span className="ac-team">{s.position ? `@${s.position}` : 'Unseated'}</span>
                   <div className="ac-actions">
-                    {['N','S','E','W'].filter(seatOpenFor).map(pos => (
+                    {(!s.position || canReseatHuman) && ['N','S','E','W'].filter(seatOpenFor).map(pos => (
                       <button key={pos} className="ac-btn green pos"
                         onClick={() => {
                           if (players.some(p => p.id === s.id)) sendOnce('assign_position', { playerId: s.id, position: pos });
@@ -609,7 +614,8 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                       </button>
                     ))}
                     {isAdmin && s.id !== playerId && players.some(p => p.id === s.id) && (
-                      <button className="ac-btn red pos" onClick={() => sendOnce('kick_player', { targetId: s.id })}>✕</button>
+                      <button className="ac-btn red pos" title={s.position ? 'Leave seat' : 'Remove from table'}
+                        onClick={() => sendOnce('kick_player', { targetId: s.id })}>✕</button>
                     )}
                   </div>
                 </div>

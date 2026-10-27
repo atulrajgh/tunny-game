@@ -497,9 +497,20 @@ export default function UIViewer() {
               <div style={{ fontSize: 11, color: '#a0d0a0', margin: '10px 0 6px 0' }}>Observers</div>
               <div className="ac-player-row">
                 <span className="ac-name">Alice</span>
+                <span className="ac-team">Unseated</span>
                 <div className="ac-actions">
                   <button className="ac-btn green pos">N</button>
                   <button className="ac-btn green pos">S</button>
+                  <button className="ac-btn green pos">E</button>
+                  <button className="ac-btn green pos">W</button>
+                  <button className="ac-btn red pos">✕</button>
+                </div>
+              </div>
+              <div className="ac-player-row">
+                <span className="ac-name">Dave</span>
+                <span className="ac-team">@S</span>
+                <div className="ac-actions">
+                  <button className="ac-btn green pos">N</button>
                   <button className="ac-btn green pos">E</button>
                   <button className="ac-btn green pos">W</button>
                   <button className="ac-btn red pos">✕</button>
