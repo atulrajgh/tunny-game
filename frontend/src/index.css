@@ -92,16 +92,24 @@ input, button { font-family: inherit; }
 .seat-info { font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; text-align: center; }
 .seat-role { display: block; font-size: 0.6875rem; font-weight: 400; color: #8fbf8f; }
 .team-badge { font-size: 0.6875rem; background: #2d4a2d; color: #a0d0a0; padding: 1px 5px; border-radius: 4px; margin-left: 4px; }
-.host-info { font-size: 0.9375rem; color: #c0e8c0; margin-bottom: 12px; }
-.spectator-label { font-size: 0.8125rem; color: #a0d0a0; padding: 8px; }
-.hand-cards { display: flex; gap: 2px; }
-.hand-cards.vert { flex-direction: column; }
-.card-back { display: inline-block; width: 30px; height: 44px; background: linear-gradient(135deg, #1a3a6a, #2a5a8a); border-radius: 4px; border: 1px solid #3a6a9a; }
-.card-back.mini { width: 22px; height: 32px; }
-.card-back.tiny { width: 26px; height: 38px; }
-.dummy-card { position: relative; width: clamp(44px, 6vw, 72px); height: clamp(60px, 8vw, 96px); background: linear-gradient(135deg, #3a1a6a, #6a2a9a); border-radius: 8px; border: 1px solid #8a4abc; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 8px; padding: 4px; box-sizing: border-box; gap: 2px; }
-.dummy-name { font-size: 0.6875rem; font-weight: 700; color: #e6d0ff; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
-.dummy-role { font-size: 0.625rem; font-weight: 400; color: #8fbf8f; }
+/* ---- Table seats / diamond plates ---- */
+.seat-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.seat-plate { display: flex; flex-direction: column; align-items: center; padding: 3px 10px; border-radius: 999px; background: rgba(30,58,30,.88); border: 1px solid #4a9a4a; max-width: 116px; text-align: center; }
+.seat-plate.open { opacity: 0.55; }
+.seat-plate.turn { box-shadow: 0 0 0 2px #f0c040; }
+.seat-plate.declarer { border-color: #f0c040; }
+.seat-plate.vacated { border-color: #f0c040; }
+.seat-name { font-size: 0.7rem; font-weight: 700; color: #e6d0ff; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seat-meta { font-size: 0.625rem; color: #8fbf8f; }
+.seat-trump { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.seat-trump-label { font-size: 0.7rem; font-weight: 700; color: #f0c040; letter-spacing: 1px; }
+.bot-tag { margin-left: 4px; font-size: 0.6rem; color: #f0c040; }
+.offline-tag { margin-left: 4px; font-size: 0.6rem; color: #ffb3b3; }
+
+/* Legacy dummy-card kept only if referenced elsewhere; replaced by .seat-plate */
+.dummy-card { display: none; }
+.dummy-name { display: none; }
+.dummy-role { display: none; }
 .tricks { font-size: 0.8125rem; color: #f0c040; margin-top: 4px; }
 
 /* ---- Vacated (admin takes over) seat ---- */
@@ -154,16 +162,16 @@ input, button { font-family: inherit; }
 /* ---- My hand ---- */
 .my-area { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 4px 0; }
 
-/* Reserved face-down trump card slot (declarer only, before reveal) */
-.trump-reserved { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
-.trump-reserved-label { font-size: 0.75rem; font-weight: 700; color: #f0c040; letter-spacing: 1px; }
+/* ---- My hand (flat row) ---- */
+.my-area { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 4px 0; flex-wrap: wrap; }
 
-/* ---- Cards (real-deck face: see .pc rules below) ---- */
+.hand-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 6px; padding: 4px; }
+.hand-row .hand-card { background: none; border: none; cursor: pointer; padding: 2px; }
+.hand-row .hand-card:disabled { opacity: 0.8; cursor: default; }
+.hand-row .hand-card:hover .pc { transform: translateY(-8px); }
+.hand-row .pc { transition: transform 0.15s ease; }
 
-
-.my-hand { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
-.hand-card { background: none; border: none; cursor: pointer; padding: 2px; }
-.hand-card:disabled { opacity: 0.8; cursor: default; }
+/* Legacy fan styles removed */
 
 .bid-buttons { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0; }
 .bid-buttons.admin { margin: 0; }
@@ -184,8 +192,8 @@ input, button { font-family: inherit; }
 .card-btn { background: none; border: none; cursor: pointer; padding: 4px; }
 
 /* ---- Action bar ---- */
-.trump-card-display { margin-top: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.trump-card-label { font-size: 0.75rem; color: #a0d0a0; }
+.trump-card-display { display: none; }
+.trump-card-label { display: none; }
 .action-bar { display: flex; gap: 8px; justify-content: center; padding: 8px; }
 .action-btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; background: #3498db; color: #fff; font-size: 0.9375rem; touch-action: manipulation; }
 .action-btn.reset { background: #7f8c8d; }
@@ -393,7 +401,7 @@ input, button { font-family: inherit; }
 .table-cross .tc-controls { grid-area: controls; align-self: start; justify-self: end; position: relative; }
 .table-cross .tc-west { grid-area: west; justify-self: start; align-self: center; }
 .table-cross .tc-east { grid-area: east; justify-self: end; align-self: center; }
-.table-cross .tc-table { grid-area: table; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 200px; }
+.table-cross .tc-table { grid-area: table; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 200px; }
 .table-cross .tc-south { grid-area: south; justify-self: center; align-self: end; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
 .tc-trick { position: relative; width: 300px; height: 220px; }
 .tc-trick .tk { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 0.6875rem; font-weight: 600; color: #a0d0a0; }
@@ -420,7 +428,10 @@ input, button { font-family: inherit; }
   .table-cross .tc-west { align-self: center; justify-self: start; }
   .table-cross .tc-east { align-self: center; justify-self: end; }
   .table-cross .tc-south { width: 100%; }
-  .dummy-role { font-size: 0.5625rem; }
+  .seat-plate { max-width: 84px; padding: 2px 6px; }
+  .seat-name { font-size: 0.5625rem; }
+  .seat-meta { font-size: 0.5rem; }
+  .bot-tag, .offline-tag { font-size: 0.5rem; }
   .table-seat { padding: 2px; }
   .team-scores { min-width: 0; font-size: 0.6875rem; padding: 5px; }
   .team-scores .ts-row { grid-template-columns: 22px 1fr 1fr; gap: 2px; }
@@ -431,7 +442,9 @@ input, button { font-family: inherit; }
   .current-trick, .cut-card-area { min-width: 0; gap: 4px; }
   .tc-controls .ac-menu-btn { min-height: 34px; padding: 5px 9px; font-size: 0.75rem; }
   .my-area { flex-wrap: wrap; }
-  .my-hand { flex-wrap: wrap; justify-content: center; }
+  .hand-row { gap: 3px; padding: 2px; }
+  .hand-row .pc { font-size: clamp(14px, 4.4vw, 22px); }
+  .tc-trick { width: 240px; height: 170px; }
 }
 
 /* ---- Playing-card face (real deck) ---- */
@@ -451,15 +464,13 @@ input, button { font-family: inherit; }
   vertical-align: bottom;
 }
 .pc.red { color: #cc1a1a; }
-.pc .ix { position: absolute; display: flex; flex-direction: column; align-items: center; line-height: 0.8; font-weight: 900; }
-.pc .ix .r { font-size: 1em; letter-spacing: -0.02em; }
-.pc .ix .s { font-size: 0.88em; }
-.pc .ix.tl { top: 0.23em; left: 0.27em; }
-.pc .ix.br { bottom: 0.23em; right: 0.27em; transform: rotate(180deg); }
-.pc .cpip { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 2.08em; line-height: 1; }
-.pc .cpip.court { font-size: 1.6em; }
-.pc .cpip .cpip-suit { font-size: 0.88em; line-height: 1; margin-top: -0.04em; }
+.pc .ix { position: absolute; display: flex; align-items: center; justify-content: center; line-height: 1; font-weight: 900; }
+.pc .ix { font-size: 0.95em; }
+.pc .ix.tl { top: 0.18em; left: 0.26em; }
+.pc .ix.br { bottom: 0.18em; right: 0.26em; transform: rotate(180deg); }
+.pc .cpip { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2.7em; line-height: 1; }
 .pc.sm { font-size: var(--pc-font-sm); border-radius: 0.32em; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
+.pc.sm .cpip { font-size: 2.6em; }
 
 .pc-back { position: relative; display: inline-block; font-size: var(--pc-font); width: 3em; height: 4.23em; border-radius: 0.35em; background: #b3202b; border: 1px solid #7a1620; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); box-sizing: border-box; vertical-align: bottom; }
 .pc-back::after { content: ""; position: absolute; inset: 0.19em; border-radius: 0.27em; border: 2px solid rgba(255, 255, 255, 0.55); background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.18) 0 4px, transparent 4px 8px), repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.18) 0 4px, transparent 4px 8px); }

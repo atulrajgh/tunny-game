@@ -22,14 +22,11 @@ function renderMiniCard(c) {
 function pc(c, opts = {}) {
   if (!c) return null;
   const isRed = c.suit === '♥' || c.suit === '♦';
-  const isCourt = c.rank === 'J' || c.rank === 'Q' || c.rank === 'K';
   return (
     <span className={`pc${opts.sm ? ' sm' : ''}${isRed ? ' red' : ''}`}>
-      <span className="ix tl"><span className="r">{c.rank}</span><span className="s">{c.suit}</span></span>
-      <span className="ix br"><span className="r">{c.rank}</span><span className="s">{c.suit}</span></span>
-      <span className={`cpip${isCourt ? ' court' : ''}`}>
-        {isCourt ? <>{c.rank}<span className="cpip-suit">{c.suit}</span></> : c.suit}
-      </span>
+      <span className="ix tl">{c.rank}</span>
+      <span className="ix br">{c.rank}</span>
+      <span className="cpip">{c.suit}</span>
     </span>
   );
 }
@@ -244,6 +241,9 @@ export default function UIViewer() {
           </div>
 
           <div className="tc-table">
+            <div className="seat-block">
+              <div className="seat-plate"><span className="seat-name">Bob</span><span className="seat-meta">Partner · 5</span></div>
+            </div>
             <div className="tc-trick">
               <div className="tk tk-n"><span>Bob</span>{renderCard(card('♥', 'A'))}</div>
               <div className="tk tk-w"><span>Carol</span>{renderCard(card('♠', '10'))}</div>
@@ -252,10 +252,14 @@ export default function UIViewer() {
             </div>
           </div>
 
+          <div className="tc-west">
+            <div className="seat-block">
+              <div className="seat-plate"><span className="seat-name">Carol</span><span className="seat-meta">Defender · 5</span></div>
+            </div>
+          </div>
           <div className="tc-east">
-            <div className="dummy-card">
-              <span className="dummy-name">Dan</span>
-              <span className="dummy-count">5</span>
+            <div className="seat-block">
+              <div className="seat-plate"><span className="seat-name">Dan</span><span className="seat-meta">Defender · 5</span></div>
             </div>
           </div>
 
@@ -263,10 +267,13 @@ export default function UIViewer() {
             <div className="message-bar">
               <span className="current-action-msg">Bob is playing</span>
             </div>
-            <div className="my-hand">
-              {[['♠', 'J'], ['♥', '9'], ['♦', 'A'], ['♣', '10']].map(([s, r], i) => (
+            <div className="my-hand hand-row">
+              {[['♠', 'J'], ['♥', '9'], ['♦', 'A'], ['♣', '10'], ['♠', 'K'], ['♥', 'A']].map(([s, r], i) => (
                 <button key={i} className="hand-card">{renderCard(card(s, r))}</button>
               ))}
+            </div>
+            <div className="seat-block">
+              <div className="seat-plate"><span className="seat-name">You</span><span className="seat-meta">You · 6</span></div>
             </div>
           </div>
         </div>
@@ -280,17 +287,13 @@ export default function UIViewer() {
         <Row title="Small size (trick / cut)">
           {SUITS.map(s => <span key={s}>{pc(card(s, 'A'), { sm: true })}</span>)}
         </Row>
-        <Row title="Your hand — sorted + fanned (hover lifts a card)">
-          <div className="fan">
-            {DEMO_HAND.map(([s, r], i) => {
-              const n = DEMO_HAND.length;
-              const t = n > 1 ? i / (n - 1) : 0.5;
-              return (
-                <span key={i} className="fan-card" style={{ transform: `rotate(${(t - 0.5) * 12}deg) translateY(${Math.abs(t - 0.5) * 16}px)` }}>
-                  {pc(card(s, r))}
-                </span>
-              );
-            })}
+        <Row title="Your hand — sorted row (individual cards)">
+          <div className="hand-row">
+            {DEMO_HAND.map(([s, r], i) => (
+              <span key={i} className="hand-card">
+                {pc(card(s, r))}
+              </span>
+            ))}
           </div>
         </Row>
         <Row title="Current trick — compass (N / E / S / W)">
@@ -301,12 +304,14 @@ export default function UIViewer() {
             <div className="tk tk-s"><span>You</span>{pc(card('♠', 'K'), { sm: true })}<span className="trick-leader" title="Started the trick">1</span></div>
           </div>
         </Row>
-        <Row title="Card back + opponent seat">
+        <Row title="Card back + opponent seat plate">
           <span className="pc-back" />
           <span className="pc-back sm" />
-          <div className="dummy-card">
-            <span className="dummy-name">Carol</span>
-            <span className="dummy-count">5</span>
+          <div className="seat-block">
+            <div className="seat-plate">
+              <span className="seat-name">Carol</span>
+              <span className="seat-meta">Defender · 5</span>
+            </div>
           </div>
         </Row>
       </Section>

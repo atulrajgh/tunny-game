@@ -360,14 +360,12 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
   function renderCard(c, small) {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
-    const court = c.rank === 'J' || c.rank === 'Q' || c.rank === 'K';
+    // Face: value top-left + bottom-right, one big suit glyph in the middle.
     return (
       <span className={`pc${small ? ' sm' : ''}${isRed ? ' red' : ''}`}>
-        <span className="ix tl"><span className="r">{c.rank}</span><span className="s">{c.suit}</span></span>
-        <span className="ix br"><span className="r">{c.rank}</span><span className="s">{c.suit}</span></span>
-        <span className={`cpip${court ? ' court' : ''}`}>
-          {court ? <>{c.rank}<span className="cpip-suit">{c.suit}</span></> : c.suit}
-        </span>
+        <span className="ix tl">{c.rank}</span>
+        <span className="ix br">{c.rank}</span>
+        <span className="cpip">{c.suit}</span>
       </span>
     );
   }
@@ -478,15 +476,49 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     );
   }
 
+  // The reserved trump card is only ever in state for the declarer (or the admin
+  // acting as a vacated/timed-out declarer), so rendering it on the declarer's
+  // own seat leaks nothing. The seated declarer sees it beside their hand instead.
+  function trumpSlotFor(pos) {
+    return isPlaying && !!gameState.trumpCard && !gameState.trumpRevealed &&
+      gameState.declarer?.position === pos && pos !== myPos;
+  }
+
   function renderSeat(pos, roleLabel) {
     const p = playerAtPos(pos);
-    if (vacatedAt(pos)) return <div className="table-seat">{renderVacated(pos, true)}</div>;
-    return (
-      <div className="table-seat">
-        <div className="dummy-card" title={`${p?.name || POSITION_NAMES[pos]} — ${faceDownCount(p)} cards`}>
-          <span className="dummy-name">{p?.name || POSITION_NAMES[pos]}{p?.isBot ? <span className="bot-tag">BOT</span> : null}{p && p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
-          {roleLabel && <span className="dummy-role">{roleLabel}</span>}
+    const v = vacatedAt(pos);
+    const isTurnSeat = !!curPlayer && curPlayer.position === pos;
+    const isDeclSeat = isPlaying && gameState.declarer?.position === pos;
+    const trumpSlot = trumpSlotFor(pos) ? (
+      <div className="seat-trump">
+        {renderCard(gameState.trumpCard, true)}
+        <span className="seat-trump-label">TRUMP</span>
+      </div>
+    ) : null;
+    if (v) {
+      return (
+        <div className="seat-block">
+          <div className={`seat-plate vacated${isTurnSeat ? ' turn' : ''}`} title={`${v.playerName} — seat vacated`}>
+            <span className="seat-name">{v.playerName}</span>
+            <span className="seat-meta">Vacated · {(v.hand || []).length}</span>
+          </div>
+          {renderVacated(pos, true)}
+          {trumpSlot}
         </div>
+      );
+    }
+    const role = pos === myPos ? 'You' : (roleLabel || (isDeclSeat ? 'Declarer' : (p?.team || 'Open')));
+    let count = faceDownCount(p);
+    if (pos === myPos && isDeclSeat && gameState.trumpCard && !gameState.trumpRevealed) count += 1;
+    return (
+      <div className="seat-block">
+        <div
+          className={`seat-plate${isTurnSeat ? ' turn' : ''}${isDeclSeat ? ' declarer' : ''}${p ? '' : ' open'}`}
+          title={`${p?.name || POSITION_NAMES[pos]} — ${count} cards`}>
+          <span className="seat-name">{p?.name || POSITION_NAMES[pos]}{p?.isBot ? <span className="bot-tag">BOT</span> : null}{p && p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
+          <span className="seat-meta">{role} · {count}</span>
+        </div>
+        {trumpSlot}
       </div>
     );
   }
@@ -578,7 +610,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                   <span className="ac-name">{b.name}<span className="bot-tag">BOT</span>{b.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
                   <span className="ac-team">{b.position ? `@${b.position}` : 'Unseated'}</span>
                   <div className="ac-actions">
-                    {!b.position && ['N','S','E','W'].filter(seatOpenFor).map(pos => (
+                    {!b.position && !tableFull && ['N','S','E','W'].filter(seatOpenFor).map(pos => (
                       <button key={pos} className="ac-btn green pos"
                         onClick={() => {
                           if (botSpectators.find(s=>s.id===b.id)) sendOnce('promote_to_player', { spectatorId: b.id, position: pos });
@@ -903,6 +935,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
             )}
           </div>
         )}
+        {myPos ? renderSeat(posOrder[2]) : renderSeat('S')}
         </div>
 
         {/* East */}
@@ -932,20 +965,18 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                 ) : isSpectator ? (
                   <div className="spectator-label">Observing</div>
                 ) : (
-                  <div className="my-hand fan">
-                    {sortHand(me?.hand).map((c, i, arr) => {
-                      const canPlay = isMyTurn && isPlaying && !isBidding && !isTrump;
-                      const t = arr.length > 1 ? i / (arr.length - 1) : 0.5;
-                      return (
-                        <button key={i} className="hand-card fan-card"
-                          disabled={!canPlay}
-                          style={{ transform: `rotate(${(t - 0.5) * 10}deg) translateY(${Math.abs(t - 0.5) * 14}px)` }}
-                          onClick={() => canPlay && sendOnce('play', { card: { suit: c.suit, rank: c.rank } })}>
-                          {renderCard(c)}
-                        </button>
-                      );
-                    })}
-                  </div>
+              <div className="my-hand hand-row">
+                {sortHand(me?.hand).map((c, i) => {
+                  const canPlay = isMyTurn && isPlaying && !isBidding && !isTrump;
+                  return (
+                    <button key={i} className="hand-card"
+                      disabled={!canPlay}
+                      onClick={() => canPlay && sendOnce('play', { card: { suit: c.suit, rank: c.rank } })}>
+                      {renderCard(c)}
+                    </button>
+                  );
+                })}
+              </div>
                 )
               )
             )}
