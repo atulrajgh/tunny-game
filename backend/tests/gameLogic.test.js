@@ -318,13 +318,15 @@ describe('assign seats', () => {
     assert.equal(g.players.filter(p => !p.isBot).length, 1);
   });
 
-  it('never auto-adds bots: only empty seats get filled by existing bots, leftovers stay open', () => {
+  it('fills open seats with the always-available bots (never creates new ones)', () => {
     const { g } = waitingRoom();
     g.addPlayer('Al');
+    const before = g.countBots();
     const res = g.assignSeats(g.admin.id);
     assert.ok(res);
-    assert.equal(g.players.length, 1, 'only Al seated, no bots created');
-    assert.equal(Object.keys(g.positions).length, 1);
+    assert.equal(g.players.filter(p=>!p.isBot).length, 1, 'only Al seated among humans');
+    assert.equal(Object.keys(g.positions).length, 4, 'open seats go to existing bots');
+    assert.equal(g.countBots(), before, 'no bots created');
     assert.equal(g.admin.position, null, 'human exists, so host stays unseated');
   });
 
@@ -918,7 +920,7 @@ describe('reset', () => {
     assert.equal(g.winner, null);
     assert.equal(g.declarer, null);
     assert.equal(g.players.length, 0);
-    assert.equal(g.spectators.length, 0);
+    assert.equal(g.spectators.filter(s=>!s.isBot).length, 0);
     assert.deepEqual(g.vacatedHands, {}, 'vacated seats are cleared');
   });
 
@@ -932,7 +934,7 @@ describe('reset', () => {
     assert.equal(g.admin, null, 'admin is not preserved');
     assert.equal(g.adminId, null);
     assert.equal(g.players.length, 0);
-    assert.equal(g.spectators.length, 0);
+    assert.equal(g.spectators.filter(s=>!s.isBot).length, 0);
   });
 });
 
@@ -1022,7 +1024,7 @@ describe('admin actions', () => {
     const p = g.demoteToSpectator(g.admin.id, ids.South.id);
     assert.ok(p);
     assert.equal(g.players.length, 3);
-    assert.equal(g.spectators.length, 1);
+    assert.equal(g.spectators.filter(s=>!s.isBot).length, 1);
     assert.equal(p.position, null);
     assert.equal(g.positions.S, undefined);
   });
@@ -1196,6 +1198,8 @@ function botAt(g, pos) {
 // Host admin + a given mix of seated humans and bots (keyed by position).
 function makeBotGame({ humanSeats = [], botSeats = [], spectatorBots = 0 }) {
   const g = new Game('bot-test');
+  g.spectators = g.spectators.filter(s => !s.isBot);
+  g.players = g.players.filter(p => !p.isBot);
   g.addPlayer('Host', true);
   const humans = {};
   const placed = {};
@@ -1206,11 +1210,16 @@ function makeBotGame({ humanSeats = [], botSeats = [], spectatorBots = 0 }) {
     placed[pos] = h;
   });
   botSeats.forEach(pos => {
-    const b = g.addBot();
-    g.promoteSpectator(g.admin.id, b.id, pos);
-    placed[pos] = b;
+    g.ensureBots();
+    const b = g.spectators.find(s => s.isBot && !s.position);
+    if (b) {
+      g.promoteSpectator(g.admin.id, b.id, pos);
+      placed[pos] = b;
+    }
   });
-  for (let i = 0; i < spectatorBots; i++) g.addBot();
+  for (let i = 0; i < spectatorBots; i++) {
+    g.ensureBots();
+  }
   return { g, humans, placed };
 }
 
@@ -1218,13 +1227,14 @@ describe('bots & host (computer players)', () => {
   it('addBot creates bot spectators from the name pool, capped at 3', () => {
     const g = new Game();
     g.addPlayer('Admin', true);
-    const b1 = g.addBot(); const b2 = g.addBot(); const b3 = g.addBot();
-    assert.ok(b1 && b1.isBot); assert.ok(b2 && b2.isBot); assert.ok(b3 && b3.isBot);
-    const names = [b1.name, b2.name, b3.name];
+    const bots = g.spectators.filter(s => s.isBot);
+    assert.equal(bots.length, 3, 'three bots are provisioned up front');
+    const names = bots.map(b => b.name);
     for (const n of names) assert.ok(BOT_NAMES.includes(n), n + ' comes from the pool');
     assert.equal(new Set(names).size, 3, 'names are unique');
     assert.equal(g.countBots(), 3);
-    assert.equal(g.addBot(), null, 'no more than 3 bots total');
+    assert.equal(g.addBot(), bots[0], 'addBot reuses an existing unseated bot');
+    assert.equal(g.countBots(), 3, 'no more than 3 bots total');
   });
 
   it('bots are exempt from the 25-viewer cap', () => {
@@ -1241,18 +1251,22 @@ describe('bots & host (computer players)', () => {
   it('bot names block human reuse', () => {
     const g = new Game();
     g.addPlayer('Admin', true);
+    g.spectators = g.spectators.filter(s=>!s.isBot);
+    g.players = g.players.filter(p=>!p.isBot);
     const bot = g.addBot();
     assert.equal(g.addPlayer(bot.name), null);
     assert.equal(g.addSpectator(bot.name.toLowerCase()), null, 'case-insensitive reuse blocked');
     g.removeBot(bot.id);
-    assert.ok(g.addPlayer(bot.name), 'the name frees up when the bot is removed');
+    // With bots always available, name stays reserved by the pool
+    assert.equal(g.addPlayer(bot.name), null, 'the name stays reserved while bots remain available');
   });
 
   it('countBots counts seated and unseated bots together', () => {
     const { g } = makeBotGame({ humanSeats: ['N', 'S'], botSeats: ['E'], spectatorBots: 1 });
-    assert.equal(g.countBots(), 2);
+    g.ensureBots();
+    assert.equal(g.countBots(), 3);
     assert.equal(g.players.filter(p => p.isBot).length, 1);
-    assert.equal(g.spectators.filter(s => s.isBot).length, 1);
+    assert.equal(g.spectators.filter(s => s.isBot).length, 2);
   });
 
   it('promoteToAdmin never promotes a bot (falls through to humans)', () => {
@@ -1388,10 +1402,11 @@ describe('bots & host (computer players)', () => {
 
   it('removeBot removes an unseated bot', () => {
     const { g } = makeBotGame({ humanSeats: ['N', 'S'], botSeats: [], spectatorBots: 1 });
-    const b = g.spectators.find(s => s.isBot);
+    g.ensureBots();
+    const b = g.spectators.find(s => s.isBot && !s.position);
     const removed = g.removeBot(b.id);
     assert.equal(removed.id, b.id);
-    assert.equal(g.countBots(), 0);
+    assert.equal(g.countBots(), 3);
   });
 
   it('countViewers excludes bots and dedupes a seated host', () => {
@@ -1404,6 +1419,7 @@ describe('bots & host (computer players)', () => {
 
   it('bots persist through toJSON/fromJSON', () => {
     const { g } = makeBotGame({ humanSeats: ['N'], botSeats: ['E'], spectatorBots: 1 });
+    g.ensureBots();
     g.adminSit('S'); // seated host must round-trip too
     const rt = Game.fromJSON(g.toJSON());
     assert.equal(rt.admin.isBot, false);
@@ -1411,7 +1427,7 @@ describe('bots & host (computer players)', () => {
     assert.ok(botAt(rt, 'E') && botAt(rt, 'E').isBot, 'seated bot persisted');
     assert.ok(rt.spectators.some(s => s.isBot), 'unseated bot persisted');
     assert.equal(rt.players.filter(p => p.isBot).length, 1);
-    assert.equal(rt.countBots(), 2);
+    assert.equal(rt.countBots(), 3);
   });
 });
 

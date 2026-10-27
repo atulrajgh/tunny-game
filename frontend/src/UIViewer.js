@@ -318,19 +318,11 @@ export default function UIViewer() {
             <span className="your-turn-msg">Your turn!</span>
           </div>
         </Row>
-        <Row title="Message bar (waiting - short, no Assign Seats)">
-          <div className="message-bar">
-            <span className="flow-msg">
-              <button className="action-btn">Add Bots</button>
-              <span className="flow-hint"> (seated players only)</span>
-            </span>
-          </div>
-        </Row>
-        <Row title="Message bar (waiting - 3+ waiting for a seat)">
+        <Row title="Message bar (waiting - seats open, admin)">
           <div className="message-bar">
             <span className="flow-msg">
               <button className="action-btn">Assign Seats</button>
-              <button className="action-btn">Add Bots</button>
+              <span className="flow-hint"> — or seat players/bots from the People list</span>
             </span>
           </div>
         </Row>
@@ -339,8 +331,7 @@ export default function UIViewer() {
             <span className="flow-msg">
               <button className="action-btn" disabled>Assign Seats</button>
               <span className="flow-hint"> (admin only)</span>
-              <button className="action-btn" disabled>Add Bots</button>
-              <span className="flow-hint"> (seated players only)</span>
+              <span className="flow-hint"> — or seat players/bots from the People list</span>
             </span>
           </div>
         </Row>
@@ -455,14 +446,18 @@ export default function UIViewer() {
         <Row title="Bot controls">
           <div className="ac-player-row" style={{ maxWidth: 420 }}>
             <span className="ac-name">Alex<span className="bot-tag">BOT</span></span>
+            <span className="ac-team">Unseated</span>
             <span className="ac-actions">
               <button className="ac-btn green pos">N</button>
               <button className="ac-btn green pos">S</button>
-              <button className="ac-btn red pos">✕</button>
             </span>
           </div>
           <div className="ac-player-row" style={{ maxWidth: 420 }}>
-            <button className="ac-btn green add-bot">Add Bot</button>
+            <span className="ac-name">Abbot<span className="bot-tag">BOT</span></span>
+            <span className="ac-team">@E</span>
+            <span className="ac-actions">
+              <button className="ac-btn red pos">✕</button>
+            </span>
           </div>
         </Row>
       </Section>
@@ -475,23 +470,43 @@ export default function UIViewer() {
           </div>
           <div className="ac-grid">
             <div className="ac-panel">
-              <h3>Table</h3>
-              <div className="ac-player-row">
-                <span><span className="ac-name">Bob</span> <span className="ac-team">N (NS)</span></span>
-                <span className="ac-actions"><button className="ac-btn red">Kick</button></span>
+              <h3>People</h3>
+              <div className="ac-state" style={{ marginBottom: 8 }}>
+                <div className="ac-state-item"><span className="ac-label">Table</span><span className="ac-value small">N:Bob S:— E:Abbot W:—</span></div>
               </div>
-            </div>
-            <div className="ac-panel">
-              <h3>Gallery</h3>
+              <div style={{ fontSize: 11, color: '#a0d0a0', marginBottom: 6 }}>Host</div>
+              <div className="ac-player-row">
+                <span className="ac-name">You <span className="host-tag">HOST</span></span>
+                <span className="ac-team">—</span>
+                <div className="ac-actions">
+                  <button className="ac-btn green pos">S</button>
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: '#a0d0a0', margin: '10px 0 6px 0' }}>Bots</div>
+              <div className="ac-player-row">
+                <span className="ac-name">Abbot<span className="bot-tag">BOT</span></span>
+                <span className="ac-team">@E</span>
+                <div className="ac-actions"><button className="ac-btn red pos">✕</button></div>
+              </div>
+              <div className="ac-player-row">
+                <span className="ac-name">Bianca<span className="bot-tag">BOT</span></span>
+                <span className="ac-team">Unseated</span>
+                <div className="ac-actions">
+                  <button className="ac-btn green pos">N</button>
+                  <button className="ac-btn green pos">S</button>
+                  <button className="ac-btn green pos">W</button>
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: '#a0d0a0', margin: '10px 0 6px 0' }}>Observers</div>
               <div className="ac-player-row">
                 <span className="ac-name">Alice</span>
-                <span className="ac-actions">
-                  <button className="ac-btn pos">N</button>
-                  <button className="ac-btn pos">S</button>
-                  <button className="ac-btn pos">E</button>
-                  <button className="ac-btn pos">W</button>
-                  <button className="ac-btn red">Kick</button>
-                </span>
+                <div className="ac-actions">
+                  <button className="ac-btn green pos">N</button>
+                  <button className="ac-btn green pos">S</button>
+                  <button className="ac-btn green pos">E</button>
+                  <button className="ac-btn green pos">W</button>
+                  <button className="ac-btn red pos">✕</button>
+                </div>
               </div>
             </div>
             <div className="ac-panel">

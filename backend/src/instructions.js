@@ -40,7 +40,7 @@ td{font-size:13px}
 
 <h2>Game Flow</h2>
 <h3>1. Waiting Room</h3>
-<p>The first player to join becomes the <strong>admin</strong>; the next players fill the N/S/E/W seats, and anyone after that joins as a <strong>spectator</strong>. While seats are open the message bar shows <strong>Add Bots</strong> (up to 3 computer players) and, once at least <strong>3 players/bots are waiting for a seat</strong>, <strong>Assign Seats</strong> — an admin-only one-click button that seats them all at random open positions (the host sits too when no other human is waiting). The <strong>Start Game</strong> button appears only when <strong>all 4 seats are filled</strong>.</p>
+<p>The first player to join becomes the <strong>admin</strong>; the next players fill the N/S/E/W seats, and anyone after that joins as a <strong>spectator</strong>. Three computer players (<strong>bots</strong>) are always available on the bench, so <strong>nobody is seated automatically</strong> — open seats stay empty until the admin seats someone. The admin seats a person or bot by clicking a position (<strong>N/S/E/W</strong>) next to their name in the <strong>People</strong> list of the admin panel, or uses the admin-only <strong>Assign Seats</strong> button, which seats waiting humans first and then bots at random open positions (the host sits too when no other human is waiting). The <strong>Start Game</strong> button appears only when <strong>all 4 seats are filled</strong>.</p>
 
 <h3>2. Cut</h3>
 <p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>, and the player to their left bids first. The dealer rotates clockwise to the next seat at the start of each new hand (the admin can also move the dealer manually).</p>
@@ -63,7 +63,7 @@ td{font-size:13px}
 <p>Until the trump is revealed, trump-suit cards count as ordinary cards and cannot beat the led suit; once revealed, the highest trump in a trick wins.</p>
 
 <h3>Playing with Bots</h3>
-<p>Short-handed? The admin can add up to <strong>3 computer players (Bots)</strong> from the <strong>Bots</strong> section of the admin panel. Bots fill real seats and play automatically — they never time out. Press <strong>✕</strong> next to an unseated bot to remove it. A human (or you yourself) can take over a bot's seat at any time, even on a full table.</p>
+<p><strong>Three computer players (Bots)</strong> are always sitting on the bench — there is no "add bots" step. The admin seats a bot by clicking a position (<strong>N/S/E/W</strong>) next to its name in the <strong>People</strong> list of the admin panel. Bots fill real seats and play automatically — they never time out. A seated bot can be sent back to the bench with <strong>✕</strong> (its hand is saved for whoever takes the seat), and a human can take over a bot's seat at any time, even on a full table.</p>
 <p>The admin can also sit <strong>as a player</strong> on the table (<strong>Sit as Player</strong>) while keeping full admin powers, and step back off with <strong>Leave Seat</strong>.</p>
 
 <h3>6. Scoring</h3>
@@ -93,16 +93,15 @@ td{font-size:13px}
 <h2>Admin Controls</h2>
 <p>The collapsible admin panel below the table includes:</p>
 <ul>
-<li><strong>Host</strong> — sit yourself as a player (N/S/E/W), or leave your seat</li>
-<li><strong>Table</strong> — seated players with team badges and kick</li>
-<li><strong>Gallery</strong> — unseated players, with position assign and kick</li>
-<li><strong>Spectators</strong> — promote a spectator to a seat</li>
-<li><strong>Bots</strong> — add up to 3 computer players, or remove an unseated bot</li>
+<li><strong>People</strong> — one list with the <strong>Host</strong> first, then the three <strong>Bots</strong>, then any <strong>Observers</strong>. Each row has N/S/E/W buttons to seat that person/bot at an open seat, and ✕ to unseat a bot or move a player out of the seats</li>
+<li><strong>Table</strong> — a compact N/S/E/W occupancy line at the top of the People list</li>
 <li><strong>Game State</strong> — hand/trick, state, declarer, bid, trump</li>
 <li><strong>Tricks &amp; Scores</strong> — live trick-by-trick table with running HCP totals</li>
+<li><strong>Hand Log</strong> — debug trace of the latest hand</li>
+<li><strong>Scores</strong> — running scores, HCP and tricks this hand</li>
 <li><strong>Controls</strong> — Move Dealer, Reset Scores, Reset Game, Take Over, Confirm &amp; Next Hand</li>
 </ul>
-<p>During waiting/cut/redeal, the <strong>Start Game</strong>, <strong>Determine Dealer</strong>, and <strong>Redeal</strong> buttons appear in the message bar above your hand and can be used by any seated player or the host — <strong>Start Game</strong> shows only once all 4 seats are filled. The <strong>Assign Seats</strong> button (admin only, during waiting, once at least 3 players await a seat) seats unseated humans and then existing bots at random open positions — with no humans waiting, the host sits too.</p>
+<p>During waiting/cut/redeal, the <strong>Start Game</strong>, <strong>Determine Dealer</strong>, and <strong>Redeal</strong> buttons appear in the message bar above your hand and can be used by any seated player or the host — <strong>Start Game</strong> shows only once all 4 seats are filled. While seats are open the bar also shows the admin-only <strong>Assign Seats</strong> button, which seats waiting humans and then existing bots at random open positions — with no humans waiting, the host sits too.</p>
 
 <div class="back"><a href="/">← Back to Game</a></div>
 <div class="version">Version ${version}</div>

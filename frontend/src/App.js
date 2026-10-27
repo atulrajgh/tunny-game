@@ -292,20 +292,14 @@ function App() {
   const timedOutDeclarer = isAdmin && timedOutHand && gameState.declarer && gameState.declarer.id === timedOutHand.playerId;
 const seatedCount = Object.keys(gameState.positions || {}).length;
   const humanSeated = (gameState.players || []).filter(p => !p.isBot).length;
-  const botCount = (gameState.players || []).filter(p => p.isBot).length + (gameState.spectators || []).filter(s => s.isBot).length;
   const tableFull = seatedCount === 4;
   // Anyone SITTING at a seat (plus the host admin) can advance waiting/cut/redeal.
   const canStartFlow = !!me && !me.isBot && (me.position || me.isAdmin);
-  // Assign Seats is admin-only: seats unseated humans, then existing bots; the admin
-  // fills a seat only when no humans are in the gallery.
+  // Assign Seats is admin-only: it seats unseated humans first, then the always-available
+  // bots; the admin fills a seat only when no humans are in the gallery.
   const unseatedHumans = (gameState.players || []).filter(p => !p.isBot && !p.position).length;
   const unseatedBots = (gameState.spectators || []).filter(s => s.isBot && !s.position).length;
   const adminUnseated = !!me && me.isAdmin && !me.position;
-  // The gallery pool = unseated players + unseated spectator bots awaiting a seat.
-  // Assign Seats only renders once the pool has at least 3 candidates so a single
-  // click meaningfully fills the table.
-  const galleryPool = unseatedHumans + unseatedBots;
-  const showAssignSeats = galleryPool >= 3;
   const assignSeatsEnabled = !!me && me.isAdmin && seatedCount < 4 &&
     (unseatedHumans > 0 || unseatedBots > 0 || adminUnseated);
 
@@ -313,7 +307,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
   const currentActionText = [
     gameState.state === 'waiting' && (tableFull
       ? (isAdmin ? 'Waiting — the table is full; start the game' : `${seatedCount}/4 seated — any seated player can start`)
-      : `Only ${seatedCount}/4 seated — ${showAssignSeats ? 'add bots or assign seats' : 'add bots to fill the table'}`),
+      : `Only ${seatedCount}/4 seated — assign seats to fill the table`),
     gameState.state === 'cut' && (isAdmin ? 'Waiting — determine the dealer' : 'Cut complete — any seated player can determine the dealer'),
     isBidding && `${curPlayer?.name || 'Someone'} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`,
     isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`,
@@ -513,6 +507,15 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
       return !!bp && bp.isBot;
     };
     const seatOpenFor = (pos) => !gameState.positions?.[pos] || isBotAt(pos);
+    const seatedBots = players.filter(p => p.isBot);
+    const allBots = [
+      ...seatedBots,
+      ...botSpectators
+    ];
+    const observers = [
+      ...unseated.filter(p => !p.isBot),
+      ...humanSpectators
+    ];
     controlsMenu = (
       <>
         <button className="ac-menu-btn" onClick={() => setCtrlMenuOpen(o => !o)}>
@@ -532,9 +535,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
               <button className="ac-btn green" onClick={() => { setCtrlMenuOpen(false); sendOnce('confirm_hand'); }}>Confirm &amp; Next Hand</button>
             )}
             <div className="ac-menu-sep" />
-            <button className="ac-btn green" disabled={botCount >= 3} onClick={() => { setCtrlMenuOpen(false); sendOnce('add_bot'); }}>
-              Add Bot{botCount >= 3 ? ' (full)' : ''}
-            </button>
             <button className="ac-btn gray" onClick={() => setShowHandLog(s => !s)}>
               {showHandLog ? 'Hide Hand Log' : 'Hand Log (debug)'}
             </button>
@@ -545,9 +545,13 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     adminPanel = (
       <div className="admin-panel">
         <div className="ac-grid">
-          {/* Left: Host + Gallery + Table Seats */}
+          {/* Left: People */}
           <div className="ac-panel">
-            <h3>Host</h3>
+            <h3>People</h3>
+            <div className="ac-state" style={{ marginBottom: 8 }}>
+              <div className="ac-state-item"><span className="ac-label">Table</span><span className="ac-value small">N:{(players.find(p=>p.position==='N')?.name||'—').slice(0,6)} S:{(players.find(p=>p.position==='S')?.name||'—').slice(0,6)} E:{(players.find(p=>p.position==='E')?.name||'—').slice(0,6)} W:{(players.find(p=>p.position==='W')?.name||'—').slice(0,6)}</span></div>
+            </div>
+            <div style={{ fontSize: 11, color: '#a0d0a0', marginBottom: 6 }}>Host</div>
             <div className="ac-player-row">
               <span className="ac-name">You <span className="host-tag">HOST</span></span>
               <span className="ac-team">{hostSeated ? (gameState.me?.team || '—') : '—'}</span>
@@ -564,90 +568,55 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                 )}
               </div>
             </div>
-            <h3 style={{ marginTop: 12 }}>Gallery</h3>
-            <h4 style={{ margin: '8px 0 4px 0', fontSize: 12, color: '#a0d0a0' }}>Seated ({seatedCount}/4)</h4>
-            {['N','S','E','W'].map(pos => {
-              const pid = gameState.positions?.[pos];
-              const p = players.find(x => x.id === pid);
-              return (
-                <div key={pos} className="ac-player-row">
-                  <span style={{ fontWeight: 700, width: 20 }}>{pos}</span>
-                  {p ? (
-                    <>
-                      <span className="ac-name">{p.name}{p.isBot ? <span className="bot-tag">BOT</span> : null}{p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
-                      <span className="ac-team">{p.team || '—'}</span>
-                      <div className="ac-actions">
-                        {isAdmin && p.id !== playerId && (
-                          <button className="ac-btn red" onClick={() => sendOnce('kick_player', { targetId: p.id })}>✕</button>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <span className="ac-empty">— empty —</span>
-                  )}
-                </div>
-              );
-            })}
-            <h4 style={{ margin: '8px 0 4px 0', fontSize: 12, color: '#a0d0a0' }}>Waiting ({unseated.length + botSpectators.length})</h4>
-            {unseated.length === 0 && botSpectators.length === 0 ? (
-              <div className="ac-empty">No waiting players</div>
+            <div style={{ fontSize: 11, color: '#a0d0a0', margin: '10px 0 6px 0' }}>Bots</div>
+            {allBots.length === 0 ? (
+              <div className="ac-empty">No bots</div>
             ) : (
-              <>
-                {unseated.map(p => (
-                  <div key={p.id} className="ac-player-row">
-                    <span className="ac-name">{p.name}{p.isBot ? <span className="bot-tag">BOT</span> : null}</span>
-                    <div className="ac-actions">
-                      {['N','S','E','W'].filter(seatOpenFor).map(pos => (
-                        <button key={pos} className="ac-btn green pos"
-                          onClick={() => sendOnce('assign_position', { playerId: p.id, position: pos })}>
-                          {pos}
-                        </button>
-                      ))}
-                      {p.id !== playerId && (
-                        <button className="ac-btn red pos" onClick={() => sendOnce('kick_player', { targetId: p.id })}>✕</button>
-                      )}
-                    </div>
+              allBots.map(b => (
+                <div key={b.id} className="ac-player-row">
+                  <span className="ac-name">{b.name}<span className="bot-tag">BOT</span>{b.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
+                  <span className="ac-team">{b.position ? `@${b.position}` : 'Unseated'}</span>
+                  <div className="ac-actions">
+                    {!b.position && ['N','S','E','W'].filter(seatOpenFor).map(pos => (
+                      <button key={pos} className="ac-btn green pos"
+                        onClick={() => {
+                          if (botSpectators.find(s=>s.id===b.id)) sendOnce('promote_to_player', { spectatorId: b.id, position: pos });
+                          else sendOnce('assign_position', { playerId: b.id, position: pos });
+                        }}>
+                        {pos}
+                      </button>
+                    ))}
+                    {b.position && isAdmin && b.id !== playerId ? (
+                      <button className="ac-btn red pos" title="Return to the bot pool"
+                        onClick={() => sendOnce('kick_player', { targetId: b.id })}>✕</button>
+                    ) : null}
                   </div>
-                ))}
-                {botSpectators.map(s => (
-                  <div key={s.id} className="ac-player-row">
-                    <span className="ac-name">{s.name}<span className="bot-tag">BOT</span></span>
-                    <div className="ac-actions">
-                      {['N','S','E','W'].filter(pos => !gameState.positions?.[pos]).map(pos => (
-                        <button key={pos} className="ac-btn green pos"
-                          onClick={() => sendOnce('promote_to_player', { spectatorId: s.id, position: pos })}>
-                          {pos}
-                        </button>
-                      ))}
-                      <button className="ac-btn red pos" onClick={() => sendOnce('remove_bot', { botId: s.id })}>✕</button>
-                    </div>
-                  </div>
-                ))}
-              </>
+                </div>
+              ))
             )}
-            {humanSpectators.length > 0 && (
-              <>
-                <h3 style={{ marginTop: 12 }}>Spectators</h3>
-                {humanSpectators.map(s => (
-                  <div key={s.id} className="ac-player-row">
-                    <span className="ac-name">{s.name}</span>
-                    <div className="ac-actions">
-                      {['N','S','E','W'].filter(seatOpenFor).map(pos => (
-                        <button key={pos} className="ac-btn green pos"
-                          onClick={() => sendOnce('promote_to_player', { spectatorId: s.id, position: pos })}>
-                          {pos}
-                        </button>
-                      ))}
-                      {players.length < 4 && (
-                        <button className="ac-btn gray pos" title="Move to gallery"
-                          onClick={() => sendOnce('promote_to_player', { spectatorId: s.id })}>
-                          →
-                        </button>
-                      )}
-                    </div>
+            <div style={{ fontSize: 11, color: '#a0d0a0', margin: '10px 0 6px 0' }}>Observers</div>
+            {observers.length === 0 ? (
+              <div className="ac-empty">None</div>
+            ) : (
+              observers.map(s => (
+                <div key={s.id} className="ac-player-row">
+                  <span className="ac-name">{s.name}{s.isBot ? <span className="bot-tag">BOT</span> : null}</span>
+                  <div className="ac-actions">
+                    {['N','S','E','W'].filter(seatOpenFor).map(pos => (
+                      <button key={pos} className="ac-btn green pos"
+                        onClick={() => {
+                          if (players.some(p => p.id === s.id)) sendOnce('assign_position', { playerId: s.id, position: pos });
+                          else sendOnce('promote_to_player', { spectatorId: s.id, position: pos });
+                        }}>
+                        {pos}
+                      </button>
+                    ))}
+                    {isAdmin && s.id !== playerId && players.some(p => p.id === s.id) && (
+                      <button className="ac-btn red pos" onClick={() => sendOnce('kick_player', { targetId: s.id })}>✕</button>
+                    )}
                   </div>
-                ))}
-              </>
+                </div>
+              ))
             )}
           </div>
 
@@ -823,22 +792,15 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
       )}
       {gameState.state === 'waiting' && (
         <span className="flow-msg">
-          {showAssignSeats && (
+          {!tableFull && (
             <>
               <button className="action-btn" disabled={!assignSeatsEnabled}
                 onClick={() => sendOnce('assign_seats')}>Assign Seats</button>
               {!isAdmin && <span className="flow-hint"> (admin only)</span>}
+              <span className="flow-hint"> — or seat players/bots from the People list</span>
             </>
           )}
-          {!tableFull ? (
-            botCount < 3 && (
-              <>
-                <button className="action-btn" disabled={!canStartFlow}
-                  onClick={() => sendOnce('add_bot')}>Add Bots</button>
-                {!canStartFlow && <span className="flow-hint"> (seated players only)</span>}
-              </>
-            )
-          ) : (
+          {tableFull && (
             <>
               <button className="action-btn" disabled={!canStartFlow || humanSeated < 1}
                 onClick={() => sendOnce('start_game')}>Start Game</button>

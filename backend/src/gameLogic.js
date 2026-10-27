@@ -86,6 +86,7 @@ class Game {
     this.lastHandLog = null;
     this._lastIntegritySignature = null;
     this._handDealtComplete = false;
+    this.ensureBots();
   }
 
   setupDeck() {
@@ -258,25 +259,40 @@ class Game {
     return this.players.filter(p => p.isBot).length + this.spectators.filter(s => s.isBot).length;
   }
 
-  addBot() {
-    if (this.countBots() >= MAX_BOTS) return null;
-    // Pick any unused pool name at random — never the same as a live/waiting name.
+  ensureBots() {
+    if (this.countBots() >= MAX_BOTS) return;
+    const existing = new Set();
+    for (const p of this.players) if (p.isBot) existing.add(p.name);
+    for (const s of this.spectators) if (s.isBot) existing.add(s.name);
     const pool = BOT_NAMES.slice().sort(() => Math.random() - 0.5);
-    const name = pool.find(n => !this.getViewerName(n));
-    if (!name) return null;
-    const bot = new Player(uuidv4(), name);
-    bot.isBot = true;
-    this.spectators.push(bot);
+    for (const name of pool) {
+      if (this.countBots() >= MAX_BOTS) break;
+      if (existing.has(name)) continue;
+      if (this.getViewerName(name)) continue;
+      const bot = new Player(uuidv4(), name);
+      bot.isBot = true;
+      this.spectators.push(bot);
+      existing.add(name);
+    }
     this.lastActivity = Date.now();
-    return bot;
   }
 
-  // Removes a bot anywhere (unseated spectator or seated player). Seated bots are
-  // vacated first so their seat's saved hand is preserved for the next human.
+  addBot() {
+    this.ensureBots();
+    // With always-available bots, adding is a no-op; return the first unseated bot if any.
+    const unseated = this.spectators.find(s => s.isBot && !s.position);
+    if (unseated) return unseated;
+    return null;
+  }
+
+  // Bots are always available. Unseat a seated bot back to the pool; if unseated, do nothing destructive.
   removeBot(botId) {
     const target = this.getPlayer(botId) || this.spectators.find(s => s.id === botId);
     if (!target || !target.isBot) return null;
-    this.removePlayer(botId);
+    if (target.position) {
+      this._unseatBot(target);
+      return target;
+    }
     return target;
   }
 
@@ -434,6 +450,7 @@ class Game {
     const admin = this.getPlayer(adminId);
     if (!admin || !admin.isAdmin) return null;
     if (this.state !== 'waiting') return null;
+    this.ensureBots();
     const open = ['N', 'S', 'E', 'W'].filter((pos) => !this.positions[pos]);
     if (open.length === 0) return null;
     // Fisher–Yates shuffle so seats are assigned randomly.
@@ -1433,6 +1450,10 @@ if (viewer) {
 
   static fromJSON(data) {
     const g = new Game(data.id);
+    // The constructor provisions the always-available bot pool; drop it so the saved
+    // bots are restored as-is (no duplicates). ensureBots() tops up old saves at the end.
+    g.players = [];
+    g.spectators = [];
     g.roomId = data.roomId; g.state = data.state;
     g.scores = data.scores; g.winner = data.winner;
     g.teamTricks = data.teamTricks || { 'N-S': 0, 'E-W': 0 };
@@ -1470,6 +1491,7 @@ if (viewer) {
       // A seated host is part of the player pool at runtime — mirror that on restore.
       if (a.position) g.players.push(a);
     }
+    g.ensureBots();
     return g;
   }
 
@@ -1492,6 +1514,12 @@ if (viewer) {
     this.vacatedHands = {};
     this.redealCount = 0;
     this.redealPending = null;
+    this.revokedTokens = new Set();
+    this.lastHandLog = null;
+    this._lastIntegritySignature = null;
+    this._handDealtComplete = false;
+    this.trumpCardPlayed = false;
+    this.ensureBots();
   }
 }
 

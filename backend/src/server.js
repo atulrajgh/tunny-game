@@ -388,7 +388,7 @@ io.on('connection', (socket) => {
 
   socket.on('create_room', ({ playerName, playerId: token }) => {
     if (!playerName) return error('Name required');
-    if (!GLOBAL_TABLE) { GLOBAL_TABLE = new Game(); GLOBAL_TABLE.roomId = GLOBAL_TABLE.id; ROOMS[GLOBAL_TABLE.id] = GLOBAL_TABLE; }
+    if (!GLOBAL_TABLE) { GLOBAL_TABLE = new Game(); GLOBAL_TABLE.roomId = GLOBAL_TABLE.id; GLOBAL_TABLE.ensureBots(); ROOMS[GLOBAL_TABLE.id] = GLOBAL_TABLE; } else { GLOBAL_TABLE.ensureBots(); }
     const clean = String(playerName || '').trim();
     // The game is over and someone hits Join on the game-over screen: reset all
     // parameters (including the admin — no admin is preserved) and send everyone
@@ -459,9 +459,12 @@ io.on('connection', (socket) => {
   socket.on('add_bot', () => {
     const g = game(); if (!g) return;
     const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
+    g.ensureBots();
     const bot = g.addBot();
-    if (!bot) return error('Cannot add bot (max 3)');
-    io.to(g.id).emit('spectator_joined', { playerId: bot.id, playerName: bot.name });
+    if (!bot) return error('Bots are already available');
+    if (!g.spectators.find(s => s.id === bot.id)) {
+      io.to(g.id).emit('spectator_joined', { playerId: bot.id, playerName: bot.name });
+    }
     io.emit('room_list', getPublicList());
     updateAll();
   });
@@ -471,7 +474,11 @@ io.on('connection', (socket) => {
     const admin = me(); if (!admin || !admin.isAdmin) return error('Admin only');
     const bot = g.removeBot(botId);
     if (!bot) return error('Bot not found');
-    io.to(g.id).emit('spectator_left', { playerId: botId, playerName: bot.name });
+    if (bot.position == null) {
+      // Already unseated - keep in pool, no need to broadcast left
+    } else {
+      io.to(g.id).emit('spectator_left', { playerId: botId, playerName: bot.name });
+    }
     io.emit('room_list', getPublicList());
     updateAll();
     scheduleBots(game());
