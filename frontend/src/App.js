@@ -351,12 +351,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
   function playerAtPos(pos) { return players.find(p => p.position === pos); }
 
-  function faceDownCount(p) {
-    if (!p) return 0;
-    if (p.hand) return p.hand.length;
-    return p.cardCount || 0;
-  }
-
   function renderCard(c, small) {
     if (!c) return null;
     const isRed = c.suit === '♥' || c.suit === '♦';
@@ -375,10 +369,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
       (SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit]) || (RANK_ORDER[a.rank] - RANK_ORDER[b.rank]));
   }
 
-  function sideFor(pos) {
-    const idx = posOrder.indexOf(pos);
-    return ['n', 'e', 's', 'w'][idx] || 's';
-  }
+
 
   function miniCard(c, isWinner) {
     if (!c) return null;
@@ -476,52 +467,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     );
   }
 
-  // The reserved trump card is only ever in state for the declarer (or the admin
-  // acting as a vacated/timed-out declarer), so rendering it on the declarer's
-  // own seat leaks nothing. The seated declarer sees it beside their hand instead.
-  function trumpSlotFor(pos) {
-    return isPlaying && !!gameState.trumpCard && !gameState.trumpRevealed &&
-      gameState.declarer?.position === pos && pos !== myPos;
-  }
 
-  function renderSeat(pos, roleLabel) {
-    const p = playerAtPos(pos);
-    const v = vacatedAt(pos);
-    const isTurnSeat = !!curPlayer && curPlayer.position === pos;
-    const isDeclSeat = isPlaying && gameState.declarer?.position === pos;
-    const trumpSlot = trumpSlotFor(pos) ? (
-      <div className="seat-trump">
-        {renderCard(gameState.trumpCard, true)}
-        <span className="seat-trump-label">TRUMP</span>
-      </div>
-    ) : null;
-    if (v) {
-      return (
-        <div className="seat-block">
-          <div className={`seat-plate vacated${isTurnSeat ? ' turn' : ''}`} title={`${v.playerName} — seat vacated`}>
-            <span className="seat-name">{v.playerName}</span>
-            <span className="seat-meta">Vacated · {(v.hand || []).length}</span>
-          </div>
-          {renderVacated(pos, true)}
-          {trumpSlot}
-        </div>
-      );
-    }
-    const role = pos === myPos ? 'You' : (roleLabel || (isDeclSeat ? 'Declarer' : (p?.team || 'Open')));
-    let count = faceDownCount(p);
-    if (pos === myPos && isDeclSeat && gameState.trumpCard && !gameState.trumpRevealed) count += 1;
-    return (
-      <div className="seat-block">
-        <div
-          className={`seat-plate${isTurnSeat ? ' turn' : ''}${isDeclSeat ? ' declarer' : ''}${p ? '' : ' open'}`}
-          title={`${p?.name || POSITION_NAMES[pos]} — ${count} cards`}>
-          <span className="seat-name">{p?.name || POSITION_NAMES[pos]}{p?.isBot ? <span className="bot-tag">BOT</span> : null}{p && p.online === false ? <span className="offline-tag">reconnecting</span> : null}</span>
-          <span className="seat-meta">{role} · {count}</span>
-        </div>
-        {trumpSlot}
-      </div>
-    );
-  }
 
   const stuckSeat = gameState.stuckSeat;
   const log = gameState.lastHandLog;

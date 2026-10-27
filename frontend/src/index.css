@@ -92,24 +92,8 @@ input, button { font-family: inherit; }
 .seat-info { font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; text-align: center; }
 .seat-role { display: block; font-size: 0.6875rem; font-weight: 400; color: #8fbf8f; }
 .team-badge { font-size: 0.6875rem; background: #2d4a2d; color: #a0d0a0; padding: 1px 5px; border-radius: 4px; margin-left: 4px; }
-/* ---- Table seats / diamond plates ---- */
-.seat-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.seat-plate { display: flex; flex-direction: column; align-items: center; padding: 3px 10px; border-radius: 999px; background: rgba(30,58,30,.88); border: 1px solid #4a9a4a; max-width: 116px; text-align: center; }
-.seat-plate.open { opacity: 0.55; }
-.seat-plate.turn { box-shadow: 0 0 0 2px #f0c040; }
-.seat-plate.declarer { border-color: #f0c040; }
-.seat-plate.vacated { border-color: #f0c040; }
-.seat-name { font-size: 0.7rem; font-weight: 700; color: #e6d0ff; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.seat-meta { font-size: 0.625rem; color: #8fbf8f; }
-.seat-trump { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.seat-trump-label { font-size: 0.7rem; font-weight: 700; color: #f0c040; letter-spacing: 1px; }
 .bot-tag { margin-left: 4px; font-size: 0.6rem; color: #f0c040; }
 .offline-tag { margin-left: 4px; font-size: 0.6rem; color: #ffb3b3; }
-
-/* Legacy dummy-card kept only if referenced elsewhere; replaced by .seat-plate */
-.dummy-card { display: none; }
-.dummy-name { display: none; }
-.dummy-role { display: none; }
 .tricks { font-size: 0.8125rem; color: #f0c040; margin-top: 4px; }
 
 /* ---- Vacated (admin takes over) seat ---- */
