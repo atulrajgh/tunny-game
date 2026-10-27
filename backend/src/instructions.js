@@ -90,6 +90,10 @@ td{font-size:13px}
 <li>If the admin disconnects, the first spectator (or player) is promoted to admin. If only the admin remains, the room closes and a fresh join starts a new table.</li>
 </ul>
 
+<h2>Suggestions &amp; Recommendations</h2>
+<p>Have feedback, ideas, or suggestions to improve Tunny? We'd love to hear from you!</p>
+<p>Email: <a href="mailto:atul.note7@gmail.com" style="color:#f0c040">atul.note7@gmail.com</a></p>
+
 <h2>Admin Controls</h2>
 <p>The collapsible admin panel below the table includes:</p>
 <ul>
