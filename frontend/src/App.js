@@ -306,9 +306,9 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
   // The current "who is acting" line, folded into the unified message bar.
   const currentActionText = [
     gameState.state === 'waiting' && (tableFull
-      ? (isAdmin ? 'Waiting — the table is full; start the game' : `${seatedCount}/4 seated — any seated player can start`)
+      ? (isAdmin ? 'Waiting — the table is full; cut for the dealer' : `${seatedCount}/4 seated — any seated player can cut for the dealer`)
       : `Only ${seatedCount}/4 seated — assign seats to fill the table`),
-    gameState.state === 'cut' && (isAdmin ? 'Waiting — determine the dealer' : 'Cut complete — any seated player can determine the dealer'),
+    gameState.state === 'cut' && (isAdmin ? 'Cut complete — start the game to set the dealer' : 'Cut complete — any seated player can start the game'),
     isBidding && `${curPlayer?.name || 'Someone'} is bidding${isAdmin && vacatedTurnPos ? ' — you bid this seat' : ''}`,
     isTrump && `${players.find(p => p.position === gameState.declarer?.position)?.name || 'Declarer'} is selecting trump${isAdmin && declarerVacated ? ' — you choose for this seat' : ''}`,
     gameState.state === 'redeal_pending' && null,
@@ -548,9 +548,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
           {/* Left: People */}
           <div className="ac-panel">
             <h3>People</h3>
-            <div className="ac-state" style={{ marginBottom: 8 }}>
-              <div className="ac-state-item"><span className="ac-label">Table</span><span className="ac-value small">N:{(players.find(p=>p.position==='N')?.name||'—').slice(0,6)} S:{(players.find(p=>p.position==='S')?.name||'—').slice(0,6)} E:{(players.find(p=>p.position==='E')?.name||'—').slice(0,6)} W:{(players.find(p=>p.position==='W')?.name||'—').slice(0,6)}</span></div>
-            </div>
             <div style={{ fontSize: 11, color: '#a0d0a0', marginBottom: 6 }}>Host</div>
             <div className="ac-player-row">
               <span className="ac-name">You <span className="host-tag">HOST</span></span>
@@ -803,7 +800,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
           {tableFull && (
             <>
               <button className="action-btn" disabled={!canStartFlow || humanSeated < 1}
-                onClick={() => sendOnce('start_game')}>Start Game</button>
+                onClick={() => sendOnce('start_game')}>Determine Dealer</button>
               {!canStartFlow && <span className="flow-hint"> (seated players only)</span>}
             </>
           )}
@@ -812,7 +809,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
       {gameState.state === 'cut' && (
         <span className="flow-msg">
           <button className="action-btn" disabled={!canStartFlow}
-            onClick={() => sendOnce('cut_done')}>Determine Dealer</button>
+            onClick={() => sendOnce('cut_done')}>Start Game</button>
           {!canStartFlow && <span className="flow-hint"> (seated players only)</span>}
         </span>
       )}

@@ -40,7 +40,7 @@ td{font-size:13px}
 
 <h2>Game Flow</h2>
 <h3>1. Waiting Room</h3>
-<p>The first player to join becomes the <strong>admin</strong>; the next players fill the N/S/E/W seats, and anyone after that joins as a <strong>spectator</strong>. Three computer players (<strong>bots</strong>) are always available on the bench, so <strong>nobody is seated automatically</strong> — open seats stay empty until the admin seats someone. The admin seats a person or bot by clicking a position (<strong>N/S/E/W</strong>) next to their name in the <strong>People</strong> list of the admin panel, or uses the admin-only <strong>Assign Seats</strong> button, which seats waiting humans first and then bots at random open positions (the host sits too when no other human is waiting). The <strong>Start Game</strong> button appears only when <strong>all 4 seats are filled</strong>.</p>
+<p>The first player to join becomes the <strong>admin</strong>; the next players fill the N/S/E/W seats, and anyone after that joins as a <strong>spectator</strong>. Three computer players (<strong>bots</strong>) are always available on the bench, so <strong>nobody is seated automatically</strong> — open seats stay empty until the admin seats someone. The admin seats a person or bot by clicking a position (<strong>N/S/E/W</strong>) next to their name in the <strong>People</strong> list of the admin panel, or uses the admin-only <strong>Assign Seats</strong> button, which seats waiting humans first and then bots at random open positions (the host sits too when no other human is waiting). The <strong>Determine Dealer</strong> button appears only when <strong>all 4 seats are filled</strong> — pressing it deals the cut cards.</p>
 
 <h3>2. Cut</h3>
 <p>Each player draws a card. The player with the highest cut card becomes the <strong>dealer</strong>, and the player to their left bids first. The dealer rotates clockwise to the next seat at the start of each new hand (the admin can also move the dealer manually).</p>
@@ -101,7 +101,7 @@ td{font-size:13px}
 <li><strong>Scores</strong> — running scores, HCP and tricks this hand</li>
 <li><strong>Controls</strong> — Move Dealer, Reset Scores, Reset Game, Take Over, Confirm &amp; Next Hand</li>
 </ul>
-<p>During waiting/cut/redeal, the <strong>Start Game</strong>, <strong>Determine Dealer</strong>, and <strong>Redeal</strong> buttons appear in the message bar above your hand and can be used by any seated player or the host — <strong>Start Game</strong> shows only once all 4 seats are filled. While seats are open the bar also shows the admin-only <strong>Assign Seats</strong> button, which seats waiting humans and then existing bots at random open positions — with no humans waiting, the host sits too.</p>
+<p>During waiting/cut/redeal, the <strong>Determine Dealer</strong>, <strong>Start Game</strong>, and <strong>Redeal</strong> buttons appear in the message bar above your hand and can be used by any seated player or the host — <strong>Determine Dealer</strong> shows only once all 4 seats are filled and deals the cut cards, and the cut screen then offers <strong>Start Game</strong> to pick the dealer and begin bidding. While seats are open the bar also shows the admin-only <strong>Assign Seats</strong> button, which seats waiting humans and then existing bots at random open positions — with no humans waiting, the host sits too.</p>
 
 <div class="back"><a href="/">← Back to Game</a></div>
 <div class="version">Version ${version}</div>

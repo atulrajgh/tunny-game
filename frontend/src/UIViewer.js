@@ -338,7 +338,7 @@ export default function UIViewer() {
         <Row title="Message bar (waiting - full table)">
           <div className="message-bar">
             <span className="flow-msg">
-              <button className="action-btn">Start Game</button>
+              <button className="action-btn">Determine Dealer</button>
             </span>
           </div>
         </Row>
@@ -471,9 +471,6 @@ export default function UIViewer() {
           <div className="ac-grid">
             <div className="ac-panel">
               <h3>People</h3>
-              <div className="ac-state" style={{ marginBottom: 8 }}>
-                <div className="ac-state-item"><span className="ac-label">Table</span><span className="ac-value small">N:Bob S:— E:Abbot W:—</span></div>
-              </div>
               <div style={{ fontSize: 11, color: '#a0d0a0', marginBottom: 6 }}>Host</div>
               <div className="ac-player-row">
                 <span className="ac-name">You <span className="host-tag">HOST</span></span>
