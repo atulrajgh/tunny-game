@@ -401,15 +401,18 @@ input, button { font-family: inherit; }
 .table-cross .tc-controls { grid-area: controls; align-self: start; justify-self: end; position: relative; }
 .table-cross .tc-west { grid-area: west; justify-self: start; align-self: center; }
 .table-cross .tc-east { grid-area: east; justify-self: end; align-self: center; }
-.table-cross .tc-table { grid-area: table; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 200px; }
+.table-cross .tc-table { grid-area: table; position: relative; display: flex; align-items: center; justify-content: center; min-height: 240px; }
 .table-cross .tc-south { grid-area: south; justify-self: center; align-self: end; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
-.tc-trick { position: relative; width: 300px; height: 220px; }
-.tc-trick .tk { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 0.6875rem; font-weight: 600; color: #a0d0a0; }
-.tc-trick .tk-n { top: 0; left: 50%; transform: translateX(-50%); }
-.tc-trick .tk-s { bottom: 0; left: 50%; transform: translateX(-50%); }
-.tc-trick .tk-w { left: 0; top: 50%; transform: translateY(-50%); }
-.tc-trick .tk-e { right: 0; top: 50%; transform: translateY(-50%); }
-.tc-trick .tk .trick-leader { position: absolute; top: 14px; left: -2px; }
+
+.table-slots { position: relative; width: 320px; height: 240px; }
+.t-slot { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.t-slot-name { font-size: 0.75rem; font-weight: 600; color: #e6d0ff; text-align: center; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-slot-card { display: flex; align-items: center; justify-content: center; }
+.t-slot-outline { width: 3em; height: 4.23em; border: 1px dashed rgba(255,255,255,0.7); border-radius: 0.35em; box-sizing: border-box; }
+.t-slot-n { top: 0; left: 50%; transform: translateX(-50%); }
+.t-slot-s { bottom: 0; left: 50%; transform: translateX(-50%); }
+.t-slot-w { left: 0; top: 50%; transform: translateY(-50%); }
+.t-slot-e { right: 0; top: 50%; transform: translateY(-50%); }
 @media (max-width: 768px) {
   .table-cross {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
@@ -421,30 +424,10 @@ input, button { font-family: inherit; }
     gap: 6px;
     min-height: 0;
   }
-  .table-cross .tc-table { min-height: 110px; gap: 4px; }
-  .table-cross .tc-score { align-self: start; justify-self: start; }
-  .table-cross .tc-controls { align-self: start; justify-self: end; }
-  .table-cross .tc-north { align-self: start; justify-self: center; }
-  .table-cross .tc-west { align-self: center; justify-self: start; }
-  .table-cross .tc-east { align-self: center; justify-self: end; }
-  .table-cross .tc-south { width: 100%; }
-  .seat-plate { max-width: 84px; padding: 2px 6px; }
-  .seat-name { font-size: 0.5625rem; }
-  .seat-meta { font-size: 0.5rem; }
-  .bot-tag, .offline-tag { font-size: 0.5rem; }
-  .table-seat { padding: 2px; }
-  .team-scores { min-width: 0; font-size: 0.6875rem; padding: 5px; }
-  .team-scores .ts-row { grid-template-columns: 22px 1fr 1fr; gap: 2px; }
-  .team-scores .help-link { font-size: 0.625rem; }
-  .state-info { min-width: 0; }
-  .round-info { font-size: 0.6875rem; }
-  .state-details { font-size: 0.6875rem; }
-  .current-trick, .cut-card-area { min-width: 0; gap: 4px; }
-  .tc-controls .ac-menu-btn { min-height: 34px; padding: 5px 9px; font-size: 0.75rem; }
-  .my-area { flex-wrap: wrap; }
-  .hand-row { gap: 3px; padding: 2px; }
-  .hand-row .pc { font-size: clamp(14px, 4.4vw, 22px); }
-  .tc-trick { width: 240px; height: 170px; }
+  .table-cross .tc-table { min-height: 160px; }
+  .table-slots { width: 260px; height: 190px; }
+  .t-slot-name { font-size: 0.6875rem; max-width: 72px; }
+  .t-slot-outline { width: 2.6em; height: 3.67em; }
 }
 
 /* ---- Playing-card face (real deck) ---- */

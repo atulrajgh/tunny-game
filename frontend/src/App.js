@@ -901,45 +901,51 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
         <div className="tc-controls">{controlsMenu}</div>
 
         {/* West */}
-        <div className="tc-west">{myPos ? renderSeat(posOrder[3]) : renderSeat('W')}</div>
+        <div className="tc-west"></div>
 
-        {/* Center table — partner seat below the messages, above the trick */}
+        {/* Center table */}
         <div className="tc-table">
-        {myPos ? renderSeat(posOrder[0], 'Partner') : renderSeat('N')}
-        {isPlaying && shownTrick.length > 0 && (
-          <div className="tc-trick">
-            {shownTrick.map((t, i) => (
-              <div key={i} className={`tk tk-${sideFor(t.position)}${!gameState.currentTrick?.length && t.position === lastTrickEntry?.winnerPosition ? ' won' : ''}`}>
-                <span>{t.playerName}</span>
-                {t.card ? renderCard(t.card, true) : <span className="pc-back sm" />}
-              </div>
-            ))}
-          </div>
-        )}
-        {gameState.state === 'cut' && (
-          <div className="current-trick cut-card-area">
-            {(gameState.cutCards || []).length > 0 ? (
-              <div className="cut-cards">
-                {gameState.cutCards.map((c, i) => (
-                  <div key={i} className="cut-card">
-                    <span className="cut-card-label">{c.name}</span>
-                    {c.card ? renderCard(c.card) : <span className="cut-card-pending">Cutting…</span>}
+          {isPlaying && (
+            <div className="table-slots">
+              {['n','e','s','w'].map(side => {
+                const pos = side === 'n' ? posOrder[0] : side === 'e' ? posOrder[1] : side === 's' ? posOrder[2] : posOrder[3];
+                const p = playerAtPos(pos);
+                const entry = (shownTrick || []).find(t => t.position === pos);
+                const card = entry?.card || null;
+                return (
+                  <div key={side} className={`t-slot t-slot-${side}`}>
+                    <div className="t-slot-name">{p?.name || POSITION_NAMES[pos]}</div>
+                    <div className="t-slot-card">
+                      {card ? renderCard(card, true) : <div className="t-slot-outline" />}
+                    </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="cut-card">
-                {me?.cutCard ? renderCard(me.cutCard) : <span className="cut-card-pending">Cutting…</span>}
-                <span className="cut-card-label">Your card</span>
-              </div>
-            )}
-          </div>
-        )}
-        {myPos ? renderSeat(posOrder[2]) : renderSeat('S')}
+                );
+              })}
+            </div>
+          )}
+          {gameState.state === 'cut' && (
+            <div className="current-trick cut-card-area">
+              {(gameState.cutCards || []).length > 0 ? (
+                <div className="cut-cards">
+                  {gameState.cutCards.map((c, i) => (
+                    <div key={i} className="cut-card">
+                      <span className="cut-card-label">{c.name}</span>
+                      {c.card ? renderCard(c.card) : <span className="cut-card-pending">Cutting…</span>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="cut-card">
+                  {me?.cutCard ? renderCard(me.cutCard) : <span className="cut-card-pending">Cutting…</span>}
+                  <span className="cut-card-label">Your card</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* East */}
-        <div className="tc-east">{myPos ? renderSeat(posOrder[1]) : renderSeat('E')}</div>
+        <div className="tc-east"></div>
 
         {/* South — notification bar, action bar, my hand */}
         <div className="tc-south">

@@ -241,27 +241,22 @@ export default function UIViewer() {
           </div>
 
           <div className="tc-table">
-            <div className="seat-block">
-              <div className="seat-plate"><span className="seat-name">Bob</span><span className="seat-meta">Partner · 5</span></div>
-            </div>
-            <div className="tc-trick">
-              <div className="tk tk-n"><span>Bob</span>{renderCard(card('♥', 'A'))}</div>
-              <div className="tk tk-w"><span>Carol</span>{renderCard(card('♠', '10'))}</div>
-              <div className="tk tk-e"><span>Dan</span>{renderCard(card('♥', 'J'))}</div>
-              <div className="tk tk-s"><span>You</span>{renderCard(card('♠', 'K'))}<span className="trick-leader" title="Started the trick">1</span></div>
+            <div className="table-slots">
+              {['n','e','s','w'].map(side => {
+                const name = side === 'n' ? 'Bob' : side === 'e' ? 'Dan' : side === 's' ? 'You' : 'Carol';
+                const card = side === 'n' ? card('♥','A') : side === 'e' ? card('♥','J') : side === 's' ? card('♠','K') : card('♠','10');
+                return (
+                  <div key={side} className={`t-slot t-slot-${side}`}>
+                    <div className="t-slot-name">{name}</div>
+                    <div className="t-slot-card">{renderCard(card, true)}</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          <div className="tc-west">
-            <div className="seat-block">
-              <div className="seat-plate"><span className="seat-name">Carol</span><span className="seat-meta">Defender · 5</span></div>
-            </div>
-          </div>
-          <div className="tc-east">
-            <div className="seat-block">
-              <div className="seat-plate"><span className="seat-name">Dan</span><span className="seat-meta">Defender · 5</span></div>
-            </div>
-          </div>
+          <div className="tc-west"></div>
+          <div className="tc-east"></div>
 
           <div className="tc-south">
             <div className="message-bar">
