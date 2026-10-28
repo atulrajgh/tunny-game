@@ -851,43 +851,28 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
         {/* Center table */}
         <div className="tc-table">
-          {isPlaying && (
-            <div className="table-slots">
-              {['n','e','s','w'].map(side => {
-                const pos = side === 'n' ? posOrder[0] : side === 'e' ? posOrder[1] : side === 's' ? posOrder[2] : posOrder[3];
-                const p = playerAtPos(pos);
-                const entry = (shownTrick || []).find(t => t.position === pos);
-                const card = entry?.card || null;
-                return (
-                  <div key={side} className={`t-slot t-slot-${side}`}>
-                    <div className="t-slot-name">{p?.name || POSITION_NAMES[pos]}</div>
-                    <div className="t-slot-card">
-                      {card ? renderCard(card, true) : <div className="t-slot-outline" />}
-                    </div>
+          <div className="table-slots">
+            {['n','e','s','w'].map(side => {
+              const pos = side === 'n' ? posOrder[0] : side === 'e' ? posOrder[1] : side === 's' ? posOrder[2] : posOrder[3];
+              const p = playerAtPos(pos);
+              const cutEntry = (gameState.cutCards || []).find(c => c.position === pos);
+              const myCut = me?.position === pos && me.cutCard ? { card: me.cutCard, name: me.name } : null;
+              const cutCard = cutEntry?.card || myCut?.card || null;
+              const trickEntry = (shownTrick || []).find(t => t.position === pos);
+              const trickCard = trickEntry?.card || null;
+              const card = cutCard || trickCard;
+              const assigned = !!(gameState.positions?.[pos] || p || cutEntry || myCut);
+              const name = p?.name || cutEntry?.name || myCut?.name || (assigned ? POSITION_NAMES[pos] : '');
+              return (
+                <div key={side} className={`t-slot t-slot-${side}`}>
+                  {name ? <div className="t-slot-name">{name}</div> : null}
+                  <div className="t-slot-card">
+                    {card ? renderCard(card, true) : <div className="t-slot-outline" />}
                   </div>
-                );
-              })}
-            </div>
-          )}
-          {gameState.state === 'cut' && (
-            <div className="current-trick cut-card-area">
-              {(gameState.cutCards || []).length > 0 ? (
-                <div className="cut-cards">
-                  {gameState.cutCards.map((c, i) => (
-                    <div key={i} className="cut-card">
-                      <span className="cut-card-label">{c.name}</span>
-                      {c.card ? renderCard(c.card) : <span className="cut-card-pending">Cutting…</span>}
-                    </div>
-                  ))}
                 </div>
-              ) : (
-                <div className="cut-card">
-                  {me?.cutCard ? renderCard(me.cutCard) : <span className="cut-card-pending">Cutting…</span>}
-                  <span className="cut-card-label">Your card</span>
-                </div>
-              )}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </div>
 
         {/* East */}
