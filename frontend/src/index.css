@@ -117,6 +117,7 @@ input, button { font-family: inherit; }
 .state-info { flex: 1; text-align: center; min-width: 200px; }
 .state-info-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; text-align: right; color: #c0e8c0; font-size: 0.875rem; line-height: 1.25; }
 .tc-north { align-items: flex-end; justify-content: flex-end; padding-right: 12px; }
+.state-info-right .trump-suit { font-size: 1.25rem; font-weight: 700; }
 .trump-indicator { font-size: 1.375rem; font-weight: 800; color: #f0c040; }
 .trump-revealed { background: #f0c040; color: #2d4a2d; padding: 2px 12px; border-radius: 20px; font-weight: 700; display: inline-block; animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
