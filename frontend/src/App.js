@@ -821,7 +821,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
             {gameState.declarer && gameState.highestBid && (
               <div>Declarer: {(players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position)} - Bid: {gameState.highestBid}</div>
             )}
-            {gameState.trumpSuit && <div>Trump: <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span></div>}
+            {(gameState.trumpRevealed || (me?.position && gameState.declarer?.position === me.position)) && gameState.trumpSuit && <div>Trump: <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span></div>}
             {contractNeed && <div>Need {contractNeed} HCP · made {gameState.teamPoints?.[declarerTeamPos] || 0}</div>}
           </div>
         </div>
