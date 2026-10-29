@@ -532,9 +532,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
             <div className="ac-panel-header">
               <h3>People</h3>
               <div className="ac-panel-actions">
-                {isAdmin && assignSeatsEnabled && (
-                  <button className="ac-btn green" onClick={() => sendOnce('assign_seats')}>Assign Seats</button>
-                )}
+                {isAdmin && controlsMenu}
               </div>
             </div>
             <div style={{ fontSize: 11, color: '#a0d0a0', marginBottom: 6 }}>Host</div>
@@ -840,8 +838,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
           </div>
         </div>
 
-        {/* Controls — top-right (admin only) */}
-        <div className="tc-controls">{controlsMenu}</div>
+        {/* Controls moved to People section */}
 
         {/* West */}
         <div className="tc-west"></div>
