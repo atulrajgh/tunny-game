@@ -605,18 +605,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
               ))
             )}
           </div>
-
-          {/* Center: Game State + Bids + Current Trick */}
-          <div className="ac-panel">
-            <h3>Game State</h3>
-            <div className="ac-state">
-              <div className="ac-state-item"><span className="ac-label">Hand</span><span className="ac-value">{gameState.handNumber}</span></div>
-              <div className="ac-state-item"><span className="ac-label">Trick</span><span className="ac-value">{gameState.trickNumber + 1}/6</span></div>
-              <div className="ac-state-item"><span className="ac-label">State</span><span className="ac-value small">{gameState.state}</span></div>
-            </div>
-
-          </div>
-
         </div>
 
         {/* Live Tricks + Scores */}
