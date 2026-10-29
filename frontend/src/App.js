@@ -608,10 +608,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
               <div className="ac-state-item"><span className="ac-label">Hand</span><span className="ac-value">{gameState.handNumber}</span></div>
               <div className="ac-state-item"><span className="ac-label">Trick</span><span className="ac-value">{gameState.trickNumber + 1}/6</span></div>
               <div className="ac-state-item"><span className="ac-label">State</span><span className="ac-value small">{gameState.state}</span></div>
-              {gameState.dealer && <div className="ac-state-item"><span className="ac-label">Dealer</span><span className="ac-value small">{players.find(p => p.id === gameState.dealer.id)?.name || gameState.dealer.position}</span></div>}
-              {gameState.declarer && <div className="ac-state-item"><span className="ac-label">Declarer</span><span className="ac-value small">{players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position}</span></div>}
-              {gameState.highestBid && <div className="ac-state-item"><span className="ac-label">Bid</span><span className="ac-value">{gameState.highestBid}</span></div>}
-              {gameState.trumpSuit && <div className="ac-state-item"><span className="ac-label">Trump</span><span className="ac-value">{gameState.trumpSuit}</span></div>}
             </div>
 
           </div>
@@ -828,17 +824,14 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
         <div className="tc-north">
           <div className="state-info">
             <div className="round-info">Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
-            <div className="state-details">
+            <div className="state-meta">
+              {gameState.dealer && <span>Dealer: {players.find(p => p.id === gameState.dealer.id)?.name || gameState.dealer.position}</span>}
+              {gameState.highestBid && <span>Bid: {gameState.highestBid}</span>}
+              {gameState.declarer && <span>Declarer: {players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position}</span>}
               {isPlaying && declarerName && (
-                <div className="trump-indicator">
-                  {gameState.trumpSuit ? `Trump: ${gameState.trumpSuit} · set by ${declarerName}` : `Trump set by ${declarerName}`}
-                </div>
+                <span>{gameState.trumpSuit ? `Trump: ${gameState.trumpSuit} · set by ${declarerName}` : `Trump set by ${declarerName}`}</span>
               )}
-              {contractNeed && (
-                <div className="contract-progress">Need {contractNeed} HCP · made {gameState.teamPoints?.[declarerTeamPos] || 0}</div>
-              )}
-              {gameState.trumpCard && <div className="trump-card-display"><span className="trump-card-label">Trump card:</span>{renderCard(gameState.trumpCard)}</div>}
-              {gameState.trumpRevealed && <div className="trump-revealed">♠ Trump Revealed! ♠</div>}
+              {contractNeed && <span>Need {contractNeed} HCP · made {gameState.teamPoints?.[declarerTeamPos] || 0}</span>}
             </div>
           </div>
         </div>
