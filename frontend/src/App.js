@@ -529,7 +529,14 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
         <div className="ac-grid">
           {/* Left: People */}
           <div className="ac-panel">
-            <h3>People</h3>
+            <div className="ac-panel-header">
+              <h3>People</h3>
+              <div className="ac-panel-actions">
+                {isAdmin && assignSeatsEnabled && (
+                  <button className="ac-btn green" onClick={() => sendOnce('assign_seats')}>Assign Seats</button>
+                )}
+              </div>
+            </div>
             <div style={{ fontSize: 11, color: '#a0d0a0', marginBottom: 6 }}>Host</div>
             <div className="ac-player-row">
               <span className="ac-name">You <span className="host-tag">HOST</span></span>
@@ -822,17 +829,14 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
         {/* State messages — top-center */}
         <div className="tc-north">
-          <div className="state-info">
-            <div className="round-info">Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
-            <div className="state-meta">
-              {gameState.dealer && <span>Dealer: {players.find(p => p.id === gameState.dealer.id)?.name || gameState.dealer.position}</span>}
-              {gameState.highestBid && <span>Bid: {gameState.highestBid}</span>}
-              {gameState.declarer && <span>Declarer: {players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position}</span>}
-              {isPlaying && declarerName && (
-                <span>{gameState.trumpSuit ? `Trump: ${gameState.trumpSuit} · set by ${declarerName}` : `Trump set by ${declarerName}`}</span>
-              )}
-              {contractNeed && <span>Need {contractNeed} HCP · made {gameState.teamPoints?.[declarerTeamPos] || 0}</span>}
-            </div>
+          <div className="state-info state-info-right">
+            <div>Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
+            {gameState.dealer && <div>Dealer: {players.find(p => p.id === gameState.dealer.id)?.name || gameState.dealer.position}</div>}
+            {gameState.declarer && gameState.highestBid && (
+              <div>Declarer: {(players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position)} - Bid: {gameState.highestBid}</div>
+            )}
+            {gameState.trumpSuit && <div>Trump: {gameState.trumpSuit}</div>}
+            {contractNeed && <div>Need {contractNeed} HCP · made {gameState.teamPoints?.[declarerTeamPos] || 0}</div>}
           </div>
         </div>
 

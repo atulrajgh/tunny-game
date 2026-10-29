@@ -115,8 +115,8 @@ input, button { font-family: inherit; }
 /* ---- State bar (top) ---- */
 .state-bar { display: flex; align-items: center; gap: 12px; padding: 8px; background: #1a2e1a; border-radius: 8px; flex-wrap: wrap; }
 .state-info { flex: 1; text-align: center; min-width: 200px; }
-.state-details { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 6px; font-size: 0.875rem; color: #a0d0a0; }
-.round-info { color: #a0d0a0; margin-bottom: 4px; }
+.state-info-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; text-align: right; color: #c0e8c0; font-size: 0.875rem; line-height: 1.25; }
+.tc-north { align-items: flex-end; justify-content: flex-end; padding-right: 12px; }
 .trump-indicator { font-size: 1.375rem; font-weight: 800; color: #f0c040; }
 .trump-revealed { background: #f0c040; color: #2d4a2d; padding: 2px 12px; border-radius: 20px; font-weight: 700; display: inline-block; animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
@@ -451,6 +451,10 @@ input, button { font-family: inherit; }
 .card-btn:hover .pc { border: 2px solid #f0c040; transform: translateY(-4px); }
 .vacated-card-btn:not(:disabled) .pc { border: 2px solid #f0c040; box-shadow: 0 0 6px rgba(240, 192, 64, 0.5); }
 .trump-reserved .pc { background: #2c3e50; color: #f0c040; border: 2px dashed #f0c040; }
+/* Admin panel */
+.ac-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.ac-panel-header h3 { margin: 0; }
+.ac-panel-actions { display: flex; align-items: center; gap: 6px; }
 .tk.won .pc { border: 2px solid #f0c040; box-shadow: 0 0 8px rgba(240, 192, 64, 0.6); }
 
 /* Sorted, fanned hand */
