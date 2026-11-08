@@ -414,9 +414,9 @@ input, button { font-family: inherit; }
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
     grid-template-rows: auto 1fr auto;
     grid-template-areas:
-      "score north controls"
-      "west table east"
-      "south south south";
+      "north north north"
+      "west  table east"
+      ".     south .";
     gap: 6px;
     min-height: 0;
   }
@@ -424,6 +424,13 @@ input, button { font-family: inherit; }
   .table-slots { width: 260px; height: 190px; }
   .t-slot-name { font-size: 0.6875rem; max-width: 72px; }
   .t-slot-outline { width: 2.6em; height: 3.67em; }
+  .score-corner { min-width: 46px; padding: 2px 4px; border-radius: 5px; }
+  .score-corner-label { font-size: 0.5625rem; }
+  .score-corner-value { font-size: 0.8125rem; }
+  .score-ns-game { top: 0; left: 0; }
+  .score-ew-game { top: 0; right: 0; }
+  .score-ns-hand { bottom: 0; left: 0; }
+  .score-ew-hand { bottom: 0; right: 0; }
 }
 
 /* ---- Playing-card face (real deck) ---- */
