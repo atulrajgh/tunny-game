@@ -814,17 +814,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
         </div>
 
         {/* State messages — top-center */}
-        <div className="tc-north">
-          <div className="state-info state-info-right">
-            <div>Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</div>
-            {gameState.dealer && <div>Dealer: {players.find(p => p.id === gameState.dealer.id)?.name || gameState.dealer.position}</div>}
-            {gameState.declarer && gameState.highestBid && (
-              <div>Declarer: {(players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position)} - Bid: {gameState.highestBid}</div>
-            )}
-            {(gameState.trumpRevealed || (me?.position && gameState.declarer?.position === me.position)) && gameState.trumpSuit && <div>Trump: <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span></div>}
-            {contractNeed && <div>Need {contractNeed} HCP · made {gameState.teamPoints?.[declarerTeamPos] || 0}</div>}
-          </div>
-        </div>
+        <div className="tc-north"></div>
 
         {/* Controls moved to People section */}
 
@@ -905,6 +895,26 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                 <span className="trump-reserved-label">TRUMP</span>
               </div>
             )}
+          </div>
+          <div className="south-stats">
+            <table className="south-stats-table">
+              <tbody>
+                <tr>
+                  <td>Hand {gameState.handNumber} · Trick {gameState.trickNumber + 1}/6</td>
+                  <td>{gameState.dealer ? `Dealer: ${players.find(p => p.id === gameState.dealer.id)?.name || gameState.dealer.position}` : ''}</td>
+                  <td>{gameState.declarer && gameState.highestBid ? `Declarer: ${(players.find(p => p.id === gameState.declarer.id)?.name || gameState.declarer.position)} - Bid: ${gameState.highestBid}` : ''}</td>
+                </tr>
+                <tr>
+                  <td>
+                    {(gameState.trumpRevealed || (me?.position && gameState.declarer?.position === me.position)) && gameState.trumpSuit ? (
+                      <>Trump: <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span></>
+                    ) : ''}
+                  </td>
+                  <td>{contractNeed ? `Need: ${contractNeed}` : ''}</td>
+                  <td>{contractNeed ? `Made: ${gameState.teamPoints?.[declarerTeamPos] || 0}` : ''}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
