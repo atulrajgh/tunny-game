@@ -804,20 +804,8 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
     <div className="app game-table">
       <div className="game-title">TUNNY <a href="/instructions" target="_blank" className="help-link-inline">How to Play</a></div>
       <div className="table-cross">
-        {/* N-S game score — top-left */}
-        <div className="score-corner score-ns-game">
-          <div className="score-corner-label ns">N-S</div>
-          <div className="score-corner-value">{gameState.scores?.['N-S'] || 0}</div>
-        </div>
-
         {/* State messages — top-center */}
         <div className="tc-north"></div>
-
-        {/* E-W game score — top-right */}
-        <div className="score-corner score-ew-game">
-          <div className="score-corner-label ew">E-W</div>
-          <div className="score-corner-value">{gameState.scores?.['E-W'] || 0}</div>
-        </div>
 
         {/* West */}
         <div className="tc-west"></div>
@@ -825,6 +813,22 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
         {/* Center table */}
         <div className="tc-table">
           <div className="table-slots">
+            <div className="score-corner score-ns-game">
+              <div className="score-corner-label ns">N-S</div>
+              <div className="score-corner-value">{gameState.scores?.['N-S'] || 0}</div>
+            </div>
+            <div className="score-corner score-ew-game">
+              <div className="score-corner-label ew">E-W</div>
+              <div className="score-corner-value">{gameState.scores?.['E-W'] || 0}</div>
+            </div>
+            <div className="score-corner score-ns-hand">
+              <div className="score-corner-label ns">N-S HCP</div>
+              <div className="score-corner-value">{gameState.teamPoints?.['N-S'] || 0}</div>
+            </div>
+            <div className="score-corner score-ew-hand">
+              <div className="score-corner-label ew">E-W HCP</div>
+              <div className="score-corner-value">{gameState.teamPoints?.['E-W'] || 0}</div>
+            </div>
             {['n','e','s','w'].map(side => {
               const pos = side === 'n' ? posOrder[0] : side === 'e' ? posOrder[1] : side === 's' ? posOrder[2] : posOrder[3];
               const p = playerAtPos(pos);
@@ -850,12 +854,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
         {/* East */}
         <div className="tc-east"></div>
-
-        {/* N-S hand score — bottom-left */}
-        <div className="score-corner score-ns-hand">
-          <div className="score-corner-label ns">N-S HCP</div>
-          <div className="score-corner-value">{gameState.teamPoints?.['N-S'] || 0}</div>
-        </div>
 
         {/* South — notification bar, action bar, my hand */}
         <div className="tc-south">
@@ -925,11 +923,6 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
           </div>
         </div>
 
-        {/* E-W hand score — bottom-right */}
-        <div className="score-corner score-ew-hand">
-          <div className="score-corner-label ew">E-W HCP</div>
-          <div className="score-corner-value">{gameState.teamPoints?.['E-W'] || 0}</div>
-        </div>
       </div>
 
 {/* Bidding overlay — visible to everyone during bidding; controls enabled only for the current bidder */}
