@@ -420,13 +420,13 @@ input, button { font-family: inherit; }
     gap: 6px;
     min-height: 0;
   }
-  .table-cross .tc-table { min-height: 160px; }
-  .table-slots { width: 260px; height: 190px; }
+  .table-cross .tc-table { min-height: 220px; width: 100%; }
+  .table-slots { width: min(92vw, 360px); height: min(64vw, 280px); }
   .t-slot-name { font-size: 0.6875rem; max-width: 72px; }
   .t-slot-outline { width: 2.6em; height: 3.67em; }
-  .score-corner { min-width: 46px; padding: 2px 4px; border-radius: 5px; }
-  .score-corner-label { font-size: 0.5625rem; }
-  .score-corner-value { font-size: 0.8125rem; }
+  .score-corner { min-width: 44px; padding: 1px 3px; border-radius: 4px; }
+  .score-corner-label { font-size: 0.5rem; }
+  .score-corner-value { font-size: 0.75rem; }
   .score-ns-game { top: 0; left: 0; }
   .score-ew-game { top: 0; right: 0; }
   .score-ns-hand { bottom: 0; left: 0; }
