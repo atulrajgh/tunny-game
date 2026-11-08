@@ -404,8 +404,8 @@ input, button { font-family: inherit; }
 .tc-table { width: 100%; }
 .t-slot { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .t-slot-name { font-size: 0.75rem; font-weight: 600; color: #e6d0ff; text-align: center; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.t-slot-card { display: flex; align-items: center; justify-content: center; }
-.t-slot-outline { width: 3em; height: 4.23em; border: 1px dashed rgba(255,255,255,0.7); border-radius: 0.35em; box-sizing: border-box; font-size: var(--pc-font); }
+.t-slot-card { display: flex; align-items: center; justify-content: center; width: 3em; height: 4.23em; font-size: var(--pc-font-sm); }
+.t-slot-outline { width: 3em; height: 4.23em; border: 1px dashed rgba(255,255,255,0.7); border-radius: 0.35em; box-sizing: border-box; font-size: var(--pc-font-sm); }
 .trump-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: clamp(28px, 6vw, 48px); font-weight: 800; line-height: 1; z-index: 1; pointer-events: none; text-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 .trump-center.red { color: #e74c3c; }
 .trump-center.black { color: #f0f0f0; }
