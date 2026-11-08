@@ -802,21 +802,22 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
   return (
     <div className="app game-table">
+      <div className="game-title">TUNNY <a href="/instructions" target="_blank" className="help-link-inline">How to Play</a></div>
       <div className="table-cross">
-        {/* Score Card — top-left */}
-        <div className="tc-score">
-          <div className="team-scores">
-            <div className="ts-row header"><span></span><span>Score</span><span>HCP</span></div>
-            <div className="ts-row ns"><span>N-S</span><span>{gameState.scores?.['N-S'] || 0}</span><span>{gameState.teamPoints?.['N-S'] || 0}</span></div>
-            <div className="ts-row ew"><span>E-W</span><span>{gameState.scores?.['E-W'] || 0}</span><span>{gameState.teamPoints?.['E-W'] || 0}</span></div>
-            <a href="/instructions" target="_blank" className="help-link">How to Play</a>
-          </div>
+        {/* N-S game score — top-left */}
+        <div className="score-corner score-ns-game">
+          <div className="score-corner-label ns">N-S</div>
+          <div className="score-corner-value">{gameState.scores?.['N-S'] || 0}</div>
         </div>
 
         {/* State messages — top-center */}
         <div className="tc-north"></div>
 
-        {/* Controls moved to People section */}
+        {/* E-W game score — top-right */}
+        <div className="score-corner score-ew-game">
+          <div className="score-corner-label ew">E-W</div>
+          <div className="score-corner-value">{gameState.scores?.['E-W'] || 0}</div>
+        </div>
 
         {/* West */}
         <div className="tc-west"></div>
@@ -849,6 +850,12 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
         {/* East */}
         <div className="tc-east"></div>
+
+        {/* N-S hand score — bottom-left */}
+        <div className="score-corner score-ns-hand">
+          <div className="score-corner-label ns">N-S HCP</div>
+          <div className="score-corner-value">{gameState.teamPoints?.['N-S'] || 0}</div>
+        </div>
 
         {/* South — notification bar, action bar, my hand */}
         <div className="tc-south">
@@ -916,6 +923,12 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* E-W hand score — bottom-right */}
+        <div className="score-corner score-ew-hand">
+          <div className="score-corner-label ew">E-W HCP</div>
+          <div className="score-corner-value">{gameState.teamPoints?.['E-W'] || 0}</div>
         </div>
       </div>
 

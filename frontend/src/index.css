@@ -370,25 +370,35 @@ input, button { font-family: inherit; }
 }
 
 /* ---- New cross (compass) table layout ---- */
+.game-title { text-align: center; font-size: 1.5rem; font-weight: 800; color: #f0c040; letter-spacing: 2px; padding: 4px 0 2px; }
+.help-link-inline { font-size: 0.75rem; font-weight: 400; color: #a0d0a0; margin-left: 10px; text-decoration: none; vertical-align: middle; }
+.help-link-inline:hover { text-decoration: underline; color: #f0c040; }
 .table-cross {
   display: grid;
-  grid-template-columns: minmax(130px, 1fr) minmax(240px, 1.5fr) minmax(130px, 1fr);
+  grid-template-columns: minmax(100px, 1fr) minmax(240px, 1.5fr) minmax(100px, 1fr);
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
-    "score north controls"
-    "west table east"
-    ". south .";
+    "ns-game north ew-game"
+    "west    table east"
+    "ns-hand south ew-hand";
   gap: 12px;
   align-items: center;
   min-height: 72vh;
 }
-.table-cross .tc-score { grid-area: score; align-self: start; justify-self: start; }
+.table-cross .score-ns-game { grid-area: ns-game; align-self: start; justify-self: start; }
+.table-cross .score-ew-game { grid-area: ew-game; align-self: start; justify-self: end; }
+.table-cross .score-ns-hand { grid-area: ns-hand; align-self: end; justify-self: start; }
+.table-cross .score-ew-hand { grid-area: ew-hand; align-self: end; justify-self: end; }
 .table-cross .tc-north { grid-area: north; justify-self: center; align-self: start; }
-.table-cross .tc-controls { grid-area: controls; align-self: start; justify-self: end; position: relative; }
 .table-cross .tc-west { grid-area: west; justify-self: start; align-self: center; }
 .table-cross .tc-east { grid-area: east; justify-self: end; align-self: center; }
 .table-cross .tc-table { grid-area: table; position: relative; display: flex; align-items: center; justify-content: center; min-height: 240px; }
 .table-cross .tc-south { grid-area: south; justify-self: center; align-self: end; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+.score-corner { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1a3a1a; border: 1px solid #3a5a3a; border-radius: 8px; padding: 6px 10px; min-width: 72px; }
+.score-corner-label { font-size: 0.75rem; font-weight: 700; color: #a0d0a0; }
+.score-corner-label.ns { color: #4aa3df; }
+.score-corner-label.ew { color: #e06c75; }
+.score-corner-value { font-size: 1.25rem; font-weight: 800; color: #f0c040; }
 
 .table-slots { position: relative; width: 320px; height: 240px; }
 .t-slot { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; }
