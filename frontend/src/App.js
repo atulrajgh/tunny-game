@@ -832,6 +832,11 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
               <div className="score-corner-label ew">E-W HCP</div>
               <div className="score-corner-value">{gameState.teamPoints?.['E-W'] || 0}</div>
             </div>
+            {gameState.trumpRevealed && gameState.trumpSuit && (
+              <div className={`trump-center ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : 'black'}`}>
+                {gameState.trumpSuit}
+              </div>
+            )}
             {['n','e','s','w'].map(side => {
               const pos = side === 'n' ? posOrder[0] : side === 'e' ? posOrder[1] : side === 's' ? posOrder[2] : posOrder[3];
               const p = playerAtPos(pos);
