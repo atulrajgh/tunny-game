@@ -151,8 +151,8 @@ input, button { font-family: inherit; }
 /* ---- My hand (flat row) ---- */
 .my-area { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 4px 0; flex-wrap: wrap; }
 
-.hand-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 6px; padding: 4px; }
-.hand-row .hand-card { background: none; border: none; cursor: pointer; padding: 2px; }
+.hand-row { display: flex; flex-wrap: nowrap; justify-content: center; align-items: flex-end; gap: 4px; padding: 4px; overflow-x: auto; max-width: 100%; }
+.hand-row .hand-card { background: none; border: none; cursor: pointer; padding: 1px; flex: 0 0 auto; }
 .hand-row .hand-card:disabled { opacity: 0.8; cursor: default; }
 .hand-row .hand-card:hover .pc { transform: translateY(-8px); }
 .hand-row .pc { transition: transform 0.15s ease; }
@@ -431,6 +431,9 @@ input, button { font-family: inherit; }
   .score-ew-game { top: 0; right: 0; }
   .score-ns-hand { bottom: 0; left: 0; }
   .score-ew-hand { bottom: 0; right: 0; }
+  .hand-row { gap: 2px; }
+  .hand-row .hand-card { padding: 0; }
+  :root { --pc-font: clamp(16px, 4.2vw, 22px); }
 }
 
 /* ---- Playing-card face (real deck) ---- */
