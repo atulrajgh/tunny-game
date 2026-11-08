@@ -371,7 +371,7 @@ input, button { font-family: inherit; }
 
 /* ---- New cross (compass) table layout ---- */
 .game-title { text-align: center; font-size: 1.5rem; font-weight: 800; color: #f0c040; letter-spacing: 2px; padding: 4px 0 2px; }
-.help-link-inline { font-size: 0.75rem; font-weight: 400; color: #a0d0a0; margin-left: 10px; text-decoration: none; vertical-align: middle; }
+.help-link-inline { display: block; font-size: 0.75rem; font-weight: 400; color: #a0d0a0; margin-top: 2px; text-decoration: none; }
 .help-link-inline:hover { text-decoration: underline; color: #f0c040; }
 .table-cross {
   display: grid;

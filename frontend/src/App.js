@@ -802,7 +802,10 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
   return (
     <div className="app game-table">
-      <div className="game-title">TUNNY <a href="/instructions" target="_blank" className="help-link-inline">How to Play</a></div>
+      <div className="game-title">
+        <div>TUNNY</div>
+        <a href="/instructions" target="_blank" className="help-link-inline">How to Play</a>
+      </div>
       <div className="table-cross">
         {/* State messages — top-center */}
         <div className="tc-north"></div>
