@@ -400,7 +400,8 @@ input, button { font-family: inherit; }
 .score-ns-hand { bottom: 8px; left: 8px; }
 .score-ew-hand { bottom: 8px; right: 8px; }
 
-.table-slots { position: relative; width: 320px; height: 240px; }
+.table-slots { position: relative; width: 100%; max-width: none; aspect-ratio: 4 / 3; height: auto; min-height: 220px; }
+.tc-table { width: 100%; }
 .t-slot { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .t-slot-name { font-size: 0.75rem; font-weight: 600; color: #e6d0ff; text-align: center; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .t-slot-card { display: flex; align-items: center; justify-content: center; }
@@ -421,7 +422,7 @@ input, button { font-family: inherit; }
     min-height: 0;
   }
   .table-cross .tc-table { min-height: 220px; width: 100%; }
-  .table-slots { width: min(92vw, 360px); height: min(64vw, 280px); }
+  .table-slots { width: 100%; max-width: none; aspect-ratio: 4 / 3; height: auto; min-height: 200px; }
   .t-slot-name { font-size: 0.6875rem; max-width: 72px; }
   .t-slot-outline { width: 2.6em; height: 3.67em; }
   .score-corner { min-width: 44px; padding: 1px 3px; border-radius: 4px; }
