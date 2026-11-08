@@ -414,16 +414,18 @@ input, button { font-family: inherit; }
 .t-slot-w { left: 0; top: 50%; transform: translateY(-50%); }
 .t-slot-e { right: 0; top: 50%; transform: translateY(-50%); }
 @media (max-width: 768px) {
+  .app { padding: 6px; }
   .table-cross {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
+    grid-template-columns: 1fr;
     grid-template-rows: auto 1fr auto;
     grid-template-areas:
-      "north north north"
-      "west  table east"
-      ".     south .";
+      "north"
+      "table"
+      "south";
     gap: 6px;
     min-height: 0;
   }
+  .table-cross .tc-west, .table-cross .tc-east { display: none; }
   .table-cross .tc-table { min-height: 220px; width: 100%; }
   .table-slots { width: 100%; max-width: none; aspect-ratio: 4 / 3; height: auto; min-height: 200px; }
   .t-slot-name { font-size: 0.6875rem; max-width: 72px; }
