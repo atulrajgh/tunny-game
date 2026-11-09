@@ -396,6 +396,7 @@ input, button { font-family: inherit; }
 .score-corner-label { font-size: 0.6875rem; font-weight: 700; color: #a0d0a0; }
 .score-corner-label.ns { color: #4aa3df; }
 .score-corner-label.ew { color: #e06c75; }
+.score-corner-sub { font-size: 0.875rem; font-weight: 700; color: #c0e8c0; line-height: 1; }
 .score-corner-value { font-size: 1.125rem; font-weight: 800; color: #f0c040; line-height: 1.1; }
 .score-ns-game { top: 8px; left: 8px; }
 .score-ew-game { top: 8px; right: 8px; }
@@ -434,6 +435,7 @@ input, button { font-family: inherit; }
   .trump-center { font-size: clamp(22px, 7vw, 36px); }
   .score-corner { min-width: 44px; padding: 1px 3px; border-radius: 4px; }
   .score-corner-label { font-size: 0.5rem; }
+  .score-corner-sub { font-size: 0.6875rem; }
   .score-corner-value { font-size: 0.75rem; }
   .score-ns-game { top: 0; left: 0; }
   .score-ew-game { top: 0; right: 0; }

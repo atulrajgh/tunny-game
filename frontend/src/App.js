@@ -829,11 +829,13 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
               <div className="score-corner-value">{gameState.scores?.['E-W'] || 0}</div>
             </div>
             <div className="score-corner score-ns-hand">
-              <div className="score-corner-label ns">N-S HCP</div>
+              <div className="score-corner-label ns">N-S</div>
+              <div className="score-corner-sub">HCP</div>
               <div className="score-corner-value">{gameState.teamPoints?.['N-S'] || 0}</div>
             </div>
             <div className="score-corner score-ew-hand">
-              <div className="score-corner-label ew">E-W HCP</div>
+              <div className="score-corner-label ew">E-W</div>
+              <div className="score-corner-sub">HCP</div>
               <div className="score-corner-value">{gameState.teamPoints?.['E-W'] || 0}</div>
             </div>
             {gameState.trumpRevealed && gameState.trumpSuit && (
