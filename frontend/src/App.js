@@ -155,13 +155,19 @@ function App() {
     socket.emit('create_room', { playerName: name, playerId: localStorage.getItem('tunny_id') || undefined });
   };
 
+  const appHeader = (
+    <div className="app-header">
+      <h1 className="title">♠ TUNNY ♥</h1>
+      <a href="/instructions" target="_blank" className="help-link">How to Play</a>
+      <a href="/demo/tunny-demo.mp4" target="_blank" className="help-link">Watch a demo</a>
+    </div>
+  );
+
   // --- Login ---
   if (screen === 'login') {
     return (
       <div className="app login-screen">
-        <h1 className="title">♠ TUNNY ♥</h1>
-        <a href="/instructions" target="_blank" className="help-link" style={{ marginBottom: 4 }}>How to Play</a>
-        <a href="/demo/tunny-demo.mp4" target="_blank" className="help-link" style={{ marginBottom: 12 }}>Watch a demo</a>
+        {appHeader}
         {!socketConnected && <div className="reconnect-banner">Connection lost — reconnecting…</div>}
         {error && <div className="toast error">{error}</div>}
         <div className="login-box">
@@ -176,7 +182,7 @@ function App() {
   }
 
   if (!gameState) {
-    return <div className="app"><div className="loading">Connecting...</div></div>;
+    return <div className="app"><div className="app-header-wrap">{appHeader}</div><div className="loading">Connecting...</div></div>;
   }
 
   const { me } = gameState;
@@ -192,6 +198,7 @@ function App() {
     const rows = buildTrickRows(gameState.trickHistory || []);
     return (
       <div className="app review-screen">
+        {appHeader}
         <h2 className="review-title">Hand {gameState.handNumber} Review{gameState.highestBid ? <> · Highest Bid: {gameState.highestBid} ({handHCPRequirement(gameState.highestBid)} HCP)</> : ''}</h2>
         {(error || !isAdmin) && (
           <div className="message-bar">
@@ -248,6 +255,7 @@ function App() {
     const winNames = players.filter(p => p.team === winnerTeam).map(p => p.name).join(' & ');
     return (
       <div className="app gameover-screen">
+        {appHeader}
         <h2>Game Over</h2>
         <div className="winner-banner">{winNames} Win</div>
         <div className="final-scores">
@@ -262,7 +270,6 @@ function App() {
             {players.filter(p => p.team === 'E-W').map(p => <div key={p.id}>{p.name}{gameState.declarer?.id === p.id && gameState.trumpSuit ? <span className={`trump-suit ${gameState.trumpSuit === '♥' || gameState.trumpSuit === '♦' ? 'red' : ''}`}>{gameState.trumpSuit}</span> : null}</div>)}
           </div>
           </div>
-          <a href="/instructions" target="_blank" className="help-link" style={{ marginTop: 16 }}>How to Play</a>
           <div className="login-box" style={{ margin: '16px auto 0' }}>
             <input placeholder="Your Name" value={name} onChange={e => setName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && joinGame()} />
@@ -802,10 +809,7 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
 
   return (
     <div className="app game-table">
-      <div className="game-title">
-        <div>TUNNY</div>
-        <a href="/instructions" target="_blank" className="help-link-inline">How to Play</a>
-      </div>
+      {appHeader}
       <div className="table-cross">
         {/* State messages — top-center */}
         <div className="tc-north"></div>
