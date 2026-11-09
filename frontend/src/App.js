@@ -854,10 +854,9 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                         <button onClick={() => sendOnce('bid', { bid: 'pass' })} className="bid-pass">Pass</button>
                         <div className="bid-stepper">
                           <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
-                          <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
+                          <button onClick={placeMyBid} className="bid-inc">{incBid}</button>
                           <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
                         </div>
-                        <button onClick={placeMyBid} className="bid-inc">{incBid}</button>
                       </div>
                     )}
                     {isAdmin && (vacatedPlayer || timedOutTurn) && (
@@ -866,20 +865,18 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                           <>
                             <div className="bid-stepper">
                               <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
-                              <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
+                              <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.position, card: incBid })} className="bid-inc">{incBid}</button>
                               <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
                             </div>
-                            <button onClick={() => sendOnce('admin_play', { position: vacatedPlayer.position, card: incBid })} className="bid-inc">{incBid}</button>
                           </>
                         )}
                         {timedOutTurn && (
                           <>
                             <div className="bid-stepper">
                               <button onClick={() => setIncBid(v => Math.min(v + 10, 200))} className="bid-arrow up" aria-label="Increase bid">▲</button>
-                              <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
+                              <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: incBid }); }} className="bid-inc">{incBid}</button>
                               <button onClick={() => setIncBid(v => Math.max(Math.max(50, (highestBid || 0) + 10), v - 10))} className="bid-arrow down" aria-label="Decrease bid">▼</button>
                             </div>
-                            <button onClick={() => { setTimedOut(null); sendOnce('admin_play', { targetId: timedOutHand.playerId, card: incBid }); }} className="bid-inc">{incBid}</button>
                           </>
                         )}
                         <button onClick={() => {
@@ -897,10 +894,9 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
                     <button className="bid-pass" disabled>Pass</button>
                     <div className="bid-stepper">
                       <button className="bid-arrow up" disabled aria-label="Increase bid">▲</button>
-                      <span className="bid-hcp">{handHCPRequirement(incBid)}</span>
+                      <button className="bid-inc" disabled>{incBid}</button>
                       <button className="bid-arrow down" disabled aria-label="Decrease bid">▼</button>
                     </div>
-                    <button className="bid-inc" disabled>{incBid}</button>
                   </div>
                 )}
                 <div className="bid-summary compact">{players.map(p => <span key={p.id || p.position} className="bid-summary-item">{p.position}:{p.bid || '—'}</span>)}</div>
