@@ -913,11 +913,12 @@ const seatedCount = Object.keys(gameState.positions || {}).length;
               const card = cutCard || trickCard;
               const assigned = !!(gameState.positions?.[pos] || p || cutEntry || myCut);
               const name = p?.name || cutEntry?.name || myCut?.name || (assigned ? POSITION_NAMES[pos] : '');
+              const bidVal = isBidding && p ? (p.bid === 'pass' ? 'Pass' : (p.bid != null ? p.bid : '—')) : null;
               return (
                 <div key={side} className={`t-slot t-slot-${side}`}>
                   {name ? <div className="t-slot-name">{name}</div> : null}
                   <div className="t-slot-card">
-                    {card ? renderCard(card, true) : <div className="t-slot-outline" />}
+                    {card ? renderCard(card, true) : bidVal !== null ? <div className="t-slot-bid">{bidVal}</div> : <div className="t-slot-outline" />}
                   </div>
                 </div>
               );
