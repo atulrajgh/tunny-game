@@ -148,8 +148,8 @@ input, button { font-family: inherit; }
 .bidding-board-sub { font-size: 0.6875rem; color: #a0d0a0; margin-bottom: 2px; }
 .bidding-board .bid-buttons.compact { gap: 6px; margin: 2px 0; justify-content: center; flex-wrap: nowrap; align-items: center; }
 .bidding-board .bid-stepper { gap: 2px; display: flex; flex-direction: column; align-items: center; }
-.bidding-board .bid-arrow, .bidding-board .bid-inc { width: 28px; height: 28px; min-width: 28px; padding: 0; font-size: 0.6875rem; line-height: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
-.bidding-board .bid-pass { width: 28px; height: 88px; min-width: 28px; padding: 0; font-size: 0.625rem; border-radius: 4px; display: flex; align-items: center; justify-content: center; writing-mode: vertical-rl; text-orientation: mixed; }
+.bidding-board .bid-arrow, .bidding-board .bid-inc { width: 44px; height: 28px; min-width: 44px; padding: 0; font-size: 0.75rem; line-height: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+.bidding-board .bid-pass { width: 44px; height: 88px; min-width: 44px; padding: 0; font-size: 0.75rem; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
 .bidding-board .bid-hcp { font-size: 0.625rem; min-width: 24px; }
 .bidding-board .bid-summary.compact { font-size: 0.625rem; gap: 4px; margin-top: 2px; flex-wrap: wrap; justify-content: center; }
 .bidding-board .bid-summary-item { padding: 0; }
