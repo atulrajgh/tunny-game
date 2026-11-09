@@ -90,10 +90,6 @@ td{font-size:13px}
 <li>If the admin disconnects, the first spectator (or player) is promoted to admin. If only the admin remains, the room closes and a fresh join starts a new table.</li>
 </ul>
 
-<h2>Suggestions &amp; Recommendations</h2>
-<p>Have feedback, ideas, or suggestions to improve Tunny? We'd love to hear from you!</p>
-<p>Email: <a href="mailto:atul.note7@gmail.com" style="color:#f0c040">atul.note7@gmail.com</a></p>
-
 <h2>Admin Controls</h2>
 <p>The collapsible admin panel below the table includes:</p>
 <ul>
@@ -108,6 +104,10 @@ td{font-size:13px}
 <p>During waiting/cut/redeal, the <strong>Determine Dealer</strong>, <strong>Start Game</strong>, and <strong>Redeal</strong> buttons appear in the message bar above your hand and can be used by any seated player or the host — <strong>Determine Dealer</strong> shows only once all 4 seats are filled and deals the cut cards, and the cut screen then offers <strong>Start Game</strong> to pick the dealer and begin bidding. While seats are open the bar also shows the admin-only <strong>Assign Seats</strong> button, which seats waiting humans and then existing bots at random open positions — with no humans waiting, the host sits too.</p>
 
 <div class="back"><a href="/">← Back to Game</a></div>
+
+<h2>Suggestions &amp; Recommendations</h2>
+<p>Have feedback, ideas, or suggestions to improve Tunny? We'd love to hear from you!</p>
+<p>Email: <a href="mailto:atul.note7@gmail.com" style="color:#f0c040">atul.note7@gmail.com</a></p>
 <div class="version">Version ${version}</div>
 </body></html>`;
 }
